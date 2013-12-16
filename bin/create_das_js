@@ -1,4 +1,16 @@
 #!/bin/bash
+
+# find out where DAS is installed on a system
+dasroot=`python -c "import DAS; print '/'.join(DAS.__file__.split('/')[:-1])"`
+
+# define location of DAS maps
+if [ -n "$1" ]; then
+    das_map_dir=$1
+else
+    das_map_dir="$dasroot/services/cms_maps/"
+fi
+echo "DAS YML: $das_map_dir"
+
 # build DAS JSON maps out of DAS YML files
 # the dasmaps js files are written to src/python/DAS/services/cms_maps/ into
 # das_maps.js and das_testbed_maps.js
@@ -6,8 +18,8 @@
 # build DAS JSON maps out of DAS YML files
 build_das_maps()
 {
-    cmd="python src/python/DAS/tools/das_drop_maps.py"
-    dir="src/python/DAS/services/cms_maps/"
+    cmd="python $dasroot/tools/das_drop_maps.py"
+    dir=$das_map_dir
     tdir=/tmp/dasmaps
     rm -rf $tdir
     mkdir -p $tdir
@@ -37,6 +49,7 @@ build_das_maps()
     mv $map_file.tmp $map_file
     rm -rf $tdir
     $cmd --get-verification-token-for=$map_file | grep -v "###" >> $map_file
+    echo "Created: $map_file"
 
 }
 
