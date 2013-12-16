@@ -7,17 +7,19 @@ This release series is targeted to DAS production stability and quality.
 
 - 2.4.X
 
+  - Fixed issues: 4090, 4095, 4093, 4089, 4081, 4085
   - Re-factor code to use individual DB connections instead of sharing one in
     various places. This work address DAS instability issue reported in #4024.
-  - Fix 4085 issue
   - Add cookie support in DAS client
-  - Add support of DAS client version
+  - Add support of DAS client version, it is configured via
+    config.web_server.check_clients option
 
     - check DAS client version in DAS server
     - issue warning status and associative message for the client about version
       mismatch
 
   - Add code to re-initiate DAS request in check_pid, issue #4060
+  - Prepare server/client for distributed deployment on cmsweb
 
 - 2.3.X
 
