@@ -5,7 +5,8 @@ a common use-case is retrieving an entity by it's primary key. this module
 checks if the input can be unambiguously matched as a single value token and
 if so returns a valid DAS Query
 """
-from DAS.utils.regex import NON_AMBIGUOUS_INPUT_PATTERNS
+from DAS.utils.regex import NON_AMBIGUOUS_INPUT_PATTERNS, \
+    DATASET_PATTERN_RELAXED
 
 
 def identify_apparent_query_patterns(uinput):
@@ -29,16 +30,27 @@ def identify_apparent_query_patterns(uinput):
 
         >>> identify_apparent_query_patterns('/store/mc/Summer11.root')
         'file=/store/mc/Summer11.root'
+
+    More ambiguous but still unique use-cases:
+    .. doctest::
+        >>> identify_apparent_query_patterns('/TT*StoreResults*')
+        'dataset=/TT*StoreResults*'
     """
+    uinput = uinput.strip()
+
     # only rewrite the value expressions of 1 token
     if len(uinput.split(' ')) > 1 or '=' in uinput:
         return uinput
+
     matches = [daskey for daskey, pattern in NON_AMBIGUOUS_INPUT_PATTERNS
                if pattern.match(uinput)]
     if len(matches) == 1:
         return '{}={}'.format(matches[0], uinput)
-    else:
-        print matches
+    elif len(matches) == 0:
+        # on no matches, try slightly more ambiguous dataset pattern:
+        # starts with slash,  contains no  #, and not ending with '.root'
+        if DATASET_PATTERN_RELAXED.match(uinput):
+            return 'dataset={}'.format(uinput)
     return uinput
 
 

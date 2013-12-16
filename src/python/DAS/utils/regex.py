@@ -134,3 +134,6 @@ NON_AMBIGUOUS_INPUT_PATTERNS = [
         ('release', r'^CMSSW_'),
         ('site', r'^T[0-3]_')]
 ]
+
+# slash followed by not # and not '.root'
+DATASET_PATTERN_RELAXED = re.compile(r'^/[^#]+(?<!\.root)$')
