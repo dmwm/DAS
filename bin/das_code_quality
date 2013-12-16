@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 if [ "$#" -gt 2 ]; then
     echo "Usage: das_code_quality.sh <optional threashold up to 10> <stop at first failure, true or false>"
@@ -23,6 +23,10 @@ dasroot=`python -c "import DAS; print '/'.join(DAS.__file__.split('/')[:-1])"`
 echo "Run pylint with $thr/10 threashold level, exit immediate=$immediate"
 echo
 
+RED=$(tput setaf 1)
+GREEN=$(tput setaf 2)
+NO_COLOUR=$(tput sgr0)
+
 files=`find $dasroot -name "*.py" | grep -v ipy_profile_mongo | grep -v sample_config | grep -v parsetab.py`
 fail_files=0
 for f in $files
@@ -43,18 +47,18 @@ do
     out=`pylint $f | grep "Your code"`
     msg=`echo $out | grep -v "No config" | awk '{split($0,a,"at "); split(a[2],b,"/"); split(b[1],c,".");if(c[1]<THR) print "FAIL, score "b[1]"/10"; else print "PASS"}' THR=$thr`
     if  [ "$msg" != "PASS" ] && [ "$immediate" == "true" ]; then
-        echo "--- $msg"
+        echo "${RED}--- $msg${NO_COLOUR}"
         exit 1
     fi
     if [ "$msg" == "PASS" ]; then
-        echo "+++ PASS"
+        echo "${GREEN}+++ PASS${NO_COLOUR}"
     else
-        echo "--- $msg"
+        echo "${RED}--- $msg${NO_COLOUR}"
         fail_files=$(($fail_files+1))
     fi
 done
 
 if [ $fail_files != 0 ]; then
-    echo "===== Total number of failures ====="
-    echo "FAIL $fail_files times"
+    echo "$RED===== Total number of failures ====={NO_COLOUR}"
+    echo "$REDFAIL $fail_files times{NO_COLOUR}"
 fi
