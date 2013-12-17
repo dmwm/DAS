@@ -3,9 +3,11 @@
 The file stores Keyword Search specific constants
 which do not have to be changed often.
 """
-DEBUG = False
 # important debug, generating minimal output
 MINIMAL_DEBUG = 0
+# print very detailed debug info
+DEBUG = False
+
 USEFUL_STOPWORDS = ['where', 'when', 'who']
 USE_LOG_PROBABILITIES = True
 USE_IR_SCORE_SMOOTHING = False

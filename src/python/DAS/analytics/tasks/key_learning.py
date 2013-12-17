@@ -11,6 +11,8 @@ from pprint import pprint
 
 
 _DEBUG = False
+
+
 class key_learning(object):
     """
     This is the asynchronous part of the key-learning system, intended
@@ -27,33 +29,33 @@ class key_learning(object):
     names they contained, which are then injected into the DAS keylearning
     system.
     """
-    task_options = [{'name':'redundancy', 'type':'int', 'default':2,
-                     'help':'Number of records to examine per DAS primary key'}]
+    task_options = [
+        {'name': 'redundancy',
+         'type': 'int',
+         'default': 2,
+         'help': 'Number of records to examine per DAS primary key'}]
+
     def __init__(self, **kwargs):
         self.logger = PrintManager('KeyLearning', kwargs.get('verbose', 0))
         self.das = kwargs['DAS']
         self.redundancy = kwargs.get('redundancy', 10)
 
     def __call__(self):
-        "__call__ implementation"
+        """__call__ implementation"""
         self.das.rawcache.clean_cache("cache")
-
+        rawcache = self.das.rawcache.col
         autodeque = lambda: collections.deque(maxlen=self.redundancy)
         found_ids = collections.defaultdict(autodeque)
 
         self.logger.info("finding das_ids")
-        for doc in self.das.rawcache.col.find({
-                                    'das.record': record_codes('data_record'),
-                                    'das.primary_key': {'$exists': True}},
-                                fields=['das.primary_key', 'das_id']):
-
+        for doc in rawcache.find({'das.record': record_codes('data_record'),
+                                  'das.primary_key': {'$exists': True}},
+                                 fields=['das.primary_key', 'das_id']):
             for das_id in doc['das_id']:
                 found_ids[doc['das']['primary_key']].append(das_id)
 
         hit_ids = set()
-
         self.logger.info("found %s primary_keys" % len(found_ids))
-
         for key in found_ids:
             self.logger.info("primary_key=%s" % key)
             for das_id in found_ids[key]:
@@ -66,18 +68,13 @@ class key_learning(object):
                 if not das_id in hit_ids:
                     self.logger.info("das_id=%s" % das_id)
                     hit_ids.add(das_id)
-                    doc = self.das.rawcache.col.find_one(\
-                        {'_id': ObjectId(das_id)})
+                    doc = rawcache.find_one({'_id': ObjectId(das_id)})
                     if doc:
                         self.process_query_record(doc)
                     else:
-                        self.logger.warning(\
-                        "no record found for das_id=%s" % das_id)
-
+                        self.logger.warning("no record for das_id=%s" % das_id)
 
         if _DEBUG:
-            #from pprint import pprint
-            print 'keylearning collection:', self.das.keylearning.col
             print 'result attributes (all):'
             for row in self.das.keylearning.list_members():
                 pprint(row)
@@ -104,48 +101,43 @@ class key_learning(object):
             print 'result count=', result.count(), '~= systems=', len(systems)
             print 'len(systems)=', len(systems), '~= len(urns)', len(urns)
 
-        #from pprint import pprint
-
         if _DEBUG:
             print 'doc:'
             pprint(doc)
-#            result_count = result.count()
             result = [r for r in result]
             print 'results in doc:'
             pprint(result)
             print '-----------------------------------'
 
         # TODO: it seems these conditions are non-sense!!!
-        if len(systems)==len(urns) and len(systems)==1:
+        if len(systems) == len(urns) and len(systems) == 1:
             for _, record in enumerate(result):
                 self.process_document(systems[0], urns[0], record)
-
         else:
             self.logger.warning("got inconsistent system/urn/das_id length")
 
-
     def process_document(self, system, urn, doc):
         """
-        Process a rawcache document record, finding all the unique
-        data members and inserting them into the cache.
+        Process a rawcache document record coming from one API of a service.
+        Find all the unique output fields and insert them into the cache.
         """
-
         self.logger.info("%s::%s" % (system, urn))
         members = set()
         for key in doc.keys():
-            if not key in ('das', '_id', 'das_id'):
-                members |= self._process_document_recursor(doc[key], key)
+            if key not in ('das', '_id', 'das_id'):
+                members |= self.recursive_walk(doc[key], key)
 
         if _DEBUG:
             print 'process_document(): das.keylearning.add_members(system=', \
-            system, ', urn=', urn , 'members:', list(members)
+                system, ', urn=', urn, 'members:', list(members)
         self.das.keylearning.add_members(system, urn, list(members))
 
-    def _process_document_recursor(self, doc, prefix):
+    @classmethod
+    def recursive_walk(cls, doc, prefix):
         """
         Recurse through a nested data structure, finding all
         the unique endpoint names. Lists are iterated over but do
-        not add anything to the prefix, eg
+        not add anything to the prefix, eg.:
 
         a: {b: 1, c: {d: 1, e: 1}, f: [{g: 1}, {h: 1}]} ->
         a.b, a.c.d, a.c.e, a.f.g, a.f.h
@@ -156,11 +148,15 @@ class key_learning(object):
         result = set()
         if isinstance(doc, dict):
             for key in doc.keys():
-                result |= self._process_document_recursor(doc[key],
-                                                          prefix+'.'+key)
+                result |= cls.recursive_walk(doc[key], prefix + '.' + key)
         elif isinstance(doc, list):
             for item in doc:
-                result |= self._process_document_recursor(item, prefix)
+                result |= cls.recursive_walk(item, prefix)
         else:
             result.add(prefix)
         return result
+
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod()

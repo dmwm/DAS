@@ -122,6 +122,8 @@ class KeywordSearch(object):
             print '============= Q: %s, tokens: %s ' % (query, str(tokens))
             print '============= Schema mappings =========='
             pprint.pprint(schema_ws)
+            print '------ chunks ---'
+            pprint.pprint(chunks)
             print '=============== Values mappings ============'
             pprint.pprint(values_ws)
 

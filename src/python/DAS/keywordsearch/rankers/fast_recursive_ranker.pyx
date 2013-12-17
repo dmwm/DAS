@@ -257,35 +257,37 @@ cdef  bint are_wildcards_allowed(str entity,  set wildcards, set params):
         """
         # TODO: shall we allow params not defined in the rules?
         cdef bint ok = True
+        if not wildcards or not entity:
+            return True
 
         # TODO: how to compare cset's?
-        if wildcards and entity:
-            if entity == 'dataset.name' and wildcards == set(['dataset.name',]):
-                pass
-            elif entity == 'file.name' and wildcards == set(['file.name',]) and \
-                    ('dataset.name' in params or 'block.name' in params):
-                pass
-            elif entity == 'file.name' and wildcards == set(['site.name',]) and \
-                    ('dataset.name' in params or 'block.name' in params):
-                pass
-            elif entity == 'site.name' and wildcards == set(['site.name',]):
-                pass
-            elif entity == 'dataset.name' and wildcards == set(['site.name',]):
-                pass
-            elif entity == 'dataset.name' and wildcards == set(['dataset.name', 'site.name']):
-                pass
-            elif entity == 'dataset.name' and wildcards <= set (['dataset.name', 'release.name']):
-                pass
-            # these are supported (probably) because of DAS-wrapper
-            elif entity == 'file.name' and (
-                    wildcards == set(['site.name', 'dataset.name']) or
-                    wildcards == set(['site.name', 'block.name']) or
-                    wildcards == set(['dataset.name']) or
-                    wildcards == set(['block.name'])
-                    ):
-                pass
-            else:
-                ok = False
+
+        if entity == 'dataset' and wildcards == set(['dataset.name',]):
+            pass
+        elif entity == 'file' and wildcards == set(['file.name',]) and \
+                ('dataset.name' in params or 'block.name' in params):
+            pass
+        elif entity == 'file' and wildcards == set(['site.name',]) and \
+                ('dataset.name' in params or 'block.name' in params):
+            pass
+        elif entity == 'site' and wildcards == set(['site.name',]):
+            pass
+        elif entity == 'dataset' and wildcards == set(['site.name',]):
+            pass
+        elif entity == 'dataset' and wildcards == set(['dataset.name', 'site.name']):
+            pass
+        elif entity == 'dataset' and wildcards <= set (['dataset.name', 'release.name']):
+            pass
+        # these are supported (probably) because of DAS-wrapper
+        elif entity == 'file' and (
+                wildcards == set(['site.name', 'dataset.name']) or
+                wildcards == set(['site.name', 'block.name']) or
+                wildcards == set(['dataset.name']) or
+                wildcards == set(['block.name'])
+                ):
+            pass
+        else:
+            ok = False
         return ok
 
 
@@ -300,16 +302,16 @@ cdef bint validate_input_params_das_cpy(set params, str entity, bint final_step,
 
     # check if wildcards are allowed
     # TODO: this is just a quick hack to use lookup instead of PK
+    # TODO: now entity is a lookup? but not always as matching returns PK ...
     lookup = entity and entity.split('.')[0]
     #cdef char*
-    long_entity = lookup and lookup.split(',')[0] + '.name'
+    #long_entity = lookup and lookup.split(',')[0] + '.name'
     if final_step and wildcards and \
-            not are_wildcards_allowed(long_entity, wildcards, params):
+            not are_wildcards_allowed(lookup, wildcards, params):
         return False
 
     # given input parameters mapping (from keywords to input parameters)
     # there must exist an API, covering these input params
-
     cdef ApiParamDefinition api_item
     for api_item in api_definitions:
         if params.issubset(api_item.api_params_set) and \

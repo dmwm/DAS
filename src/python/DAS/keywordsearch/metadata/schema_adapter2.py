@@ -67,9 +67,9 @@ class DasSchemaAdapter(object):
             for regexp, apis in regexps]
 
         self._lookup_keys |= set(self.entity_names.values())
-        self._result_fields_by_entity = get_outputs_field_list(dascore)
+        self._fields_dict = get_outputs_field_list(dascore)
 
-        if DEBUG:
+        if DEBUG or True:
             self.print_debug()
 
     @property
@@ -116,7 +116,8 @@ class DasSchemaAdapter(object):
         entity_long = mappings.primary_mapkey(sys, api)
         entity_short = mappings.primary_key(sys, api)
         api_info = mappings.api_info(sys, api)
-        lookup_key = api_info['lookup']
+        # ensure lookup is in unique order
+        lookup_key = ','.join(sorted(api_info['lookup'].split(',')))
         if ',' in lookup_key:
             self._lookup_keys |= set([lookup_key, ])
             if DEBUG:
@@ -232,7 +233,7 @@ class DasSchemaAdapter(object):
         if not '.' in fieldname:
             return None
         entity, _ = fieldname.split('.', 1)  # i.e. maxsplit=1
-        fields = self._result_fields_by_entity.get(entity, {})
+        fields = self._fields_dict.get(entity, {})
         r = fields.get(fieldname)
         if r:
             return entity, r
@@ -241,11 +242,11 @@ class DasSchemaAdapter(object):
         """
         lists attributes available in all service outputs (aggregated)
         """
-        return self._result_fields_by_entity
+        return self._fields_dict
 
     def get_field_list_for_entity_by_pk(self, result_entity, pk):
-        if self._result_fields_by_entity:
-            return self._result_fields_by_entity[result_entity]
+        if self._fields_dict:
+            return self._fields_dict[result_entity]
 
     @classmethod
     def are_wildcards_allowed(cls, entity,  wildcards, params):
@@ -317,7 +318,6 @@ class DasSchemaAdapter(object):
                         if params.issuperset(api.req_params))
 
         to_match = covered_apis if final_step else fitting_apis
-
         return next(to_match, False)
 
     def get_api_param_definitions(self):
@@ -384,7 +384,7 @@ class DasSchemaAdapter(object):
         """
         returns name (and optionally title) of output field
         """
-        entity_fields = self._result_fields_by_entity[result_entity]
+        entity_fields = self._fields_dict[result_entity]
         title = entity_fields.get(field, {'title': ''})['title']
 
         if technical:
@@ -418,6 +418,13 @@ class DasSchemaAdapter(object):
         pprint.pprint(self.entity_names)
         print 'search_field_names'
         pprint.pprint(self._lookup_keys)
+        #print 'ENTITY FIELDS (BY LOOKUP):'
+        #pprint.pprint(dict(self._fields_dict))
+        print 'ENTITY FIELDS (BY LOOKUP MULTI ENTITY):'
+        pprint.pprint(["{}: {}".format(lookup,
+                                       self._fields_dict[lookup].keys())
+                      for lookup in self._fields_dict.keys()
+                      if ',' in lookup])
 
 
 if __name__ == '__main__':
@@ -463,8 +470,14 @@ if __name__ == '__main__':
             entity='file.name', final_step=True,
             wildcards=None)
 
-    from DAS.keywordsearch.rankers.fast_recursive_ranker \
-        import is_valid_result_py
+    from DAS.extensions.fast_recursive_ranker import is_valid_result_py
+
+    print 'trying to validate Q (pyx): file dataset=/HT/Run2011B-v1/RAW ' \
+          'run=176304 lumi=80 &&: ', \
+        is_valid_result_py(
+            set(['dataset.name', 'run.run_number', 'lumi.number']),
+            'file', final_step=True, wildcards=None)
+
 
     print 'trying to validate Q (pyx): file dataset=/HT/Run2011B-v1/RAW ' \
           'run=176304 lumi=80 &&: ', \
