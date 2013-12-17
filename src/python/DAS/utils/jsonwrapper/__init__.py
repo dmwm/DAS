@@ -7,19 +7,34 @@ We use simplejson (json), cjson and yajl JSON implementation.
 
 NOTE: different JSON implementation handle floats in different way
 Here are few examples
+
+
+..doctest::
+
     r1={"ts":time.time()}
     print r1
     {'ts': 1374255843.891289}
 
 Python json:
+
+..doctest::
+
     print json.dumps(r1), json.loads(json.dumps(r1))
     {"ts": 1374255843.891289} {u'ts': 1374255843.891289}
+
 CJSON:
+
+..doctest::
     print cjson.encode(r1), cjson.decode(cjson.encode(r1))
     {"ts": 1374255843.89} {'ts': 1374255843.89}
+
 YAJL:
+
+..doctest::
+
     print yajl.dumps(r1), yajl.loads(yajl.dumps(r1))
     {"ts":1.37426e+09} {u'ts': 1374260000.0}
+
 Therefore when records contains timestamp it is ADVISED to round it to integer.
 Then json/cjson implementations will agreee on input/output, while yajl will
 still differ (for that reason we can't use yajl).
