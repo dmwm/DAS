@@ -1,4 +1,7 @@
-__author__ = 'vidma'
+# coding=utf-8
+"""
+Exceptions raised in ranker
+"""
 
 
 class TimeLimitExceeded(Exception):
@@ -7,4 +10,3 @@ class TimeLimitExceeded(Exception):
     """
     def __init__(self, *args, **kwargs):
         super(TimeLimitExceeded, self).__init__(*args, **kwargs)
-
