@@ -1,13 +1,23 @@
 #!/bin/bash
 
 # find out where DAS is installed on a system
-dasroot=`python -c "import DAS; print '/'.join(DAS.__file__.split('/')[:-1])"`
+daspython=`env | grep PYTHONPATH | grep DAS`
+if [ -n "$daspython" ]; then
+    dasroot=`python -c "import DAS; print '/'.join(DAS.__file__.split('/')[:-1])"`
+else
+    dasroot=$PWD
+fi
 
 # define location of DAS maps
 if [ -n "$1" ]; then
     das_map_dir=$1
 else
     das_map_dir="$dasroot/services/cms_maps/"
+fi
+# check that we're able to locate das map dir
+if [ -z "$das_map_dir" ]; then
+    echo "Unable to locate $das_map_dir"
+    exit 1
 fi
 echo "DAS YML: $das_map_dir"
 
