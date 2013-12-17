@@ -69,7 +69,7 @@ class DasSchemaAdapter(object):
         self._lookup_keys |= set(self.entity_names.values())
         self._fields_dict = get_outputs_field_list(dascore)
 
-        if DEBUG or True:
+        if DEBUG:
             self.print_debug()
 
     @property
