@@ -7,6 +7,11 @@ if [ -n "$daspython" ]; then
 else
     dasroot=$PWD
 fi
+# check that we're able to locate das tools
+if [ ! -f "$dasroot/tools/das_drop_maps.py" ]; then
+    echo "Unable to locate $dasroot/tools/das_drop_maps.py"
+    exit 1
+fi
 
 # define location of DAS maps
 if [ -n "$1" ]; then
