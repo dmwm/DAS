@@ -7,7 +7,7 @@ This release series is targeted to DAS production stability and quality.
 
 - 2.4.X
 
-  - Fixed issues: 4090, 4095, 4093, 4089, 4085, 4082, 4081, 4079, 4077
+  - Fixed issues: 4098, 4097, 4090, 4095, 4093, 4089, 4085, 4082, 4081, 4079, 4077
   - Re-factor code to use individual DB connections instead of sharing one in
     various places. This work address DAS instability issue reported in #4024.
   - Add cookie support in DAS client
