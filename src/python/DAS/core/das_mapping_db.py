@@ -88,7 +88,7 @@ def db_monitor(uri, func, sleep, reload_map, reload_time,
         conn = db_connection(uri)
         if not conn or not is_db_alive(uri):
             try:
-                conn = db_connection(uri)
+                conn = db_connection(uri, verbose=False)
                 func()
                 if  conn:
                     print "### db_monitor re-established connection %s" % conn
