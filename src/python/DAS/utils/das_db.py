@@ -100,7 +100,7 @@ class DBConnection(object):
 
 DB_CONN_SINGLETON = DBConnection()
 
-def db_connection(uri):
+def db_connection(uri, verbose=True):
     """Return DB connection instance"""
     dbinst = None
     # loop several times to acquire DB connection
@@ -109,8 +109,9 @@ def db_connection(uri):
             #dbinst, _ = DB_CONN_SINGLETON.connection(uri)
             dbinst, _ = DBConnection().connection(uri)
         except Exception as exc:
-            msg = 'Fail to get connection to MongoDB: %s' % str(exc)
-            print msg
+            if  verbose:
+                msg = 'Fail to get connection to MongoDB: %s' % str(exc)
+                print msg
             pass
         if  dbinst:
             break
