@@ -8,6 +8,7 @@ import contextlib
 import sys
 import cStringIO
 import time
+from DAS.keywordsearch.whoosh import ir_entity_attributes
 
 
 @contextlib.contextmanager
@@ -106,7 +107,6 @@ def is_bootstrap_needed():
         from DAS.keywordsearch.metadata.input_values_tracker \
             import need_value_bootstrap
         from DAS.keywordsearch.metadata import schema_adapter_factory
-        from DAS.keywordsearch.whoosh import ir_entity_attributes
 
         def need_res_fields_bootsrap():
             """ return whether the list of of entity attributes is available
@@ -115,11 +115,10 @@ def is_bootstrap_needed():
             dascore = DASCore(multitask=False)
             schema_adapter = schema_adapter_factory.get_schema(dascore)
             try:
-                outputs_fields = schema_adapter.list_result_fields()
-                if not outputs_fields:
+                field_list = schema_adapter.list_result_fields()
+                if not field_list:
                     return True
-                ir_entity_attributes.build_index(outputs_fields)
-                ir_entity_attributes.load_index()
+                ir_entity_attributes.SimpleIREntityAttributeMatcher(field_list)
             except Exception as exc:
                 print exc
                 return True
@@ -132,4 +131,3 @@ def is_bootstrap_needed():
 if __name__ == '__main__':
     is_bootstrap_needed()
     waitfordb(120)
-
