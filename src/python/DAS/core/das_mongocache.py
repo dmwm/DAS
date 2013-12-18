@@ -32,7 +32,7 @@ from DAS.utils.utils import aggregator, unique_filter
 from DAS.utils.utils import adjust_mongo_keyvalue, print_exc, das_diff
 from DAS.utils.utils import parse_filters, expire_timestamp
 from DAS.utils.utils import dastimestamp, record_codes
-from DAS.utils.das_db import db_connection, db_monitor, find_one
+from DAS.utils.das_db import db_connection, find_one
 from DAS.utils.das_db import db_gridfs, parse2gridfs, create_indexes
 from DAS.utils.logger import PrintManager
 from DAS.utils.thread import start_new_thread
