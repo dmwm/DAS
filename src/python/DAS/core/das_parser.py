@@ -113,6 +113,7 @@ class QLManager(object):
         """
         Return mongo query for provided input query
         """
+        mongo_query = None
         if  self.verbose:
             msg = "input query='%s'" % query
             self.logger.debug(msg)
@@ -140,7 +141,8 @@ class QLManager(object):
                     try:
                         self.parserdb.insert_valid_query(query, mongo_query)
                     except Exception as exc:
-                        msg = "Fail to insert into parserdb"
+                        msg = "Fail to insert into parserdb, exception=%s" \
+                                % str(exc)
                         print_exc(msg, print_traceback=True)
         if  parse_again:
             try:
