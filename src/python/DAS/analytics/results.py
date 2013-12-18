@@ -4,16 +4,14 @@ DAS analytics results module
 
 # system modules
 import re
-import thread
 import logging
 
 # DAS modules
 from pymongo import DESCENDING
 from pymongo.errors import InvalidName
 from bson.errors import InvalidDocument, InvalidStringData
-from DAS.utils.das_db import db_connection, is_db_alive, db_monitor
+from DAS.utils.das_db import db_connection
 from DAS.analytics.config import DASAnalyticsConfig
-from DAS.utils.thread import start_new_thread
 
 DASAnalyticsConfig.add_option("db_uri", type=basestring,
       default="mongodb://localhost:27017/",
@@ -37,19 +35,20 @@ class ResultManager(logging.Handler):
 
     def __init__(self, config):
         logging.Handler.__init__(self, logging.NOTSET)
-        #flag to terminate the clean-up thread
         self.logger = logging.getLogger("DASAnalytics.ResultManager")
         self.dburi  = config.db_uri
         self.dbname = config.db_name
         self.dbcoll = config.db_coll
         self.dbsize = config.db_size
-
-        self.col = None #collection
-
-        # Monitoring thread which performs MongoDB connection
         self.init()
-        thname = 'analytics_results'
-        start_new_thread(thname, db_monitor, (self.dburi, self.init, 5))
+
+    @property
+    def col(self):
+        "Return MongoDB collection object"
+        conn = db_connection(self.dburi)
+        dbc  = conn[self.dbname]
+        col  = dbc[self.dbcoll]
+        return col
 
     def init(self):
         "Initialize connection to MongoDB"
@@ -59,10 +58,6 @@ class ResultManager(logging.Handler):
             if  self.dbcoll not in database.collection_names():
                 database.create_collection(self.dbcoll, \
                             capped=True, size=self.dbsize)
-            self.col = database[self.dbcoll]
-        if  not is_db_alive(self.dburi):
-            self.col = None
-            return
 
     def emit(self, record):
         "Logging Handler method to receive messages"
