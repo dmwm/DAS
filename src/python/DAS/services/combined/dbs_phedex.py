@@ -7,7 +7,6 @@ DAS DBS/Phedex combined service to fetch dataset/site information.
 # system modules
 import re
 import time
-import thread
 import cherrypy
 
 # pymongo modules
@@ -16,8 +15,8 @@ from   pymongo.errors import AutoReconnect, ConnectionFailure
 from   bson.code import Code
 
 # DAS modules
-from   DAS.utils.das_db import db_connection, create_indexes, db_monitor
-from   DAS.utils import find_one
+from   DAS.utils.das_db import db_connection, create_indexes
+from   DAS.utils.das_db import find_one
 from   DAS.utils.url_utils import getdata
 from   DAS.utils.urlfetch_pycurl import getdata as urlfetch_getdata
 from   DAS.web.tools import exposejson
@@ -308,19 +307,20 @@ class DBSPhedexService(object):
         self.uri        = self.dasconfig['mongodb']['dburi']
         self.urls       = None # defined at run-time via self.init()
         self.expire     = 60   # defined at run-time via self.init()
-        self.coll       = None # defined at run-time via self.init()
-        self.worker_thr = None # defined at run-time via self.init()
+        self.wthr       = None # defined at run-time via
         self.init()
 
-        # Monitoring thread which performs auto-reconnection
-        name = 'dbs_phedex_monitor'
-        start_new_thread(name, db_monitor, (self.uri, self.init, 5))
+    @property
+    def coll(self):
+        "Return MongoDB collection object"
+        conn = db_connection(self.uri)
+        dbc  = conn[self.dbname]
+        col  = dbc[self.collname]
+        return col
 
     def init(self):
         """Takes care of MongoDB connection"""
         try:
-            conn = db_connection(self.uri)
-            self.coll = conn[self.dbname][self.collname]
             indexes = [('dataset', DESCENDING), ('site', DESCENDING),
                        ('ts', DESCENDING)]
             for index in indexes:
@@ -333,11 +333,11 @@ class DBSPhedexService(object):
             self.expire  = mapping[service_api]['expire']
             services     = self.dasconfig['services']
             which_dbs    = [d for d in services if d.find('dbs') != -1][0]
-            if  not self.worker_thr:
+            if  not self.wthr:
                 # Worker thread which update dbs/phedex DB
-                self.worker_thr = start_new_thread('dbs_phedex_worker', worker, \
-                (self.urls, which_dbs,
-                    self.uri, self.dbname, self.collname, self.expire))
+                self.wthr = start_new_thread('dbs_phedex_worker', worker, \
+                     (self.urls, which_dbs, self.uri, \
+                     self.dbname, self.collname, self.expire))
             msg = "### DBSPhedexService:init started with %s service" \
                     % which_dbs
             print msg
@@ -345,8 +345,7 @@ class DBSPhedexService(object):
             print "### Fail DBSPhedexService:init\n", str(exc)
             self.urls       = None
             self.expire     = 60
-            self.coll       = None
-            self.worker_thr = None
+            self.wthr       = None
 
     def isexpired(self):
         """
@@ -396,8 +395,10 @@ def test():
     cherrypy.quickstart(DBSPhedexService({}), '/')
 
 def test_dbs(which_dbs):
+    """Test function for DBS"""
     urls = {
-        "dbs": "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet",
+        "dbs": \
+        "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet",
         "dbs3": "https://cmsweb.cern.ch/dbs/prod/global/DBSReader",
         "phedex": "https://cmsweb.cern.ch/phedex/datasvc/json/prod",
         "conddb": "https://cms-conddb.cern.ch",

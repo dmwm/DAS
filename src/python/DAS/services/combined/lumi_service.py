@@ -11,9 +11,7 @@ import cherrypy
 # DAS modules
 from   DAS.utils.url_utils import getdata_urllib as getdata
 from   DAS.web.tools import exposejson
-from   DAS.utils.das_db import db_monitor
 from   DAS.utils.utils import qlxml_parser, convert2ranges
-from   DAS.utils.thread import start_new_thread
 from   DAS.utils.utils import get_key_cert
 from   DAS.core.das_mapping_db import DASMapping
 from   DAS.utils.das_config import das_readconfig
@@ -79,13 +77,8 @@ class LumiService(object):
         self.uri       = self.dasconfig['mongodb']['dburi']
         self.urls      = None # defined at run-time via self.init()
         self.expire    = None # defined at run-time via self.init()
-        self.coll      = None # defined at run-time via self.init()
         self.ckey, self.cert = get_key_cert()
         self.init()
-
-        # Monitoring thread which performs auto-reconnection
-        thname = 'lumi_service'
-        start_new_thread(thname, db_monitor, (self.uri, self.init, 5))
 
     def init(self):
         "Takes care of MongoDB connection since DASMapping requires it"
@@ -95,7 +88,8 @@ class LumiService(object):
             self.urls   = mapping[self.service_api]['services']
             self.expire = mapping[self.service_api]['expire']
         except Exception, _exp:
-            self.coll = None
+            pass
+
     @cherrypy.expose
     def index(self):
         "Default path"
@@ -112,7 +106,7 @@ class LumiService(object):
         data = {'lumi' : {'integrated': int_lumi, 'runlumis': res},
                 'dataset': {'name': dataset}}
         return data
-        
+
 def test():
     """Test main function"""
     config = {'name': 'combined', 'api': 'combined_lumi4dataset'}
