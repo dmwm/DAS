@@ -42,14 +42,15 @@ def dasheader(system, dasquery, expire, api=None, url=None, ctime=None,
         services=None):
     """
     Return DAS header (dict) wrt DAS specifications:
-    - system represents DAS services, e.g. combined
-    - dasquery is DASQuery representation
-    - expire is expire timestamp of the record
-    - api is data-service API name
-    - url is data-service URL
-    - ctime is current timestamp
-    - services is a dict (or list of dicts) of CMS services contributed
-      to data record, e.g. combined service uses dbs and phedex
+
+         - system represents DAS services, e.g. combined
+         - dasquery is DASQuery representation
+         - expire is expire timestamp of the record
+         - api is data-service API name
+         - url is data-service URL
+         - ctime is current timestamp
+         - services is a dict (or list of dicts) of CMS services contributed
+           to data record, e.g. combined service uses dbs and phedex
     """
     # tstamp must be integer in order for json encoder/decoder to
     # work properly, see utils/jsonwrapper/__init__.py
