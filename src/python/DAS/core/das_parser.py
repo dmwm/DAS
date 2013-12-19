@@ -20,6 +20,7 @@ from DAS.utils.regex import last_key_pattern
 from DAS.utils.logger import PrintManager
 from DAS.core.das_parsercache import DASParserDB
 from DAS.core.das_parsercache import PARSERCACHE_VALID, PARSERCACHE_INVALID
+from DAS.utils.spawn_manager import spawn
 
 def decompose(query):
     """Extract selection keys and conditions from input query"""
@@ -98,16 +99,19 @@ class QLManager(object):
         Get ply object for given query. Since we rely on PLY package and it may
         fail under the load we use couple of trials.
         """
-        for trial in xrange(1, 3):
-            try:
-                ply_query = self.dasply.parser.parse(query)
-                return ply_query
-            except Exception as exc:
-                msg = "Fail to parse query=%s, trial=%s, exception=%s" \
-                        % (query, trial, str(exc))
-                print dastimestamp('DAS WARNING ') + ' ' + msg
-            time.sleep(trial/10.)
-        return None
+        ply_query = spawn(self.dasply.parser.parse, query)
+        return ply_query
+
+#        for trial in xrange(1, 3):
+#            try:
+#                ply_query = self.dasply.parser.parse(query)
+#                return ply_query
+#            except Exception as exc:
+#                msg = "Fail to parse query=%s, trial=%s, exception=%s" \
+#                        % (query, trial, str(exc))
+#                print dastimestamp('DAS WARNING ') + ' ' + msg
+#            time.sleep(trial/10.)
+#        return None
 
     def mongo_query(self, query):
         """
