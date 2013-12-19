@@ -299,6 +299,12 @@ class DASCore(object):
         if  not services:
             services = dasquery.params()['services']
         self.logger.info('Potential services = %s' % services)
+        if  not services:
+            msg  = 'No data-services for query %s' % dasquery
+            msg += 'mongo_query: %s' % dasquery.mongo_query
+            msg += 'params: %s' % dasquery.params()
+            print dastimestamp('DAS WARNING '), msg
+
         # get list of URI which can answer this query
         ack_services = []
         if  services:
