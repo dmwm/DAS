@@ -25,6 +25,8 @@ config
 das_usage.py
 src/python/parser/parsetab.py
 MANIFEST
+das_maps.js
+das_testbed_maps.js
 *.bak
 *.aux
 *.dvi
