@@ -54,19 +54,19 @@ def ply_parse_query(query, keys, services, pdir='/tmp', verbose=False):
     """Get ply object for given query."""
     dasply = DASPLY(pdir, keys, services, verbose)
     dasply.build()
-    ply_query = dasply.parser.parse(query)
+#    ply_query = dasply.parser.parse(query)
 #    ply_query = spawn(dasply.parser.parse, query)
-    return ply_query
-#    for trial in xrange(1, 3):
-#        try:
-#            ply_query = dasply.parser.parse(query)
-#            return ply_query
-#        except Exception as exc:
-#            msg = "Fail to parse query=%s, trial=%s, exception=%s" \
-#                    % (query, trial, str(exc))
-#            print dastimestamp('DAS WARNING ') + ' ' + msg
-#        time.sleep(trial/10.)
-#    return None
+#    return ply_query
+    for trial in xrange(1, 3):
+        try:
+            ply_query = dasply.parser.parse(query)
+            return ply_query
+        except Exception as exc:
+            msg = "Fail to parse query=%s, trial=%s, exception=%s" \
+                    % (query, trial, str(exc))
+            print dastimestamp('DAS WARNING ') + ' ' + msg
+        time.sleep(trial/10.)
+    return None
 
 
 def ply_output(query, keys, services, pdir='/tmp', verbose=False):
