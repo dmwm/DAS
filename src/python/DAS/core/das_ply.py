@@ -226,7 +226,7 @@ class DASPLY(object):
         pos  = self.lexer.lexpos-1
         pad  = ' '*pos
         msg  = "DASPLY lexer error, position=%s:\n" % pos
-        msg += self.lexer.lexdata + '\n'
+        msg += str(self.lexer.lexdata) + '\n'
         msg += pad + '^\n'
         msg += err + '\n'
         return msg
