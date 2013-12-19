@@ -521,11 +521,11 @@ class DASWebService(DASWebManager):
             return 1, error_msg(str(err), tmpl='das_wildcard_err',
                                 suggest=err.options.values)
         except WildcardMatchingException as err:
-            das_parser_error(uinput, str(type(err)))
+            das_parser_error(uinput, str(type(err)) + ' ' + str(err))
             return 1, error_msg(str(err))
         except Exception as err:
             # for non Wildcard parsing errors, show the Keyword Search
-            das_parser_error(uinput, str(type(err)))
+            das_parser_error(uinput, str(type(err)) + ' ' + str(err))
             return 1, error_msg(str(err), show_kws=self.is_kws_enabled())
 
         # DAS query validation
