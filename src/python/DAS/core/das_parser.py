@@ -20,7 +20,7 @@ from DAS.utils.regex import last_key_pattern
 from DAS.utils.logger import PrintManager
 from DAS.core.das_parsercache import DASParserDB
 from DAS.core.das_parsercache import PARSERCACHE_VALID, PARSERCACHE_INVALID
-from DAS.utils.spawn_manager import spawn
+#from DAS.utils.spawn_manager import spawn
 
 def decompose(query):
     """Extract selection keys and conditions from input query"""
@@ -50,6 +50,33 @@ def ambiguos_val_msg(query, key, val):
     msg += 'query and choose either value'
     return msg
 
+def ply_parse_query(query, keys, services, pdir='/tmp', verbose=False):
+    """Get ply object for given query."""
+    dasply = DASPLY(pdir, keys, services, verbose)
+    dasply.build()
+    ply_query = dasply.parser.parse(query)
+#    ply_query = spawn(dasply.parser.parse, query)
+    return ply_query
+#    for trial in xrange(1, 3):
+#        try:
+#            ply_query = dasply.parser.parse(query)
+#            return ply_query
+#        except Exception as exc:
+#            msg = "Fail to parse query=%s, trial=%s, exception=%s" \
+#                    % (query, trial, str(exc))
+#            print dastimestamp('DAS WARNING ') + ' ' + msg
+#        time.sleep(trial/10.)
+#    return None
+
+
+def ply_output(query, keys, services, pdir='/tmp', verbose=False):
+    """Print PLY/lexer output"""
+    if  verbose:
+        dasply = DASPLY(pdir, keys, services, verbose)
+        dasply.build()
+        print "input query='%s'" % query
+        dasply.test_lexer(query)
+
 class QLManager(object):
     """
     DAS QL manager.
@@ -72,14 +99,11 @@ class QLManager(object):
             for item in val:
                 self.daskeys.append(item)
         parserdir   = config['das']['parserdir']
-        self.dasply = DASPLY(parserdir, self.daskeys, self.dasservices, 
-                verbose=self.verbose)
+        self.parserdir = parserdir
 
         self.enabledb = config['parserdb']['enable']
         if  self.enabledb:
             self.parserdb = DASParserDB(config)
-
-        self.dasply.build()
 
     def parse(self, query):
         """
@@ -99,19 +123,9 @@ class QLManager(object):
         Get ply object for given query. Since we rely on PLY package and it may
         fail under the load we use couple of trials.
         """
-        ply_query = spawn(self.dasply.parser.parse, query)
+        ply_query = ply_parse_query(query, self.daskeys, self.dasservices,
+                    self.parserdir, self.verbose)
         return ply_query
-
-#        for trial in xrange(1, 3):
-#            try:
-#                ply_query = self.dasply.parser.parse(query)
-#                return ply_query
-#            except Exception as exc:
-#                msg = "Fail to parse query=%s, trial=%s, exception=%s" \
-#                        % (query, trial, str(exc))
-#                print dastimestamp('DAS WARNING ') + ' ' + msg
-#            time.sleep(trial/10.)
-#        return None
 
     def mongo_query(self, query):
         """
@@ -119,9 +133,8 @@ class QLManager(object):
         """
         mongo_query = None
         if  self.verbose:
-            msg = "input query='%s'" % query
-            self.logger.debug(msg)
-            self.dasply.test_lexer(query)
+            ply_output(query, self.daskeys, self.dasservices,
+                    self.parserdir, self.verbose)
         parse_again = True
         if  self.enabledb:
             status, value = self.parserdb.lookup_query(query)
@@ -150,7 +163,7 @@ class QLManager(object):
                         print_exc(msg, print_traceback=True)
         if  parse_again:
             try:
-                ply_query   = self.dasply.parser.parse(query)
+                ply_query   = self.get_ply_query(query)
                 mongo_query = ply2mongo(ply_query)
             except Exception as exc:
                 msg = "Fail to parse query='%s'" % query
