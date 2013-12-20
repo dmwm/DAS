@@ -40,11 +40,6 @@ DAS logger
 .. automodule:: DAS.utils.logger
         :members:
 
-DAS mongosearch utils
----------------------
-.. automodule:: DAS.utils.mongosearch
-        :members:
-
 DAS pycurl manager
 ------------------
 .. automodule:: DAS.utils.pycurl_manager

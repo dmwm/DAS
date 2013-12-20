@@ -140,7 +140,7 @@ functionality you can follow this recipe. The code below download
 `das_client.py` directly from cmsweb site, compile it and use it in your
 application:
 
-.. code::
+.. doctest::
 
     import os
     import json

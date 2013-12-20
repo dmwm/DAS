@@ -5,9 +5,9 @@
 File       : stress_test.py
 Author     : Valentin Kuznetsov <vkuznet@gmail.com>
 Description: DAS stress test tool
-             We retrieve list of all DBS datasets and run
-             N-processes which retrieve some information
-             about those datasets, e.g. file dataset=X
+We retrieve list of all DBS datasets and run
+N-processes which retrieve some information
+about those datasets, e.g. file dataset=X
 """
 
 # system modules

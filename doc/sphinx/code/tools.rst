@@ -5,11 +5,6 @@ DAS provides a useful set of tools.
 .. toctree::
    :maxdepth: 4
 
-DAS cmssw config db module
---------------------------
-.. automodule:: DAS.tools.cmssw_config_db
-        :members:
-
 DAS config tools
 ----------------
 .. automodule:: DAS.tools.create_das_config
@@ -18,6 +13,11 @@ DAS config tools
 DAS admin tools
 ---------------
 .. automodule:: DAS.tools.das_admin
+        :members:
+
+DAS stress test module
+----------------------
+.. automodule:: DAS.tools.das_stress_test
         :members:
 
 DAS bench tools
