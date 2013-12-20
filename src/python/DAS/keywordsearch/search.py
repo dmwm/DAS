@@ -19,6 +19,8 @@ from DAS.keywordsearch.config import K_RESULTS_TO_STORE
 from DAS.keywordsearch.rankers.exceptions import TimeLimitExceeded
 from DAS.keywordsearch.whoosh.ir_entity_attributes import \
     load_index, build_index
+from DAS.keywordsearch.metadata.input_values_tracker \
+    import init_trackers as init_value_trackers
 
 
 class KeywordSearch(object):
@@ -36,6 +38,9 @@ class KeywordSearch(object):
         # build and load the whoosh index (listing fields in service outputs)
         build_index(self.schema.list_result_fields())
         load_index()
+
+        # initialize the value trackers (primary_dataset, release, etc)
+        init_value_trackers()
 
     @classmethod
     def set_dbs_inst(cls, dbs_inst):

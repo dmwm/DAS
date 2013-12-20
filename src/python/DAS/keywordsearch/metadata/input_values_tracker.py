@@ -220,7 +220,6 @@ def init_trackers():
     """ initialization """
     for provider in VALUES_PROVIDERS:
         TRACKERS[provider['field']] = InputValuesTracker(provider)
-init_trackers()
 
 
 def get_fields_tracked(only_stable=False):
@@ -318,6 +317,7 @@ def test(service):
 
 def test_all():
     """ test all providers """
+    init_trackers()
     for provider in VALUES_PROVIDERS:
         test(provider)
 

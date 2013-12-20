@@ -49,12 +49,12 @@ class DASQuery(object):
             # TODO: fuzzy matching to propose fixes?
             # This also could be done for any dataset...
             raise WildcardMatchingException(
-                    'The pattern you specified did not match ' +
-                    'any datasets in DAS cache:\n' +
-                    '%s\n' +
-                    'Check for misspellings or if you know ' +
-                    'it exists, provide it ' +
-                    'with three slashes: \n' +
+                    'The pattern you specified did not match '
+                    'any datasets in DAS cache:\n'
+                    '%s\n'
+                    'Check for misspellings or if you know '
+                    'it exists, provide it '
+                    'with three slashes: \n'
                     '/primary_dataset/processed_daset/data_tier' % val)
         elif len(dataset_matches) > 1:
             options = {}
