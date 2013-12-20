@@ -464,10 +464,23 @@ class DASMongocache(object):
             self.col.update({'query': dasquery.storage_query},
                             {'$set': info}, upsert=True)
 
+    def find_min_expire(self, dasquery):
+        """Find minimal expire timestamp across all records for given DAS query"""
+        spec   = {'qhash': dasquery.qhash}
+        expire = 2*time.time() # upper bound, will update
+        min_expire = 0
+        for rec in self.col.find(spec, exhaust=True):
+            if  'das' in rec and 'expire' in rec['das']:
+                estamp = rec['das']['expire']
+                if  estamp < expire:
+                    min_expire = estamp
+        return long(min_expire)
+
     def update_query_record(self, dasquery, status, header=None, reason=None):
         "Update DAS record for provided query"
         ctime = time.time()
         das_spec = {'qhash': dasquery.qhash, 'das.system':'das'}
+        min_expire = self.find_min_expire(dasquery)
         if  header:
             system = header['das']['system']
             sts    = header['das']['status']
@@ -490,19 +503,15 @@ class DASMongocache(object):
                          '$push': {'das.ctime':ctime}}
                 self.col.update(das_spec, udict)
         else:
-            spec   = {'qhash': dasquery.qhash}
-            expire = 2*time.time() # upper bound, will update
-            new_expire = None
-            for rec in self.col.find(spec, exhaust=True):
-                if  'das' in rec and 'expire' in rec['das']:
-                    estamp = rec['das']['expire']
-                    if  estamp < expire:
-                        new_expire = estamp
-            udict = {'$set': {'das.status':status, 'das.expire': new_expire},
+            udict = {'$set': {'das.status':status, 'das.expire': min_expire},
                      '$push': {'das.ctime':ctime}}
             self.col.update(das_spec, udict)
         if  reason:
             udict = {'$set': {'das.reason':reason}}
+            self.col.update(das_spec, udict)
+        # align all expire timestamps when we recieve ok status
+        if  status == 'ok':
+            udict = {'$set': {'das.expire': min_expire}}
             self.col.update(das_spec, udict)
 
     def apilist(self, dasquery):
