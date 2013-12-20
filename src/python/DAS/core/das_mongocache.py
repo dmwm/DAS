@@ -490,7 +490,15 @@ class DASMongocache(object):
                          '$push': {'das.ctime':ctime}}
                 self.col.update(das_spec, udict)
         else:
-            udict = {'$set': {'das.status':status},
+            spec   = {'qhash': dasquery.qhash}
+            expire = 2*time.time() # upper bound, will update
+            new_expire = None
+            for rec in self.col.find(spec, exhaust=True):
+                if  'das' in rec and 'expire' in rec['das']:
+                    estamp = rec['das']['expire']
+                    if  estamp < expire:
+                        new_expire = estamp
+            udict = {'$set': {'das.status':status, 'das.expire': new_expire},
                      '$push': {'das.ctime':ctime}}
             self.col.update(das_spec, udict)
         if  reason:
