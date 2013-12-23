@@ -309,7 +309,7 @@ class DASCore(object):
         ack_services = []
         if  services:
             for srv in services:
-                gen = getattr(getattr(self, srv), 'apimap')(dasquery)
+                gen = [t for t in getattr(getattr(self, srv), 'apimap')(dasquery)]
                 for url, api, args, iformat, expire in gen:
                     header = dasheader(srv, dasquery, expire, api, url, ctime=0)
                     self.rawcache.insert_query_record(dasquery, header)
@@ -389,10 +389,13 @@ class DASCore(object):
                 msg = 'fail to acknowledge services %s' % services
             else:
                 msg = 'unable to locate data-services to fulfill this request'
-            print dastimestamp('DAS ERROR '), dasquery, msg
-            status = 'fail'
-            update_das_query(dasquery, status, reason=msg)
-            return status
+                msg += ', will iterate over all registered services'
+            print dastimestamp('DAS WARNING '), dasquery, msg
+            services = self.systems
+#            print dastimestamp('DAS ERROR '), dasquery, msg
+#            status = 'fail'
+#            update_das_query(dasquery, status, reason=msg)
+#            return status
         self.logger.info('Acknowledged services = %s' % services)
         try:
             if  self.multitask:
