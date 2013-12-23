@@ -52,7 +52,7 @@ def ambiguos_val_msg(query, key, val):
 
 def ply_parse_query(query, keys, services, pdir='/tmp', verbose=False):
     """Get ply object for given query."""
-    dasply = DASPLY(pdir, keys, services, verbose)
+    dasply = DASPLY(pdir, keys, services, verbose=verbose)
     dasply.build()
 #    ply_query = dasply.parser.parse(query)
 #    ply_query = spawn(dasply.parser.parse, query)
@@ -72,7 +72,7 @@ def ply_parse_query(query, keys, services, pdir='/tmp', verbose=False):
 def ply_output(query, keys, services, pdir='/tmp', verbose=False):
     """Print PLY/lexer output"""
     if  verbose:
-        dasply = DASPLY(pdir, keys, services, verbose)
+        dasply = DASPLY(pdir, keys, services, verbose=verbose)
         dasply.build()
         print "input query='%s'" % query
         dasply.test_lexer(query)
