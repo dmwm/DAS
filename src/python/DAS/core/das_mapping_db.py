@@ -325,7 +325,7 @@ class DASMapping(object):
                 nlist.append(adict[system]['notations'] == ndict[system])
         status_umap = sum(ulist) == len(ulist)
         status_nmap = sum(nlist) == len(nlist)
-        status_pmap = adict['presentation']['presentation'] == 1
+        status_pmap = adict.get('presentation', {}).get('presentation', 0) == 1
         # verify completeness of maps
         calc_token = verification_token(self.col.find(exhaust=True))
         status_complete = maps_hash and maps_hash == calc_token
@@ -333,7 +333,7 @@ class DASMapping(object):
             print "### DAS map status, umap=%s, nmap=%s, pmap=%s, complete=%s" \
                     % (status_umap, status_nmap, status_pmap, status_complete)
         if not status_complete:
-                print "### DAS map hash do not match, got=%s calculated=%s" \
+            print "### DAS map hash do not match, got=%s calculated=%s" \
                     % (maps_hash, calc_token)
         # multiply statuses as a result of this map check
         return status_umap*status_nmap*status_pmap*status_complete

@@ -11,7 +11,7 @@ import unittest
 from DAS.utils.das_config import das_readconfig
 from DAS.utils.logger import PrintManager
 from DAS.utils.utils import deepcopy
-from DAS.core.das_mapping_db import DASMapping
+from DAS.core.das_mapping_db import DASMapping, verification_token
 
 from pymongo import MongoClient
 
@@ -40,6 +40,9 @@ class testDASMapping(unittest.TestCase):
         self.pmap = {"presentation": {"block":[{"ui": "Block name", "das": "block.name"},
             {"ui": "Block size", "das": "block.size"}]}, "type": "presentation"}
         self.coll.insert(self.pmap)
+        ver_token = verification_token(self.coll.find(exhaust=True))
+        rec = {'verification_token':ver_token, 'type':'verification_token'}
+        self.coll.insert(rec)
 
         self.mgr = DASMapping(config)
 
