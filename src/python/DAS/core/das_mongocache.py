@@ -791,12 +791,15 @@ class DASMongocache(object):
         # if no raw records were yield we look-up possible error records
         # and reset timestamp for record with system:['das']
         if  not counter:
-            nrec = self.col.find({'qhash':dasquery.qhash}, exhaust=True).count()
+            spec = {'qhash':dasquery.qhash}
+            nrec = self.col.find(spec, exhaust=True).count()
             if  nrec:
                 msg = "for query %s, found %s non-result record(s)" \
                         % (dasquery, nrec)
                 prf = 'DAS WARNING, monogocache:get_from_cache '
                 print dastimestamp(prf), msg, time.time()
+                for rec in self.col.find(spec, exhaust=True):
+                    print rec
             self.update_das_expire(dasquery, etstamp())
 
     def map_reduce(self, mr_input, dasquery, collection='merge'):
