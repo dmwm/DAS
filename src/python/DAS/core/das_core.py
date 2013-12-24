@@ -285,19 +285,7 @@ class DASCore(object):
         Insert DAS query records into DAS cache and return list of services
         which will answer this query
         """
-        services = []
-        if  'system' in dasquery.mongo_query:
-            system = dasquery.mongo_query['system']
-            if  isinstance(system, str) or isinstance(system, unicode):
-                services = [system]
-            elif isinstance(system, list):
-                services = system
-            else:
-                msg = 'Unsupported system=%s type=%s in DAS query' \
-                        % (system, type(system))
-                raise Exception(msg)
-        if  not services:
-            services = dasquery.params()['services']
+        services = dasquery.services
         self.logger.info('Potential services = %s' % services)
         if  not services:
             msg  = 'No data-services for query %s' % dasquery
