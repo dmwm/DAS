@@ -163,6 +163,11 @@ class DASQuery(object):
 
     ### Class properties ###
     @property
+    def services(self):
+        "Return list of services which may provide information about this query"
+        return self.service_apis_map().keys()
+
+    @property
     def hashes(self):
         "hashes property of the DAS query"
         return self._hashes
@@ -474,7 +479,7 @@ class DASQuery(object):
         "Query string representation"
         if  self._str:
             return self._str
-        msg = """<query='''%s''' instance=%s qhash=%s>""" \
-            % (self.query, self.instance, self.qhash)
+        msg = """<query='''%s''' instance=%s qhash=%s services=%s>""" \
+            % (self.query, self.instance, self.qhash, self.services)
         self._str = msg
         return msg
