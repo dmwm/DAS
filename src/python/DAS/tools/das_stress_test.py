@@ -22,7 +22,7 @@ try:
 except:
     PSUTIL = False
 from   optparse import OptionParser
-from   multiprocessing import Process
+from   multiprocessing import Process, Queue
 
 # DAS modules
 from DAS.tools.das_client import get_data
@@ -97,7 +97,7 @@ def etime(time0):
     "Return formatted output for elapsed time"
     return '%0.2f' % (time.time()-time0)
 
-def run(host, query, idx, limit, debug, thr, ckey, cert):
+def run(out, host, query, idx, limit, debug, thr, ckey, cert):
     """
     Worker function which performs query look-up in DAS and print
     results to stdout. It should be spawned as separate process
@@ -122,6 +122,7 @@ def run(host, query, idx, limit, debug, thr, ckey, cert):
             % (status, etime(time0), etime(tstm), nres, query, qhash)
     if  reason:
         msg += ' reason: %s' % reason
+    out.put((nres, status))
     print msg
     if  debug:
         if  nres > 0:
@@ -170,13 +171,14 @@ def main():
     else:
         jsondict = json.loads(data)
     status   = jsondict.get('status', None)
+    pool     = {}
+    out      = Queue()
     if  status == 'ok':
         nres = jsondict.get('nresults', None)
         sec = "(all reported times are in seconds)"
         print "Seed query results: status %s, nrecords %s, time %s %s" \
                 % (status, nres, etime(time0), sec)
         if  nres:
-            pool  = {}
             idx   = 0
             limit = opts.limit # control how many records to get
             datasets = [r['dataset'][0]['name'] for r in jsondict['data'] \
@@ -197,23 +199,44 @@ def main():
                 idx   = random.randint(0, len(lkeys)-1)
                 skey  = lkeys[idx] # get random select key
                 query = '%s dataset=%s' % (skey, dataset)
-                args  = (host, query, idx, limit, debug, thr, ckey, cert)
+                args  = (out, host, query, idx, limit, debug, thr, ckey, cert)
                 proc  = Process(target=run, args=args)
                 proc.start()
                 pool[proc.name] = proc
     else:
         print 'DAS cli fails status=%s, query=%s' % (status, query)
         print jsondict
-    if  opts.mon:
-        if  PSUTIL:
-            while 1:
-                for pname in pool.keys():
-                    if  not pool[pname].is_alive():
-                        del pool[pname]
-                if  len(pool.keys()) == 0:
-                    break
-                time.sleep(1)
+    # wait for all processes to finish their tasks
+    while 1:
+        for pname in pool.keys():
+            if  not pool[pname].is_alive():
+                del pool[pname]
+        if  len(pool.keys()) == 0:
+            break
+        time.sleep(1)
+    if  opts.mon and PSUTIL:
         monitor_proc.terminate()
+    # retrieve results
+    tot_ok   = 0
+    tot_fail = 0
+    tot_zero = 0
+    while True:
+        try:
+            res, status = out.get_nowait()
+            if  status == 'ok':
+                if  res:
+                    tot_ok += 1
+                else:
+                    tot_zero += 1
+            else:
+                tot_fail += 1
+        except:
+            break
+    print "+++ SUMMARY:"
+    print "# queries  :", opts.ntests
+    print "status ok  :", tot_ok
+    print "status fail:", tot_fail
+    print "nresults 0 :", tot_zero
 
 # part for system monitoring
 def safe_value(value):
