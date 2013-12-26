@@ -384,7 +384,8 @@ class DASCore(object):
 #            status = 'fail'
 #            update_das_query(dasquery, status, reason=msg)
 #            return status
-        self.logger.info('Acknowledged services = %s' % services)
+        msg = 'qhash %s, acknowledged services %s' % (dasquery.qhash, services)
+        print dastimestamp('DAS INFO '), msg
         try:
             if  self.multitask:
                 jobs = []
