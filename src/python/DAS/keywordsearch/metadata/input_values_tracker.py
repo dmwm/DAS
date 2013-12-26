@@ -22,9 +22,7 @@ from pymongo import ASCENDING
 # DAS modules
 from DAS.utils import jsonwrapper as json
 from DAS.utils.utils import dastimestamp
-from DAS.utils.das_db import get_db_uri, db_connection, \
-    is_db_alive, create_indexes
-from DAS.utils.das_db import db_monitor
+from DAS.utils.das_db import get_db_uri, db_connection, create_indexes
 from DAS.utils.utils import get_key_cert
 from DAS.utils.thread import start_new_thread
 from DAS.utils.url_utils import HTTPSClientAuthHandler
@@ -98,12 +96,16 @@ class InputValuesTracker(object):
         self.cache_size = config.get('cache_size', 1000)
         self.expire = config.get('expire', 3600)
         self.write_hash = config.get('write_hash', False)
-        self.col = None  # to be defined in self.init
 
         self.init()
-        # Monitoring thread which performs auto-reconnection to MongoDB
-        start_new_thread('inputval_monitor',
-                         db_monitor, (self.dburi, self.init))
+
+    @property
+    def col(self):
+        "Return MongoDB collection object"
+        conn = db_connection(self.dburi)
+        dbc  = conn[self.dbname]
+        col  = dbc[self.dbcoll]
+        return col
 
     def init(self):
         """
@@ -111,7 +113,6 @@ class InputValuesTracker(object):
         """
         try:
             conn = db_connection(self.dburi)
-            self.col = conn[self.dbname][self.dbcoll]
             indexes = [('value', ASCENDING), ('ts', ASCENDING)]
             create_indexes(self.col, indexes)
 
@@ -119,9 +120,6 @@ class InputValuesTracker(object):
                 self.col.remove()
         except Exception as exc:
             print dastimestamp(), exc
-            self.col = None
-        if not is_db_alive(self.dburi):
-            self.col = None
 
     def update(self):
         """
@@ -130,27 +128,26 @@ class InputValuesTracker(object):
         if SKIP_UPDATES:
             return None
 
-        if self.col:
-            time0 = time.time()
-            values = self.fetch_values()
-            #print gen
-            if not self.col.count():
-                try:  # perform bulk insert operation
-                    self.col.insert(
-                        itertools.islice(values, self.cache_size))
-                    #   break
-                except InvalidOperation:
-                    pass
-            else:  # we already have records, update their ts
-                for val in values:
-                    spec = dict(value=val['value'])
-                    self.col.update(spec, {'$set': {'ts': time0}}, upsert=True)
-                    # remove records with old ts
-            self.col.remove({'ts': {'$lt': time0 - self.expire}})
-            print "%s InputValuesTracker updated" \
-                  " %s collection in %s sec, nrec=%s" \
-                  % (dastimestamp(), self.dbcoll, time.time() - time0,
-                     self.col.count())
+        time0 = time.time()
+        values = self.fetch_values()
+        #print gen
+        if not self.col.count():
+            try:  # perform bulk insert operation
+                self.col.insert(
+                    itertools.islice(values, self.cache_size))
+                #   break
+            except InvalidOperation:
+                pass
+        else:  # we already have records, update their ts
+            for val in values:
+                spec = dict(value=val['value'])
+                self.col.update(spec, {'$set': {'ts': time0}}, upsert=True)
+                # remove records with old ts
+        self.col.remove({'ts': {'$lt': time0 - self.expire}})
+        print "%s InputValuesTracker updated" \
+              " %s collection in %s sec, nrec=%s" \
+              % (dastimestamp(), self.dbcoll, time.time() - time0,
+                 self.col.count())
 
     def find(self, pattern, idx=0, limit=10):
         """
@@ -158,23 +155,22 @@ class InputValuesTracker(object):
         control number of retrieved records (aka pagination). The
         limit=-1 means no pagination (get all records).
         """
-        if self.col:
-            try:
-                if len(pattern) > 0 and pattern[0] != '*' and pattern[0] != '^':
-                    pattern = '^%s' % pattern
+        try:
+            if len(pattern) > 0 and pattern[0] != '*' and pattern[0] != '^':
+                pattern = '^%s' % pattern
 
-                if pattern.find('*') != -1:
-                    pattern = pattern.replace('*', '.*')
-                pat = re.compile('%s' % pattern, re.I)
-                spec = {'value': pat}
-                if limit == -1:
-                    for row in self.col.find(spec):
-                        yield row['value']
-                else:
-                    for row in self.col.find(spec).skip(idx).limit(limit):
-                        yield row['value']
-            except:
-                pass
+            if pattern.find('*') != -1:
+                pattern = pattern.replace('*', '.*')
+            pat = re.compile('%s' % pattern, re.I)
+            spec = {'value': pat}
+            if limit == -1:
+                for row in self.col.find(spec):
+                    yield row['value']
+            else:
+                for row in self.col.find(spec).skip(idx).limit(limit):
+                    yield row['value']
+        except:
+            pass
 
     def fetch_values(self):
         """ fetch the data from providers and select the final values
