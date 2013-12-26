@@ -23,7 +23,7 @@ from pymongo import ASCENDING
 import DAS.utils.jsonwrapper as json
 from DAS.utils.utils import qlxml_parser, dastimestamp, print_exc
 from DAS.utils.das_db import db_connection, is_db_alive, create_indexes
-from DAS.utils.das_db import db_monitor, find_one
+from DAS.utils.das_db import find_one
 from DAS.utils.utils import get_key_cert, genkey
 from DAS.utils.thread import start_new_thread
 from DAS.utils.url_utils import HTTPSClientAuthHandler
@@ -66,28 +66,28 @@ class DBSDaemon(object):
         self.write_hash = config.get('write_hash', False)
         # Shall we keep existing Datasets on server restart
         self.preserve_on_restart = config.get('preserve_on_restart', False)
-        self.col = None # to be defined in self.init
         self.init()
-        # Monitoring thread which performs auto-reconnection to MongoDB
-        thname = 'dbs_monitor:%s' % dbs_url
-        start_new_thread(thname, db_monitor, (dburi, self.init))
+
+    @property
+    def col(self):
+        "Return MongoDB collection object"
+        conn = db_connection(self.dburi)
+        dbc  = conn[self.dbname]
+        col  = dbc[self.dbcoll]
+        return col
 
     def init(self):
         """
         Init db connection and check that it is alive
         """
         try:
-            conn = db_connection(self.dburi)
-            self.col = conn[self.dbname][self.dbcoll]
             indexes = [('dataset', ASCENDING), ('ts', ASCENDING)]
             create_indexes(self.col, indexes)
 
             if not self.preserve_on_restart:
                 self.col.remove()
         except Exception as _exp:
-            self.col = None
-        if  not is_db_alive(self.dburi):
-            self.col = None
+            pass
 
     def update(self):
         """
@@ -98,42 +98,41 @@ class DBSDaemon(object):
         if SKIP_UPDATES:
             return None
 
-        if  self.col:
-            time0 = round(time.time())
-            udict = {'$set':{'ts':time0}}
-            cdict = {'dataset':'__POPULATED__'}
-            gen = self.datasets()
-            #TODO: make sure the generator is not empty (service or connection failure), as this may cause the dataset cache to be dumped out
-            if  not self.col.count():
-                try: # perform bulk insert operation
-                    while True:
-                        if  not self.col.insert(\
-                                itertools.islice(gen, self.cache_size)):
-                            break
-                except InvalidOperation as err:
-                    # please note we need to inspect error message to
-                    # distinguish InvalidOperation from generate exhastion
-                    if  str(err) == 'cannot do an empty bulk insert':
-                        self.col.insert(cdict)
-                    pass
-                except Exception as err:
-                    pass
-            else: # we already have records, update their ts
-                for row in gen:
-                    spec = dict(dataset=row['dataset'])
-                    self.col.update(spec, udict, upsert=True)
+        time0 = round(time.time())
+        udict = {'$set':{'ts':time0}}
+        cdict = {'dataset':'__POPULATED__'}
+        gen = self.datasets()
+        #TODO: make sure the generator is not empty (service or connection failure), as this may cause the dataset cache to be dumped out
+        if  not self.col.count():
+            try: # perform bulk insert operation
+                while True:
+                    if  not self.col.insert(\
+                            itertools.islice(gen, self.cache_size)):
+                        break
+            except InvalidOperation as err:
+                # please note we need to inspect error message to
+                # distinguish InvalidOperation from generate exhastion
+                if  str(err) == 'cannot do an empty bulk insert':
+                    self.col.insert(cdict)
+                pass
+            except Exception as err:
+                pass
+        else: # we already have records, update their ts
+            for row in gen:
+                spec = dict(dataset=row['dataset'])
+                self.col.update(spec, udict, upsert=True)
 
-                # if no rows were returned, do not delete old cache
-                else:
-                    msg = 'Service %s returned no results' % self.dbs_url
-                    raise Exception(msg)
+            # if no rows were returned, do not delete old cache
+            else:
+                msg = 'Service %s returned no results' % self.dbs_url
+                raise Exception(msg)
 
-            # remove records with old ts
-            self.col.remove({'ts':{'$lt':time0-self.expire}})
-            if  find_one(self.col, cdict):
-                self.col.update(cdict, udict)
-            print "%s DBSDaemon updated %s collection in %s sec, nrec=%s" \
-            % (dastimestamp(), self.dbcoll, time.time()-time0, self.col.count())
+        # remove records with old ts
+        self.col.remove({'ts':{'$lt':time0-self.expire}})
+        if  find_one(self.col, cdict):
+            self.col.update(cdict, udict)
+        print "%s DBSDaemon updated %s collection in %s sec, nrec=%s" \
+        % (dastimestamp(), self.dbcoll, time.time()-time0, self.col.count())
 
     def find(self, pattern, idx=0, limit=10):
         """
@@ -141,22 +140,21 @@ class DBSDaemon(object):
         control number of retrieved records (aka pagination). The
         limit=-1 means no pagination (get all records).
         """
-        if  self.col:
-            try:
-                if  len(pattern) > 0 and pattern[0] == '/':
-                    pattern = '^%s' % pattern
-                if  pattern.find('*') != -1:
-                    pattern = pattern.replace('*', '.*')
-                pat  = re.compile('%s' % pattern, re.I)
-                spec = {'dataset':pat}
-                if  limit == -1:
-                    for row in self.col.find(spec):
-                        yield row['dataset']
-                else:
-                    for row in self.col.find(spec).skip(idx).limit(limit):
-                        yield row['dataset']
-            except:
-                pass
+        try:
+            if  len(pattern) > 0 and pattern[0] == '/':
+                pattern = '^%s' % pattern
+            if  pattern.find('*') != -1:
+                pattern = pattern.replace('*', '.*')
+            pat  = re.compile('%s' % pattern, re.I)
+            spec = {'dataset':pat}
+            if  limit == -1:
+                for row in self.col.find(spec):
+                    yield row['dataset']
+            else:
+                for row in self.col.find(spec).skip(idx).limit(limit):
+                    yield row['dataset']
+        except:
+            pass
 
     def datasets(self):
         """
