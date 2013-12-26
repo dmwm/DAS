@@ -123,19 +123,18 @@ class DASLogdb(object):
     def __init__(self, config):
         super(DASLogdb, self).__init__()
         capped_size = config['loggingdb']['capped_size']
-        logdbname   = config['loggingdb']['dbname']
-        logdbcoll   = config['loggingdb']['collname']
-        dburi       = config['mongodb']['dburi']
+        self.dbname = config['loggingdb']['dbname']
+        self.dbcoll = config['loggingdb']['collname']
+        self.dburi  = config['mongodb']['dburi']
         try:
-            conn    = db_connection(dburi)
+            conn    = db_connection(self.dburi)
             if  not conn:
                 raise ConnectionFailure()
-            if  logdbname not in conn.database_names():
-                dbname      = conn[logdbname]
+            if  self.dbname not in conn.database_names():
+                dbname      = conn[self.dbname]
                 dbname.create_collection('db', capped=True, size=capped_size)
                 print 'Created %s.%s, size=%s' \
                 % (logdbname, logdbcoll, capped_size)
-            self.logcol     = conn[logdbname][logdbcoll]
         except ConnectionFailure as _err:
             tstamp = dastimestamp('')
             thread = threading.current_thread()
@@ -143,21 +142,24 @@ class DASLogdb(object):
                     % (thread.name, thread.ident, tstamp)
         except Exception as exc:
             print_exc(exc)
-            self.logcol     = None
+
+    @property
+    def logcol(self):
+        "provides access to DAS log collection"
+        conn = db_connection(self.dburi)
+        mdb  = conn[self.dbname]
+        return mdb[self.dbcoll]
 
     def insert(self, coll, doc):
         "Insert record to logdb"
-        if  self.logcol:
-            rec = logdb_record(coll, doc)
-            self.logcol.insert(rec)
+        rec = logdb_record(coll, doc)
+        self.logcol.insert(rec)
 
     def find(self, spec, count=False):
         "Find record in logdb"
-        if  self.logcol:
-            if  count:
-                return self.logcol.find(spec, exhaust=True).count()
-            return self.logcol.find(spec, exhaust=True)
-        return False
+        if  count:
+            return self.logcol.find(spec, exhaust=True).count()
+        return self.logcol.find(spec, exhaust=True)
 
 def cleanup_worker(dburi, dbname, collections, sleep):
     """DAS cache cleanup worker"""
@@ -701,7 +703,7 @@ class DASMongocache(object):
             with conn.start_request():
                 col = mdb[collection]
                 nres = col.find(spec, exhaust=True).count()
-                if  nres <= limit:
+                if  nres == 1 or nres <= limit:
                     limit = 0
                 if  limit:
                     res = col.find(spec=spec, fields=fields,
@@ -799,7 +801,7 @@ class DASMongocache(object):
                 prf = 'DAS WARNING, monogocache:get_from_cache '
                 print dastimestamp(prf), msg, time.time()
                 for rec in self.col.find(spec, exhaust=True):
-                    print rec
+                    print dastimestamp('DAS cache record '), rec
             self.update_das_expire(dasquery, etstamp())
 
     def map_reduce(self, mr_input, dasquery, collection='merge'):
