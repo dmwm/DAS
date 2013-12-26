@@ -150,9 +150,10 @@ def dastimestamp(msg='DAS '):
     Return timestamp in pre-defined format. For simplicity we match
     cherrypy date format.
     """
-    tstamp = time.strftime('[%d/%b/%Y:%H:%M:%S]', time.localtime())
+    tst = time.localtime()
+    tstamp = time.strftime('[%d/%b/%Y:%H:%M:%S]', tst)
     if  msg:
-        return msg + tstamp
+        return msg + tstamp + ' %s ' % time.mktime(tst)
     return tstamp
 
 def http_timestamp(tstamp=None):
