@@ -118,49 +118,6 @@ def etstamp(delta=20):
     """
     return time.time() + delta
 
-class DASLogdb(object):
-    """DASLogdb"""
-    def __init__(self, config):
-        super(DASLogdb, self).__init__()
-        capped_size = config['loggingdb']['capped_size']
-        self.dbname = config['loggingdb']['dbname']
-        self.dbcoll = config['loggingdb']['collname']
-        self.dburi  = config['mongodb']['dburi']
-        try:
-            conn    = db_connection(self.dburi)
-            if  not conn:
-                raise ConnectionFailure()
-            if  self.dbname not in conn.database_names():
-                dbname      = conn[self.dbname]
-                dbname.create_collection('db', capped=True, size=capped_size)
-                print 'Created %s.%s, size=%s' \
-                % (logdbname, logdbcoll, capped_size)
-        except ConnectionFailure as _err:
-            tstamp = dastimestamp('')
-            thread = threading.current_thread()
-            print "### MongoDB connection failure thread=%s, id=%s, time=%s" \
-                    % (thread.name, thread.ident, tstamp)
-        except Exception as exc:
-            print_exc(exc)
-
-    @property
-    def logcol(self):
-        "provides access to DAS log collection"
-        conn = db_connection(self.dburi)
-        mdb  = conn[self.dbname]
-        return mdb[self.dbcoll]
-
-    def insert(self, coll, doc):
-        "Insert record to logdb"
-        rec = logdb_record(coll, doc)
-        self.logcol.insert(rec)
-
-    def find(self, spec, count=False):
-        "Find record in logdb"
-        if  count:
-            return self.logcol.find(spec, exhaust=True).count()
-        return self.logcol.find(spec, exhaust=True)
-
 def cleanup_worker(dburi, dbname, collections, sleep):
     """DAS cache cleanup worker"""
     while True:
@@ -195,7 +152,6 @@ class DASMongocache(object):
         self.mrcol_  = self.config['dasdb']['mrcollection']
         self.merge_  = self.config['dasdb']['mergecollection']
         self.gfs     = db_gridfs(self.dburi)
-        self.logdb   = DASLogdb(self.config)
 
         msg = "%s@%s" % (self.dburi, self.dbname)
         self.logger.info(msg)
@@ -360,9 +316,6 @@ class DASMongocache(object):
                 msg  = "will remove %s records" % nrec
                 msg += ", localtime=%s" % timestamp
                 self.logger.debug(msg)
-            if  self.logging:
-                self.logdb.insert(collection,
-                        {'delete': col.find(spec, exhaust=True).count()})
             col.remove(spec, fsync=True)
 
     def check_services(self, dasquery):
@@ -942,8 +895,7 @@ class DASMongocache(object):
         if  inserted:
             # use explicit if statement, due to inserted condition
             # with outside scope meaning
-            if  self.logging:
-                self.logdb.insert('merge', {'insert': inserted})
+            pass
         elif  not lookup_keys: # we get query w/o fields
             pass
         else: # we didn't merge anything, it is DB look-up failure
@@ -985,8 +937,6 @@ class DASMongocache(object):
                     break
         except InvalidOperation:
             pass
-        if  inserted and self.logging:
-            self.logdb.insert('cache', {'insert': inserted})
 
     def insert_query_record(self, dasquery, header):
         """
@@ -1083,13 +1033,7 @@ class DASMongocache(object):
             if  row['_id'] not in id_list:
                 id_list.append(row['_id'])
         spec = {'das_id':{'$in':id_list}}
-        if  self.logging:
-            self.logdb.insert('merge',
-                    {'delete': self.merge.find(spec, exhaust=True).count()})
         self.merge.remove(spec)
-        if  self.logging:
-            self.logdb.insert('cache',
-                    {'delete': self.col.find(spec, exhaust=True).count()})
         self.col.remove(spec)
         self.col.remove({'qhash':dasquery.qhash})
 
@@ -1099,14 +1043,8 @@ class DASMongocache(object):
         """
         current_time = time.time()
         query = {'das.expire': { '$lt':current_time} }
-        if  self.logging:
-            idict = {'delete': self.merge.find(query, exhaust=True).count()}
-            self.logdb.insert('merge', idict)
         if  not collection or collection == 'merge':
             self.merge.remove(query)
-        if  self.logging:
-            idict = {'delete': self.col.find(query, exhaust=True).count()}
-            self.logdb.insert('cache', idict)
         if  not collection or collection == 'cache':
             self.col.remove(query)
 
@@ -1115,15 +1053,11 @@ class DASMongocache(object):
         Delete all results in DAS cache/merge collection, including
         internal indexes.
         """
-        if  self.logging:
-            self.logdb.insert('cache', {'delete': self.col.count()})
         self.col.remove({})
         try:
             self.col.drop_indexes()
         except:
             pass
-        if  self.logging:
-            self.logdb.insert('merge', {'delete': self.merge.count()})
         self.merge.remove({})
         try:
             self.merge.drop_indexes()
