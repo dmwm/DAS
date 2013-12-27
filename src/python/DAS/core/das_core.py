@@ -295,18 +295,15 @@ class DASCore(object):
 
         # get list of URI which can answer this query
         ack_services = []
-        if  services:
-            for srv in services:
-                gen = [t for t in getattr(getattr(self, srv), 'apimap')(dasquery)]
-                for url, api, args, iformat, expire in gen:
-                    header = dasheader(srv, dasquery, expire, api, url, ctime=0)
-                    self.rawcache.insert_query_record(dasquery, header)
-                    if  srv not in ack_services:
-                        ack_services.append(srv)
-        if  services and not ack_services:
-            srv_status = False
-        else:
-            srv_status = set(services) & set(ack_services) == set(ack_services)
+        for srv in services:
+            gen = [t for t in getattr(getattr(self, srv), 'apimap')(dasquery)]
+            for url, api, args, iformat, expire in gen:
+                header = dasheader(srv, dasquery, expire, api, url, ctime=0)
+                self.rawcache.insert_query_record(dasquery, header)
+                if  srv not in ack_services:
+                    ack_services.append(srv)
+        if  not ack_services:
+            ack_services = services
         if  dasquery.query.find('records ') != -1:
             srv_status = True # skip DAS queries w/ records request
         expire = 7*24*60*60 # 7 days, long enough to be overwriten by data-srv
@@ -315,7 +312,7 @@ class DASCore(object):
         header['lookup_keys'] = []
         self.rawcache.insert_query_record(dasquery, header)
         das_timer('das_record', self.verbose)
-        return ack_services, srv_status
+        return ack_services
 
     def call(self, query, add_to_analytics=True, **kwds):
         """
@@ -371,19 +368,12 @@ class DASCore(object):
 
         self.logger.info(dasquery)
         das_timer('das_record', self.verbose)
-        services, srv_status = self.insert_query_records(dasquery)
-        if  not srv_status:
-            if  services:
-                msg = 'fail to acknowledge services %s' % services
-            else:
-                msg = 'unable to locate data-services to fulfill this request'
-                msg += ', will iterate over all registered services'
+        services = self.insert_query_records(dasquery)
+        if  not services:
+            msg = 'unable to locate data-services to fulfill this request'
+            msg += ', will iterate over all registered services'
             print dastimestamp('DAS WARNING '), dasquery, msg
-            services = self.systems
-#            print dastimestamp('DAS ERROR '), dasquery, msg
-#            status = 'fail'
-#            update_das_query(dasquery, status, reason=msg)
-#            return status
+            services = dasquery.services if dasquery.services else self.systems
         msg = 'qhash %s, acknowledged services %s' % (dasquery.qhash, services)
         print dastimestamp('DAS INFO '), msg
         try:
