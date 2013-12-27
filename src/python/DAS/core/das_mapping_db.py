@@ -83,7 +83,7 @@ def db_monitor(uri, func, sleep, reload_map, reload_time,
     try:
         valid_maps = check_maps()
     except Exception as err:
-        print "### db_monitor, Err: %s" % str(err)
+        print_exc(err)
     while True:
         conn = db_connection(uri)
         if not conn or not is_db_alive(uri):
@@ -96,7 +96,7 @@ def db_monitor(uri, func, sleep, reload_map, reload_time,
                 else:
                     print "### db_monitor, lost connection"
             except Exception as err:
-                print "### db_monitor, Err: %s" % str(err)
+                print_exc(err)
         if  conn:
             # reload invalid more quickly
             reload_intervl = reload_time if valid_maps else reload_time_bad_maps
@@ -108,7 +108,7 @@ def db_monitor(uri, func, sleep, reload_map, reload_time,
                     reload_map()
                     valid_maps = check_maps()
                 except Exception as err:
-                    print dastimestamp('DAS ERROR '), str(err)
+                    print_exc(err)
                 time0 = time.time()
 
         time.sleep(sleep)
