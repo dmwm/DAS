@@ -29,7 +29,6 @@ from DAS.core.das_ql import das_aggregators, das_operators, das_filters
 from DAS.core.das_ql import DAS_DB_KEYWORDS
 from DAS.core.das_ply import das_parser_error
 from DAS.core.das_query import DASQuery
-from DAS.core.das_mongocache import DASLogdb
 from DAS.utils.utils import getarg
 from DAS.utils.url_utils import disable_urllib2Proxy
 from DAS.utils.ddict import DotDict
@@ -71,36 +70,6 @@ DAS_PIPECMDS = das_aggregators() + das_filters()
 
 # disable default urllib2 proxy
 disable_urllib2Proxy()
-
-def onhold_worker(dasmgr, taskmgr, reqmgr, limit):
-    "Worker daemon to process onhold requests"
-    if  not dasmgr or not taskmgr or not reqmgr:
-        return
-    print "\n### Start onhold_worker"
-    jobs = []
-    while True:
-        try:
-            while jobs:
-                try:
-                    reqmgr.remove(jobs.pop(0))
-                except:
-                    break
-            nrequests = reqmgr.size()
-            for rec in reqmgr.items_onhold():
-                dasquery  = DASQuery(rec['uinput'])
-                addr      = rec['ip']
-                if  (nrequests - taskmgr.nworkers()) < limit:
-                    _evt, pid = taskmgr.spawn(\
-                        dasmgr.call, dasquery, \
-                            uid=addr, pid=dasquery.qhash)
-                    jobs.append(pid)
-                    reqmgr.remove_onhold(str(rec['_id']))
-        except AutoReconnect:
-            pass
-        except Exception as err:
-            print_exc(err)
-        time.sleep(5)
-    print "### END onhold_worker", time.time()
 
 class DASWebService(DASWebManager):
     """
@@ -152,15 +121,6 @@ class DASWebService(DASWebManager):
         start_new_thread(thname, dascore_monitor, \
                 ({'das':self.dasmgr, 'uri':self.dburi}, self.init, 5))
 
-    def process_requests_onhold(self):
-        "Process requests which are on hold"
-        try:
-            limit = self.queue_limit/2
-            start_new_thread('onhold_monitor', onhold_worker, \
-                (self.dasmgr, self.taskmgr, self.reqmgr, limit))
-        except Exception as exc:
-            print_exc(exc)
-
     def dbs_daemon(self, config):
         """Start DBS daemon if it is requested via DAS configuration"""
         try:
@@ -199,7 +159,6 @@ class DASWebService(DASWebManager):
     def init(self):
         """Init DAS web server, connect to DAS Core"""
         try:
-            self.logcol     = DASLogdb(self.dasconfig)
             self.reqmgr     = RequestManager(self.dburi, lifetime=self.lifetime)
             self.dasmgr     = DASCore(engine=self.engine)
             self.repmgr     = CMSRepresentation(self.dasconfig, self.dasmgr)
@@ -250,36 +209,6 @@ class DASWebService(DASWebManager):
         except Exception as exc:
             print_exc(exc)
             self.q_rewriter = None
-
-        # Start Onhold_request daemon
-        if  self.dasconfig['web_server'].get('onhold_daemon', False):
-            self.process_requests_onhold()
-
-    def logdb(self, query):
-        """
-        Make entry in Logging DB
-        """
-        qhash = genkey(query)
-        args  = cherrypy.request.params
-        doc = dict(qhash=qhash,
-                date=int(str(date.fromtimestamp(time.time())).replace('-', '')),
-                headers=cherrypy.request.headers,
-                method=cherrypy.request.method,
-                path=cherrypy.request.path_info,
-                args=args,
-                ip=cherrypy.request.remote.ip,
-                hostname=cherrypy.request.remote.name,
-                port=cherrypy.request.remote.port)
-        self.logcol.insert('web', doc)
-
-    def get_nhits(self):
-        "Return number of hits per day client made"
-        tsec  = time.mktime(date.timetuple(date.today()))
-        spec  = {'ip': cherrypy.request.remote.ip, 'ts': {'$gte': tsec},
-                 'args.pid': {'$exists': False}, # do not count pid requests
-                 'path': '/cache'} # requests from das_client calls
-        nhits = self.logcol.find(spec, count=True)
-        return nhits
 
     @expose
     @checkargs(DAS_WEB_INPUTS)
@@ -889,27 +818,9 @@ class DASWebService(DASWebManager):
         if  not pid:
             pid = dasquery.qhash
         if  status == None: # submit new request
-            # TODO: this chunk of code should be replaced with decreasing
-            # priority level for this IP
-            config = self.dasconfig.get('cacherequests', {})
-            thr = threshold(self.sitedbmgr, self.hot_thr, config)
-            nhits = self.get_nhits()
-            if  nhits > thr: # exceed threshold
-                if  self.busy(): # put request onhold, server is busy
-                    tstamp = time.time() + 60*(nhits/thr) + (nhits%thr)
-                    pid  = dasquery.qhash
-                    self.reqmgr.add_onhold(\
-                        pid, uinput, cherrypy.request.remote.ip, tstamp)
-                    head = {'status':'onhold',
-                            'mongo_query':dasquery.mongo_query,
-                            'pid':pid, 'nresults':0, 'ctime':0,
-                            'ts':time.time()}
-                    data = []
-                    return self.datastream(dict(head=head, data=data))
             addr = cherrypy.request.headers.get('Remote-Addr')
             _evt, pid = self.taskmgr.spawn(\
                 self.dasmgr.call, dasquery, uid=addr, pid=dasquery.qhash)
-            self.logdb(uinput) # put entry in log DB once we place a request
             self.reqmgr.add(pid, kwargs)
             return pid
         if  status == 'ok':
@@ -1015,7 +926,7 @@ class DASWebService(DASWebManager):
         inst    = kwargs.get('instance', self.dbs_global)
         uinput  = kwargs.get('input', '')
 
-        self.logdb(uinput)
+#        self.logdb(uinput)
 
         form    = self.form(uinput=uinput, instance=inst, view=view)
         check, content = self.generate_dasquery(uinput, inst)
