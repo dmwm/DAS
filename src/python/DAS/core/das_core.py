@@ -269,8 +269,10 @@ class DASCore(object):
                 if  not reason:
                     reason = record['das'].get('reason', reason)
                 return status, error, reason
-        except:
-            pass
+        except Exception as exc:
+            print_exc(exc)
+            status = error = reason = None
+            self.rawcache.remove_from_cache(dasquery)
         return status, error, reason
 
     def worker(self, srv, dasquery):
@@ -379,7 +381,7 @@ class DASCore(object):
         try:
             if  self.multitask:
                 jobs = []
-                for srv in services:
+                for srv in sorted(services):
                     jobs.append(self.taskmgr.spawn(self.worker, srv, dasquery))
                 self.taskmgr.joinall(jobs)
             else:
