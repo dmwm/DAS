@@ -26,6 +26,9 @@ from   multiprocessing import Process, Queue
 
 # DAS modules
 from DAS.tools.das_client import get_data
+from DAS.core.das_query import DASQuery
+
+DBS_GLOBAL='cms_dbs_prod_global'
 
 class TestOptionParser(object):
     "Test option parser"
@@ -117,12 +120,12 @@ def run(out, host, query, idx, limit, debug, thr, ckey, cert):
     if  data and isinstance(data, list) and len(data):
         qhash  = data[0].get('qhash')
     else:
-        qhash = "N/A"
+        qhash = DASQuery(query + ' instance=%s' % DBS_GLOBAL).qhash
     msg    = 'status: %s client: %s server: %s nresults: %s query: %s qhash: %s' \
             % (status, etime(time0), etime(tstm), nres, query, qhash)
     if  reason:
         msg += ' reason: %s' % reason
-    out.put((nres, status))
+    out.put((nres, status, qhash))
     print msg
     if  debug:
         if  nres > 0:
@@ -218,25 +221,25 @@ def main():
         monitor_proc.terminate()
     # retrieve results
     tot_ok   = 0
-    tot_fail = 0
-    tot_zero = 0
+    tot_fail = []
+    tot_zero = []
     while True:
         try:
-            res, status = out.get_nowait()
+            res, status, qhash = out.get_nowait()
             if  status == 'ok':
                 if  res:
                     tot_ok += 1
                 else:
-                    tot_zero += 1
+                    tot_zero.append(qhash)
             else:
-                tot_fail += 1
+                tot_fail.append(qhash)
         except:
             break
     print "+++ SUMMARY:"
     print "# queries  :", opts.ntests
     print "status ok  :", tot_ok
-    print "status fail:", tot_fail
-    print "nresults 0 :", tot_zero
+    print "status fail:", len(tot_fail), tot_fail
+    print "nresults 0 :", len(tot_zero), tot_zero
 
 # part for system monitoring
 def safe_value(value):
