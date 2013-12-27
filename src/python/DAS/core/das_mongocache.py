@@ -1034,6 +1034,7 @@ class DASMongocache(object):
                 id_list.append(row['_id'])
         spec = {'das_id':{'$in':id_list}}
         self.merge.remove(spec)
+        self.merge.remove({'qhash':dasquery.qhash})
         self.col.remove(spec)
         self.col.remove({'qhash':dasquery.qhash})
 
