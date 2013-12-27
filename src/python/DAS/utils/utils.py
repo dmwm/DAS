@@ -153,6 +153,8 @@ def dastimestamp(msg='DAS '):
     tst = time.localtime()
     tstamp = time.strftime('[%d/%b/%Y:%H:%M:%S]', tst)
     if  msg:
+        if  msg[-1] != ' ':
+            msg += ' '
         return msg + tstamp + ' %s ' % time.mktime(tst)
     return tstamp
 
