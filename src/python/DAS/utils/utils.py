@@ -47,10 +47,9 @@ def md5hash(rec):
         raise NotImplementedError
     # discard timestamp fields from hash calculations since they're dynamic
     record = dict(rec)
-    if  'ts' in record:
-        del record['ts']
-    if  'timestamp' in record:
-        del record['timestamp']
+    for key in ['ts', 'timestamp']:
+        if  key in record:
+            del record[key]
     rec = json.JSONEncoder(sort_keys=True).encode(record)
     keyhash = hashlib.md5()
     keyhash.update(rec)
@@ -633,12 +632,19 @@ def genkey(query):
     query and key is just hex representation of this hash.
     """
     if  isinstance(query, dict):
-        query = json.JSONEncoder(sort_keys=True).encode(query)
+        record = dict(query)
+        # remove transient fields
+        for key in ['ts', 'timestamp']:
+            if  key in record:
+                del record[key]
+        query = json.JSONEncoder(sort_keys=True).encode(record)
     try:
         from DAS.extensions.das_hash import _das_hash
         return _das_hash(query)
     except:
-        return md5hash(query)
+        keyhash = hashlib.md5()
+        keyhash.update(query)
+        return keyhash.hexdigest()
 
 def gen2list(results):
     """
