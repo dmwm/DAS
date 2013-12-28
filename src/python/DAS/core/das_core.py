@@ -376,8 +376,6 @@ class DASCore(object):
             msg += ', will iterate over all registered services'
             print dastimestamp('DAS WARNING '), dasquery, msg
             services = dasquery.services if dasquery.services else self.systems
-        msg = 'qhash %s, acknowledged services %s' % (dasquery.qhash, services)
-        print dastimestamp('DAS INFO '), msg
         try:
             if  self.multitask:
                 jobs = []
@@ -390,6 +388,7 @@ class DASCore(object):
         except Exception as exc:
             print_exc(exc)
             return 'fail'
+        self.rawcache.flush() # flush all writing on disk
         self.logger.info('\n##### merging ######\n')
         self.rawcache.update_query_record(dasquery, 'merging')
         das_timer('merge', self.verbose)
@@ -408,6 +407,7 @@ class DASCore(object):
                 status = 'fail'
                 print dastimestamp('DAS ERROR '), dasquery, reason
         update_das_query(dasquery, status, reason)
+        self.rawcache.flush() # flush all writing on disk
         das_timer('DASCore::call', self.verbose)
         return status
 
