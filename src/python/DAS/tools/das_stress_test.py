@@ -199,9 +199,10 @@ def main():
                 for dataset in datasets[:opts.ntests]:
                     print dataset
             for dataset in datasets[:opts.ntests]:
-                idx   = random.randint(0, len(lkeys)-1)
-                skey  = lkeys[idx] # get random select key
+                jdx   = random.randint(0, len(lkeys)-1)
+                skey  = lkeys[jdx] # get random select key
                 query = '%s dataset=%s' % (skey, dataset)
+                idx   = 0 # always start from first record
                 args  = (out, host, query, idx, limit, debug, thr, ckey, cert)
                 proc  = Process(target=run, args=args)
                 proc.start()
