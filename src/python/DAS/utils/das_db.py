@@ -56,68 +56,85 @@ def make_uri(pairs):
 
 class DBConnection(object):
     """
-    DB Connection class whose purpose is to get MongoDB connection
+    DB Connection class which hanldes MongoDB connections. Input parameters:
+
+        - lifetime, controls connection lifetime
+        - retry, controls number of retries to acquire MongoDB connection
     """
-    def __init__(self):
+    def __init__(self, pool_size=300, lifetime=3600, retry=5):
         # just for the sake of information
         self.instance = "Instance at %d" % self.__hash__()
         self.conndict = {}
+        self.timedict = {}
+        self.thr      = lifetime
+        self.retry    = retry
+        self.psize    = pool_size
+
+    def genkey(self, uri):
+        "Generate unique key"
+        if  isinstance(uri, basestring):
+            key = uri
+        elif isinstance(uri, list) and len(uri) == 1:
+            key = uri[0]
+        else:
+            key = genkey(str(uri))
+        return key
 
     def connection(self, uri):
         """Return MongoDB connection"""
-        key = genkey(str(uri))
-        if  key not in self.conndict:
+        key = self.genkey(uri)
+        # check cache first
+        try: # this block may fail in multi-threaded environment
+            if  key in self.timedict:
+                if  self.is_alive(uri) and (time.time()-self.timedict[key]) < self.thr:
+                    return self.conndict[key]
+                else: # otherwise clean-up
+                    del self.timedict[key]
+                    del self.conndict[key]
+        except:
+            pass
+        return self.get_new_connection(uri)
+
+    def get_new_connection(self, uri):
+        "Get new MongoDB connection"
+        key = self.genkey(uri)
+        for idx in xrange(0, self.retry):
             try:
-                dbinst = MongoClient(host=uri, w=1,
-                        auto_start_request=True, safe=True)
+                dbinst = MongoClient(host=uri, w=1, max_pool_size=self.psize)
                 gfs    = dbinst.gridfs
                 fsinst = gridfs.GridFS(gfs)
                 self.conndict[key] = (dbinst, fsinst)
-            except (ConnectionFailure, AutoReconnect):
+                self.timedict[key] = time.time()
+                return (dbinst, fsinst)
+            except (ConnectionFailure, AutoReconnect) as exc:
                 tstamp = dastimestamp('')
                 thread = threading.current_thread()
                 print "### MongoDB connection failure thread=%s, id=%s, time=%s" \
                         % (thread.name, thread.ident, tstamp)
+                print_exc(exc)
             except Exception as exc:
                 print_exc(exc)
-                return None
-        return self.conndict[key]
+            time.sleep(idx)
+        return self.conndict.get(key, (None, None))
 
     def is_alive(self, uri):
         "Check if DB connection is alive"
-        key = genkey(str(uri))
-        try:
-            conn, _ = self.connection(uri)
+        key = self.genkey(uri)
+        if  key in self.conndict:
+            conn, _ = self.conndict[key]
             if  conn:
                 _dbnames = conn.database_names()
-            else:
-                return False
-        except:
-            if  key in self.conndict:
-                del self.conndict[key]
-            return False
-        return True
+                return True
+        return False
 
 DB_CONN_SINGLETON = DBConnection()
 
-def db_connection(uri, singleton=False, verbose=True):
+def db_connection(uri, singleton=True, verbose=True):
     """Return DB connection instance"""
-    dbinst = None
-    # loop several times to acquire DB connection
-    for idx in xrange(1, 5):
-        try:
-            if  singleton:
-                dbinst, _ = DB_CONN_SINGLETON.connection(uri)
-            else:
-                dbinst, _ = DBConnection().connection(uri)
-        except Exception as exc:
-            if  verbose:
-                msg = 'Fail to get connection to MongoDB: %s' % str(exc)
-                print msg
-            pass
-        if  dbinst:
-            break
-        time.sleep(0.1*idx)
+    if  singleton:
+        dbinst, _ = DB_CONN_SINGLETON.connection(uri)
+    else:
+        dbinst, _ = DBConnection(pool_size=10).connection(uri)
     return dbinst
 
 def is_db_alive(uri):
