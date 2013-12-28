@@ -862,8 +862,9 @@ class DASMongocache(object):
         records = self.col.find(spec, exhaust=True)
         for row in records:
             # find smallest expire timestamp to be used by aggregator
-            if  row['das']['expire'] < expire:
-                expire = row['das']['expire']
+            rexpire = row.get('das', {}).get('expire', expire)
+            if  rexpire < expire:
+                expire = rexpire
             if  row['_id'] not in id_list:
                 id_list.append(row['_id'])
         inserted = 0
@@ -884,13 +885,17 @@ class DASMongocache(object):
             else:
                 msg  = "merging records, for %s key" % pkey
             self.logger.debug(msg)
-            # use exhaust=False since we process all records in aggregator
-            # and it can be delay in processing
-            records = self.col.find(spec, exhaust=False).sort(skey)
-            # aggregate all records
-            agen = aggregator(dasquery, records, expire)
-            # diff aggregated records
-            gen  = das_diff(agen, self.mapping.diff_keys(pkey.split('.')[0]))
+            nrec = self.col.find(spec, exhaust=True).count()
+            if  nrec > 1: # only pass to aggregation if we have multiple records
+                # use exhaust=False since we process all records in aggregator
+                # and it can be delay in processing
+                records = self.col.find(spec, exhaust=False).sort(skey)
+                # aggregate all records
+                agen = aggregator(dasquery, records, expire)
+                # diff aggregated records
+                gen  = das_diff(agen, self.mapping.diff_keys(pkey.split('.')[0]))
+            else:
+                gen = [r for r in self.col.find(spec, exhaust=True)]
             # insert all records into das.merge using bulk insert
             size = self.cache_size
             try:
