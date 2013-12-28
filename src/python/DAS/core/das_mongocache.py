@@ -885,17 +885,13 @@ class DASMongocache(object):
             else:
                 msg  = "merging records, for %s key" % pkey
             self.logger.debug(msg)
-            nrec = self.col.find(spec, exhaust=True).count()
-            if  nrec > 1: # only pass to aggregation if we have multiple records
-                # use exhaust=False since we process all records in aggregator
-                # and it can be delay in processing
-                records = self.col.find(spec, exhaust=False).sort(skey)
-                # aggregate all records
-                agen = aggregator(dasquery, records, expire)
-                # diff aggregated records
-                gen  = das_diff(agen, self.mapping.diff_keys(pkey.split('.')[0]))
-            else:
-                gen = [r for r in self.col.find(spec, exhaust=True)]
+            # use exhaust=False since we process all records in aggregator
+            # and it can be delay in processing
+            records = self.col.find(spec, exhaust=False).sort(skey)
+            # aggregate all records
+            agen = aggregator(dasquery, records, expire)
+            # diff aggregated records
+            gen  = das_diff(agen, self.mapping.diff_keys(pkey.split('.')[0]))
             # insert all records into das.merge using bulk insert
             size = self.cache_size
             try:
