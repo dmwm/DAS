@@ -817,6 +817,7 @@ class DASWebService(DASWebManager):
         kwargs.update({'status':status, 'error':error, 'reason':reason})
         if  not pid:
             pid = dasquery.qhash
+            print dastimestamp('DAS CACHE REQUEST'), dasquery
         if  status == None: # submit new request
             addr = cherrypy.request.headers.get('Remote-Addr')
             _evt, pid = self.taskmgr.spawn(\
@@ -925,9 +926,6 @@ class DASWebService(DASWebManager):
         view    = kwargs.get('view', 'list')
         inst    = kwargs.get('instance', self.dbs_global)
         uinput  = kwargs.get('input', '')
-
-#        self.logdb(uinput)
-
         form    = self.form(uinput=uinput, instance=inst, view=view)
         check, content = self.generate_dasquery(uinput, inst)
         if  check:
@@ -939,6 +937,7 @@ class DASWebService(DASWebManager):
         status, error, reason = self.dasmgr.get_status(dasquery)
         kwargs.update({'status':status, 'error':error, 'reason':reason})
         pid = dasquery.qhash
+        print dastimestamp('DAS WEB REQUEST'), dasquery
         if  status == None: # process new request
             kwargs['dasquery'] = dasquery.storage_query
             addr = cherrypy.request.headers.get('Remote-Addr')
