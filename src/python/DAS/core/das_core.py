@@ -388,7 +388,6 @@ class DASCore(object):
         except Exception as exc:
             print_exc(exc)
             return 'fail'
-        self.rawcache.flush() # flush all writing on disk
         self.logger.info('\n##### merging ######\n')
         self.rawcache.update_query_record(dasquery, 'merging')
         das_timer('merge', self.verbose)
@@ -407,7 +406,6 @@ class DASCore(object):
                 status = 'fail'
                 print dastimestamp('DAS ERROR '), dasquery, reason
         update_das_query(dasquery, status, reason)
-        self.rawcache.flush() # flush all writing on disk
         das_timer('DASCore::call', self.verbose)
         return status
 
