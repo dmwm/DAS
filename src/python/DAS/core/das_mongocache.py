@@ -144,6 +144,7 @@ class DASMongocache(object):
         self.mapping = config['dasmapping']
         self.logging = config['dasdb'].get('logging', False)
         self.rec_ttl = config['dasdb'].get('record_ttl', 24*60*60)
+        self.del_ttl = config['dasdb'].get('delta_ttl', 100)
         self.retry   = config['dasdb'].get('retry', 3)
         self.das_son_manipulator = DAS_SONManipulator()
 
@@ -308,7 +309,11 @@ class DASMongocache(object):
         mdb.add_son_manipulator(self.das_son_manipulator)
         with conn.start_request():
             col   = mdb[collection]
-            spec1 = {'qhash': dasquery.qhash, 'das.expire': {'$lt' : timestamp}}
+            # use additional delta to wipe out data record since we can
+            # end-up with situation when records will be remove by
+            # another thread while we process request
+            spec1 = {'qhash': dasquery.qhash,
+                     'das.expire': {'$lt':timestamp-self.del_ttl}}
             spec2 = {'das.expire': {'$lt':timestamp-self.rec_ttl}}
             spec  = {'$or':[spec1, spec2]}
             if  self.verbose:
@@ -738,31 +743,6 @@ class DASMongocache(object):
         nrecords = '%s records' % counter
         print dastimestamp('DAS INFO '), dasquery, nrecords
 
-        # Under high load MongoDB sometimes misteriously fails to look-up
-        # records, so if we did not find any record it's worth to retry
-        if  not counter: # will retry
-            spec = {'qhash':dasquery.qhash}
-            ncache = self.col.find(spec, exhaust=True).count()
-            nmerge = self.merge.find(spec, exhaust=True).count()
-            msg  = 'retry found %s/%s cache/merge records' % (ncache, nmerge)
-            print dastimestamp('DAS WARNING'), dasquery, msg
-            if  nmerge and collection == 'merge':
-                res = self.merge.find(spec, exhaust=True)
-                res = list(res)
-                nres = len(res)
-                if  len(res) >= idx:
-                    res = res[idx:]
-                    if  limit and len(res) >= limit:
-                        res = res[:limit]
-                else:
-                    res = [] # requested from index which exceed res length
-                counter = 0
-                for row in res:
-                    counter += 1
-                    yield row
-                msg = 'counted %s records, had %s results' % (counter, nres)
-                print dastimestamp('DAS INFO '), dasquery, msg
-
         if  counter:
             msg = "yield %s record(s)" % counter
             self.logger.info(msg)
@@ -940,11 +920,6 @@ class DASMongocache(object):
             nval = {'$set': {'das.expire':empty_expire}}
             spec = {'qhash':dasquery.qhash}
             self.col.update(spec, nval, multi=True)
-
-    def flush(self):
-        "Flush all MongoDB records to disk"
-        conn = db_connection(self.dburi)
-        conn.fsync()
 
     def update_cache(self, dasquery, results, header):
         """
