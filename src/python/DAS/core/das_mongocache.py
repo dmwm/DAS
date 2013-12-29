@@ -42,7 +42,7 @@ from bson.objectid import ObjectId
 from bson.code import Code
 from pymongo import DESCENDING, ASCENDING
 from bson.errors import InvalidDocument
-from pymongo.errors import ConnectionFailure, InvalidOperation
+from pymongo.errors import ConnectionFailure, InvalidOperation, DuplicateKeyError
 
 def update_query_spec(spec, fdict):
     """
@@ -123,9 +123,8 @@ def cleanup_worker(dburi, dbname, collections, sleep):
     while True:
         conn = db_connection(dburi)
         spec = {'das.expire': { '$lt':time.time()}}
-        with conn.start_request():
-            for col in collections:
-                conn[dbname][col].remove(spec, fsync=True)
+        for col in collections:
+            conn[dbname][col].remove(spec)
         time.sleep(sleep)
 
 class DASMongocache(object):
@@ -307,21 +306,20 @@ class DASMongocache(object):
         conn = db_connection(self.dburi)
         mdb  = conn[self.dbname]
         mdb.add_son_manipulator(self.das_son_manipulator)
-        with conn.start_request():
-            col   = mdb[collection]
-            # use additional delta to wipe out data record since we can
-            # end-up with situation when records will be remove by
-            # another thread while we process request
-            spec1 = {'qhash': dasquery.qhash,
-                     'das.expire': {'$lt':timestamp-self.del_ttl}}
-            spec2 = {'das.expire': {'$lt':timestamp-self.rec_ttl}}
-            spec  = {'$or':[spec1, spec2]}
-            if  self.verbose:
-                nrec = col.find(spec, exhaust=True).count()
-                msg  = "will remove %s records" % nrec
-                msg += ", localtime=%s" % timestamp
-                self.logger.debug(msg)
-            col.remove(spec, fsync=True)
+        col   = mdb[collection]
+        # use additional delta to wipe out data record since we can
+        # end-up with situation when records will be remove by
+        # another thread while we process request
+        spec1 = {'qhash': dasquery.qhash,
+                 'das.expire': {'$lt':timestamp-self.del_ttl}}
+        spec2 = {'das.expire': {'$lt':timestamp-self.rec_ttl}}
+        spec  = {'$or':[spec1, spec2]}
+        if  self.verbose:
+            nrec = col.find(spec, exhaust=True).count()
+            msg  = "will remove %s records" % nrec
+            msg += ", localtime=%s" % timestamp
+            self.logger.debug(msg)
+        col.remove(spec)
 
     def check_services(self, dasquery):
         """
@@ -335,18 +333,11 @@ class DASMongocache(object):
             return False
         if  'services' not in das_rec['das']:
             return False
-        services = []
-        for srv in das_rec['das']['services']:
-            if  'das' in srv:
-                services = srv['das']
-                break
-        if  services:
-            cond = [{'das.system':r} for r in services]
-            spec = {'qhash': dasquery.qhash, '$or': cond,
-                    'das.expire':{'$gt':time.time()}}
-            nres = self.col.find(spec, exhaust=True).count()
-            if  nres:
-                return True
+        spec = {'qhash':dasquery.qhash, 'das.system':{'$ne':'das'},
+                'das.expire':{'$gt':time.time()}}
+        nres = self.col.find(spec, exhaust=True).count()
+        if  nres:
+            return True
         return False
 
     def find(self, dasquery):
@@ -427,12 +418,11 @@ class DASMongocache(object):
     def find_min_expire(self, dasquery):
         """Find minimal expire timestamp across all records for given DAS query"""
         spec   = {'qhash': dasquery.qhash}
-        expire = 2*time.time() # upper bound, will update
-        min_expire = 0
+        min_expire = 2*time.time() # upper bound, will update
         for rec in self.col.find(spec, exhaust=True):
             if  'das' in rec and 'expire' in rec['das']:
                 estamp = rec['das']['expire']
-                if  estamp < expire:
+                if  min_expire > estamp:
                     min_expire = estamp
         return long(min_expire)
 
@@ -507,9 +497,8 @@ class DASMongocache(object):
         conn = db_connection(self.dburi)
         mdb  = conn[self.dbname]
         mdb.add_son_manipulator(self.das_son_manipulator)
-        with conn.start_request():
-            col  = mdb[collection]
-            res  = col.find(spec=spec, exhaust=True).count()
+        col  = mdb[collection]
+        res  = col.find(spec=spec, exhaust=True).count()
         msg  = "(%s, coll=%s) found %s results" % (dasquery, collection, res)
         self.logger.info(msg)
         if  res:
@@ -540,20 +529,19 @@ class DASMongocache(object):
         conn = db_connection(self.dburi)
         mdb  = conn[self.dbname]
         mdb.add_son_manipulator(self.das_son_manipulator)
-        with conn.start_request():
-            col  = mdb[collection]
-            if  dasquery.unique_filter:
-                skeys = self.mongo_sort_keys(collection, dasquery)
-                if  skeys:
-                    gen = col.find(spec=spec, exhaust=True).sort(skeys)
-                else:
-                    gen = col.find(spec=spec, exhaust=True)
-                res = len([r for r in unique_filter(gen)])
+        col  = mdb[collection]
+        if  dasquery.unique_filter:
+            skeys = self.mongo_sort_keys(collection, dasquery)
+            if  skeys:
+                gen = col.find(spec=spec, exhaust=True).sort(skeys)
             else:
+                gen = col.find(spec=spec, exhaust=True)
+            res = len([r for r in unique_filter(gen)])
+        else:
+            res = col.find(spec=spec, exhaust=True).count()
+            if  not res: # double check that this is really the case
+                time.sleep(1)
                 res = col.find(spec=spec, exhaust=True).count()
-                if  not res: # double check that this is really the case
-                    time.sleep(1)
-                    res = col.find(spec=spec, exhaust=True).count()
         msg = "%s" % res
         self.logger.info(msg)
         return res
@@ -607,11 +595,10 @@ class DASMongocache(object):
         conn = db_connection(self.dburi)
         mdb  = conn[self.dbname]
         mdb.add_son_manipulator(self.das_son_manipulator)
-        with conn.start_request():
-            col = mdb[collection]
-            for val in col.index_information().values():
-                for idx in val['key']:
-                    yield idx[0] # index name
+        col = mdb[collection]
+        for val in col.index_information().values():
+            for idx in val['key']:
+                yield idx[0] # index name
 
     def check_filters(self, collection, spec, fields):
         "Check that given filters can be applied to records found with spec"
@@ -620,9 +607,8 @@ class DASMongocache(object):
         conn = db_connection(self.dburi)
         mdb  = conn[self.dbname]
         mdb.add_son_manipulator(self.das_son_manipulator)
-        with conn.start_request():
-            col  = mdb[collection]
-            data = find_one(col, spec)
+        col  = mdb[collection]
+        data = find_one(col, spec)
         if  not data:
             return
         found = False
@@ -657,21 +643,20 @@ class DASMongocache(object):
             conn = db_connection(self.dburi)
             mdb  = conn[self.dbname]
             mdb.add_son_manipulator(self.das_son_manipulator)
-            with conn.start_request():
-                col = mdb[coll]
-                nres = col.find(spec, exhaust=True).count()
-                if  nres == 1 or nres <= limit:
-                    limit = 0
-                if  limit:
-                    res = col.find(spec=spec, fields=fields,
-                            sort=skeys, skip=idx, limit=limit)
-                else:
-                    res = col.find(spec=spec, fields=fields,
-                            sort=skeys, exhaust=True)
-                if  unique:
-                    res = unique_filter(res)
-                for row in res:
-                    yield row
+            col = mdb[coll]
+            nres = col.find(spec, exhaust=True).count()
+            if  nres == 1 or nres <= limit:
+                limit = 0
+            if  limit:
+                res = col.find(spec=spec, fields=fields,
+                        sort=skeys, skip=idx, limit=limit)
+            else:
+                res = col.find(spec=spec, fields=fields,
+                        sort=skeys, exhaust=True)
+            if  unique:
+                res = unique_filter(res)
+            for row in res:
+                yield row
         except Exception as exp:
             print_exc(exp)
             row = {'exception': str(exp)}
@@ -740,8 +725,8 @@ class DASMongocache(object):
         for row in res:
             counter += 1
             yield row
-        nrecords = '%s records' % counter
-        print dastimestamp('DAS INFO '), dasquery, nrecords
+        msg = 'qhash %s, %s get_records' % (dasquery.qhash, counter)
+        print dastimestamp('DAS INFO '), msg
 
         if  counter:
             msg = "yield %s record(s)" % counter
@@ -755,10 +740,9 @@ class DASMongocache(object):
             if  nrec:
                 msg = "for query %s, found %s non-result record(s)" \
                         % (dasquery, nrec)
-                prf = 'DAS WARNING, monogocache:get_from_cache '
-                print dastimestamp(prf), msg, time.time()
+                print dastimestamp('DAS WARNING'), msg
                 for rec in self.col.find(spec, exhaust=True):
-                    print dastimestamp('DAS cache record '), rec
+                    print dastimestamp('DAS cache record'), rec
             self.update_das_expire(dasquery, etstamp())
 
     def map_reduce(self, mr_input, dasquery, collection='merge'):
@@ -897,13 +881,22 @@ class DASMongocache(object):
                     self.merge.insert(row)
             except InvalidOperation:
                 pass
+            except DuplicateKeyError as err:
+                if  not isinstance(gen, list):
+                    raise err
         if  inserted:
             # use explicit if statement, due to inserted condition
             # with outside scope meaning
             pass
         elif  not lookup_keys: # we get query w/o fields
+            msg = 'qhash %s, no lookup_keys' % dasquery.qhash
+            print dastimestamp('DAS WARNING'), msg
             pass
         else: # we didn't merge anything, it is DB look-up failure
+            msg  = 'qhash %s, did not insert into das.merge, '
+            msg += 'while we have %s/%s aggregator/diff records'\
+                    % (dasquery.qhash, len(agen), len(gen))
+            print dastimestamp('DAS WARNING'), msg
             empty_expire = etstamp()
             empty_record = {'das':{'expire':empty_expire,
                                    'primary_key':list(lookup_keys),
