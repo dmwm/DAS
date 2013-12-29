@@ -308,7 +308,7 @@ class DASCore(object):
             ack_services = services
         if  dasquery.query.find('records ') != -1:
             srv_status = True # skip DAS queries w/ records request
-        expire = 7*24*60*60 # 7 days, long enough to be overwriten by data-srv
+        expire = 2*60 # 2 minutes, it should be overwriten by data-srv
         header = dasheader("das", dasquery, expire, api='das_core',
                 services=dict(das=ack_services))
         header['lookup_keys'] = []
@@ -339,6 +339,18 @@ class DASCore(object):
             self.rawcache.update_query_record(dasquery, status, reason=reason)
             self.rawcache.add_to_record(\
                     dasquery, {'das.timer': get_das_timer()}, system='das')
+            # make sure that das record is updated
+            for idx in range(0, 10):
+                spec = {'qhash':dasquery.qhash, 'das.system':['das'],
+                        'das.status':status}
+                res = self.rawcache.col.find_one(spec)
+                if  res:
+                    break
+                msg = 'qhash %s, wait for das.status "%s" update' \
+                        % (dasquery.qhash, status)
+                print dastimestamp('DAS WARNING'), msg
+                time.sleep(idx)
+                self.rawcache.update_query_record(dasquery, status, reason=reason)
 
         self.logger.info('input query=%s' % query)
         das_timer('DASCore::call', self.verbose)
@@ -366,6 +378,7 @@ class DASCore(object):
             msg = 'found query %s in cache, status=%s\n' \
                         % (record['query'], status)
             self.logger.info(msg)
+            print dastimestamp('DAS INFO'), msg
             return status
 
         self.logger.info(dasquery)
@@ -389,7 +402,7 @@ class DASCore(object):
             print_exc(exc)
             return 'fail'
         self.logger.info('\n##### merging ######\n')
-        self.rawcache.update_query_record(dasquery, 'merging')
+        update_das_query(dasquery, 'merging')
         das_timer('merge', self.verbose)
         self.rawcache.merge_records(dasquery)
         das_timer('merge', self.verbose)
