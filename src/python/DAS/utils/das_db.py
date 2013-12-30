@@ -122,9 +122,7 @@ class DBConnection(object):
         key = self.genkey(uri)
         if  key in self.conndict:
             conn, _ = self.conndict[key]
-            if  conn:
-                _dbnames = conn.database_names()
-                return True
+            return conn.alive()
         return False
 
 DB_CONN_SINGLETON = DBConnection()
