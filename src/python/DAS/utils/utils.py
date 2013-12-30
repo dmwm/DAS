@@ -144,18 +144,14 @@ def deepcopy(obj):
         newobj = copy.deepcopy(obj)
     return newobj
 
-def dastimestamp(msg='DAS '):
+def dastimestamp(msg='DAS'):
     """
     Return timestamp in pre-defined format. For simplicity we match
     cherrypy date format.
     """
     tst = time.localtime()
     tstamp = time.strftime('[%d/%b/%Y:%H:%M:%S]', tst)
-    if  msg:
-        if  msg[-1] != ' ':
-            msg += ' '
-        return msg + tstamp + ' %s ' % time.mktime(tst)
-    return tstamp
+    return '%s %s %s' % (msg.strip(), tstamp, time.mktime(tst))
 
 def http_timestamp(tstamp=None):
     "Return HTTP complaint time stamp"
