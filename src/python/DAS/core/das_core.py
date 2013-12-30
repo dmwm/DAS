@@ -339,17 +339,21 @@ class DASCore(object):
             self.rawcache.update_query_record(dasquery, status, reason=reason)
             self.rawcache.add_to_record(\
                     dasquery, {'das.timer': get_das_timer()}, system='das')
-            # make sure that das record is updated
-            for idx in range(0, 10):
-                spec = {'qhash':dasquery.qhash, 'das.system':['das'],
-                        'das.status':status}
+            # make sure that das record is updated, we use 7 iteration which
+            # sum up into 1 minute to cover default syncdelay value of mongo
+            # server (in a future it would be better to find programatically
+            # this syncdelay value, but it seems pymongo driver does not
+            # provide any API for it.
+            for idx in xrange(1, 7):
+                spec = {'qhash':dasquery.qhash, 'das.system':['das']}
                 res = self.rawcache.col.find_one(spec)
-                if  res:
+                dbstatus = res.get('das', {}).get('status', None)
+                if  dbstatus == status:
                     break
-                msg = 'qhash %s, wait for das.status "%s" update' \
-                        % (dasquery.qhash, status)
+                msg = 'qhash %s, das.status=%s, status=%s, wait for update' \
+                        % (dasquery.qhash, dbstatus, status)
                 print dastimestamp('DAS WARNING'), msg
-                time.sleep(idx)
+                time.sleep(idx*idx)
                 self.rawcache.update_query_record(dasquery, status, reason=reason)
 
         self.logger.info('input query=%s' % query)
