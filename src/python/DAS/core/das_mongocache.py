@@ -120,12 +120,21 @@ def etstamp(delta=20):
 
 def cleanup_worker(dburi, dbname, collections, sleep):
     """DAS cache cleanup worker"""
+    lock = threading.Lock()
     while True:
-        conn = db_connection(dburi)
-        spec = {'das.expire': { '$lt':time.time()}}
-        for col in collections:
-            conn[dbname][col].remove(spec)
-        time.sleep(sleep)
+        try:
+            conn = db_connection(dburi)
+            spec = {'das.expire': { '$lt':time.time()}}
+            lock.acquire()
+            for col in collections:
+                conn[dbname][col].remove(spec)
+            lock.release()
+            time.sleep(sleep)
+        except:
+            try: # release possible lock
+                lock.release()
+            except threading.ThreadError:
+                pass
 
 class DASMongocache(object):
     """
@@ -302,23 +311,15 @@ class DASMongocache(object):
         config parameter. The later operation just prevent DAS cache from
         growing.
         """
-        timestamp = int(time.time())
-        conn = db_connection(self.dburi)
-        mdb  = conn[self.dbname]
+        conn   = db_connection(self.dburi)
+        mdb    = conn[self.dbname]
         mdb.add_son_manipulator(self.das_son_manipulator)
-        col   = mdb[collection]
-        # use additional delta to wipe out data record since we can
-        # end-up with situation when records will be remove by
-        # another thread while we process request
-        spec1 = {'qhash': dasquery.qhash,
-                 'das.expire': {'$lt':timestamp-self.del_ttl}}
-        spec2 = {'das.expire': {'$lt':timestamp-self.rec_ttl}}
-        spec  = {'$or':[spec1, spec2]}
-        if  self.verbose:
-            nrec = col.find(spec, exhaust=True).count()
-            msg  = "will remove %s records" % nrec
-            msg += ", localtime=%s" % timestamp
-            self.logger.debug(msg)
+        col    = mdb[collection]
+        # use additional delta to check data record expiration
+        # this delta is required to ensure the time required to
+        # process DAS request
+        spec = {'qhash':dasquery.qhash,
+                'das.expire':{'$lt':time.time()+self.del_ttl}}
         col.remove(spec)
 
     def check_services(self, dasquery):
@@ -462,7 +463,7 @@ class DASMongocache(object):
         # align all expire timestamps when we recieve ok status
         if  status == 'ok':
             udict = {'$set': {'das.expire': min_expire}}
-            self.col.update(das_spec, udict)
+            self.col.update(das_spec, udict, fsync=True)
 
     def apilist(self, dasquery):
         "Return list of apis for given dasquery"
@@ -725,7 +726,8 @@ class DASMongocache(object):
         for row in res:
             counter += 1
             yield row
-        msg = 'qhash %s, %s get_records' % (dasquery.qhash, counter)
+        msg = 'qhash %s, found %s record(s) in %s-cache' \
+                % (dasquery.qhash, counter, collection)
         print dastimestamp('DAS INFO '), msg
 
         if  counter:
