@@ -7,6 +7,14 @@ This release series is targeted to DAS production stability and quality.
 
 - 2.4.X
 
+  - Re-evaluate racing conditions:
+
+    - the clean-up worker should use lock to safely wipe out expired records
+    - the remove_expired method should only care about given dasquery records
+    - add additional delta when check expiration timestamp, it is required to
+      protect code from situation when records can be wiped out during request
+      operation
+
   - Fixed issues: 4098, 4097, 4090, 4095, 4093, 4089, 4085, 4082, 4081, 4079, 4077
   - Wrapped dasply parser call into spawn function, this fix intermittent
     problem with dasply under high load
