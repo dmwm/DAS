@@ -736,7 +736,8 @@ class DASMongocache(object):
                         % (dasquery, nrec)
                 print dastimestamp('DAS WARNING'), msg
                 for rec in self.col.find(spec, exhaust=True):
-                    print dastimestamp('DAS cache record'), rec
+                    if  rec.has_key('query'):
+                        print dastimestamp('DAS das record'), rec
             self.update_das_expire(dasquery, etstamp())
 
     def map_reduce(self, mr_input, dasquery, collection='merge'):
