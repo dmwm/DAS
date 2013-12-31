@@ -120,21 +120,13 @@ def etstamp(delta=20):
 
 def cleanup_worker(dburi, dbname, collections, sleep):
     """DAS cache cleanup worker"""
-    lock = threading.Lock()
     while True:
-        try:
-            conn = db_connection(dburi)
-            spec = {'das.expire': { '$lt':time.time()}}
-            lock.acquire()
-            for col in collections:
+        conn = db_connection(dburi)
+        spec = {'das.expire': { '$lt':time.time()}}
+        for col in collections:
+            with threading.Lock():
                 conn[dbname][col].remove(spec)
-            lock.release()
-            time.sleep(sleep)
-        except:
-            try: # release possible lock
-                lock.release()
-            except threading.ThreadError:
-                pass
+        time.sleep(sleep)
 
 class DASMongocache(object):
     """
