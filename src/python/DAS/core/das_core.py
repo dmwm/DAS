@@ -347,12 +347,13 @@ class DASCore(object):
             for idx in xrange(1, 7):
                 spec = {'qhash':dasquery.qhash, 'das.system':['das']}
                 res = self.rawcache.col.find_one(spec)
-                dbstatus = res.get('das', {}).get('status', None)
-                if  dbstatus == status:
-                    break
-                msg = 'qhash %s, das.status=%s, status=%s, wait for update' \
-                        % (dasquery.qhash, dbstatus, status)
-                print dastimestamp('DAS WARNING'), msg
+                if  res:
+                    dbstatus = res.get('das', {}).get('status', None)
+                    if  dbstatus == status:
+                        break
+                    msg = 'qhash %s, das.status=%s, status=%s, wait for update' \
+                            % (dasquery.qhash, dbstatus, status)
+                    print dastimestamp('DAS WARNING'), msg
                 time.sleep(idx*idx)
                 self.rawcache.update_query_record(dasquery, status, reason=reason)
 
