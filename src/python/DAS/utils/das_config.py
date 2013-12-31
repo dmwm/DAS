@@ -99,7 +99,7 @@ DASOption('dasdb', 'cleanup_interval', 'int', 600),
 # delta TTL control a buffer above expiration timestamp to ensure that
 # DAS will safely clean-up records and will not create racing condition
 # between clean-up thread and request ones
-DASOption('dasdb', 'delta_ttl', 'int', 2*60),
+DASOption('dasdb', 'delta_ttl', 'int', 60),
 
 #
 # DAS web server options
