@@ -50,6 +50,8 @@ class RequestManager(object):
         self.clean()
         if  not kwds:
             return
+        if  self.has_pid(pid):
+            return
         tstamp = time.strftime("%Y%m%d %H:%M:%S", time.localtime())
         doc = dict(_id=pid, kwds=json.dumps(kwds),
                 ts=time.time(), timestamp=tstamp)
