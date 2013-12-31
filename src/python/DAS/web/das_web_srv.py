@@ -936,7 +936,6 @@ class DASWebService(DASWebManager):
         status, error, reason = self.dasmgr.get_status(dasquery)
         kwargs.update({'status':status, 'error':error, 'reason':reason})
         pid = dasquery.qhash
-        print dastimestamp('DAS WEB REQUEST'), dasquery
         if  status == None: # process new request
             kwargs['dasquery'] = dasquery.storage_query
             addr = cherrypy.request.headers.get('Remote-Addr')
