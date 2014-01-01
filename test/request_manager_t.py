@@ -7,11 +7,7 @@ Unit test for DAS db methods
 
 import time
 import unittest
-import traceback
-from   DAS.utils.das_db import db_connection
-from   DAS.utils.das_config import das_readconfig
 from   DAS.web.request_manager import RequestManager
-from   DAS.utils.utils import deepcopy
 
 class testDAS_RegMgr(unittest.TestCase):
     """
@@ -21,10 +17,7 @@ class testDAS_RegMgr(unittest.TestCase):
         """
         set up stuff
         """
-        self.debug  = 0
-        dasconfig   = deepcopy(das_readconfig())
-        self.dburi  = dasconfig['mongodb']['dburi']
-        self.reqmgr = RequestManager(self.dburi)
+        self.reqmgr = RequestManager(lifetime=0)
 
     def test_reqmgr(self):
         """Test reqmgr methods"""
@@ -37,6 +30,18 @@ class testDAS_RegMgr(unittest.TestCase):
         self.reqmgr.remove(pid)
         result = self.reqmgr.get(pid)
         self.assertEqual(None, result)
+
+    def test_reqmgr_tstamp(self):
+        """Test reqmgr methods"""
+        pid  = 1
+        kwds = {'input':'bla'}
+        self.reqmgr.add(pid, kwds)
+        result = self.reqmgr.get(pid)
+        self.assertEqual(kwds, result)
+        time.sleep(1)
+        self.reqmgr.clean()
+        result = [r for r in self.reqmgr.items()]
+        self.assertEqual([], result)
 #
 # main
 #

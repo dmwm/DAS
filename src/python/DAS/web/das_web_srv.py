@@ -159,7 +159,7 @@ class DASWebService(DASWebManager):
     def init(self):
         """Init DAS web server, connect to DAS Core"""
         try:
-            self.reqmgr     = RequestManager(self.dburi, lifetime=self.lifetime)
+            self.reqmgr     = RequestManager(lifetime=self.lifetime)
             self.dasmgr     = DASCore(engine=self.engine)
             self.repmgr     = CMSRepresentation(self.dasconfig, self.dasmgr)
             self.daskeys    = self.dasmgr.das_keys()
