@@ -7,6 +7,7 @@ This release series is targeted to DAS production stability and quality.
 
 - 2.4.X
 
+  - Re-factor RequestManager code to use internal store instead of MongoDB one
   - Re-evaluate racing conditions:
 
     - the clean-up worker should use lock to safely wipe out expired records
