@@ -23,7 +23,7 @@ import whoosh.scoring
 from DAS.keywordsearch.config import DEBUG as _DEBUG
 
 
-INDEX_DIR = os.environ['DAS_KWS_IR_INDEX']
+INDEX_DIR = os.environ.get('DAS_KWS_IR_INDEX', '/tmp/das')
 _USE_FAKE_FIELDS = False  # this also impact IDFs!!!
 # if not, include only processed data!
 _ix = None
@@ -37,6 +37,9 @@ def create_idx_with_redundant_fields(field_list):
      * title (exact, without stopwords and stemmed each as separate fields)
      * parental information (e.g. dataset for dataset.tag)
     """
+    # make sure we have INDEX_DIR
+    if  not os.path.isdir(INDEX_DIR):
+        os.mkdir(INDEX_DIR)
     # remove the old index, if any
     shutil.rmtree(os.path.join(INDEX_DIR, '*'), ignore_errors=True)
     schema = Schema(fieldname=TEXT(stored=True, field_boost=3),
@@ -97,6 +100,9 @@ def create_idx_wo_redundant_fields(field_list):
      * parental information (e.g. dataset for dataset.tag)
      * fields main technical name
     """
+    # make sure we have INDEX_DIR
+    if  not os.path.isdir(INDEX_DIR):
+        os.mkdir(INDEX_DIR)
     schema = Schema(fieldname=TEXT(stored=True, field_boost=3),
                     # fieldname_current=TEXT(stored=True, field_boost=1),
                     fieldname_processed_parents=TEXT(
