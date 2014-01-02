@@ -44,6 +44,14 @@ from pymongo import DESCENDING, ASCENDING
 from bson.errors import InvalidDocument
 from pymongo.errors import ConnectionFailure, InvalidOperation, DuplicateKeyError
 
+def spec4data_records():
+    "Return spec part for data_records"
+    data_record = record_codes('data_record')
+    empty_record = record_codes('empty_record')
+    gridfs_record = record_codes('gridfs_record')
+    spec = {'$in': [data_record, empty_record, gridfs_record]}
+    return spec
+
 def update_query_spec(spec, fdict):
     """
     Update spec dict with given dictionary. If fdict
@@ -480,7 +488,7 @@ class DASMongocache(object):
         if  query_record:
             record = record_codes('query_record')
         else:
-            record = record_codes('data_record')
+            record = spec4data_records()
         spec = {'qhash':dasquery.qhash, 'das.record':record,
                 'das.expire':{'$gt':time.time()}}
         if  system:
@@ -512,10 +520,10 @@ class DASMongocache(object):
             spec = dasquery.mongo_query.get('spec', {})
         elif dasquery.hashes:
             spec = {'qhash':{'$in':dasquery.hashes},
-                    'das.record': record_codes('data_record')}
+                    'das.record': spec4data_records()}
         else:
             spec = {'qhash':dasquery.qhash,
-                    'das.record': record_codes('data_record')}
+                    'das.record': spec4data_records()}
         if  filter_cond:
             spec.update(filter_cond)
         self.check_filters(collection, spec, fields)
@@ -698,10 +706,10 @@ class DASMongocache(object):
             spec = dasquery.mongo_query.get('spec', {})
         elif dasquery.hashes:
             spec = {'qhash':{'$in':dasquery.hashes},
-                    'das.record': record_codes('data_record')}
+                    'das.record': spec4data_records()}
         else:
             spec = {'qhash':dasquery.qhash,
-                    'das.record': record_codes('data_record')}
+                    'das.record': spec4data_records()}
         if  filter_cond:
             spec.update(filter_cond)
         if  'records' in dasquery.query:
@@ -718,7 +726,7 @@ class DASMongocache(object):
         for row in res:
             counter += 1
             yield row
-        msg = 'qhash %s, found %s record(s) in %s-cache' \
+        msg = 'qhash %s, found %s record(s) in %s collection' \
                 % (dasquery.qhash, counter, collection)
         print dastimestamp('DAS INFO '), msg
 
@@ -867,7 +875,7 @@ class DASMongocache(object):
                 gen = aggregator(dasquery, records, expire)
                 genrows = parse2gridfs(self.gfs, pkey, gen, self.logger)
                 das_dict = {'das':{'expire':expire,
-                        'das.record': record_codes('data_record'),
+                        'das.record': record_codes('gridfs_record'),
                         'primary_key':[k for k in lookup_keys],
                         'system': ['gridfs']}, 'qhash':dasquery.qhash,
                         'cache_id':[], 'das_id': id_list}
@@ -891,9 +899,13 @@ class DASMongocache(object):
             msg  = 'qhash %s, did not insert into das.merge' % dasquery.qhash
             print dastimestamp('DAS WARNING'), msg
             empty_expire = etstamp()
-            empty_record = {'das':{'expire':empty_expire,
-                                   'primary_key':list(lookup_keys),
-                                   'record': record_codes('empty_record')},
+            das = dict(expire=empty_expire, primary_key=list(lookup_keys)[0],
+                       condition_keys=list(lookup_keys),
+                       instance=dasquery.instance,
+                       system=['das'], services=dasquery.services,
+                       record=record_codes('empty_record'),
+                       ts=time.time(), api=[])
+            empty_record = {'das':das, 'qhash': dasquery.qhash,
                             'cache_id':[], 'das_id': id_list}
             for key, val in dasquery.mongo_query['spec'].iteritems():
                 if  key.find('.') == -1:
