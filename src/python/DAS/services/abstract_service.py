@@ -45,9 +45,9 @@ class DASAbstractService(object):
             self.multitask    = config['das'].get('multitask', True)
             self.error_expire = config['das'].get('error_expire', 300) 
             self.dbs_global   = None # to be configured at run time
-            dburi             = config['mongodb']['dburi']
+            self.dburi        = config['mongodb']['dburi']
             engine            = config.get('engine', None)
-            self.gfs          = db_gridfs(dburi)
+            self.gfs          = db_gridfs(self.dburi)
         except Exception as exc:
             print_exc(exc)
             raise Exception('fail to parse DAS config')
