@@ -746,7 +746,7 @@ class DASMongocache(object):
                 for rec in self.col.find(spec, exhaust=True):
                     if  rec.has_key('query'):
                         print dastimestamp('DAS das record'), rec
-            self.update_das_expire(dasquery, etstamp())
+            self.update_das_expire(dasquery, etstamp(2*self.del_ttl))
 
     def map_reduce(self, mr_input, dasquery, collection='merge'):
         """
@@ -898,7 +898,7 @@ class DASMongocache(object):
         else: # we didn't merge anything, it is DB look-up failure
             msg  = 'qhash %s, did not insert into das.merge' % dasquery.qhash
             print dastimestamp('DAS WARNING'), msg
-            empty_expire = etstamp()
+            empty_expire = etstamp(2*self.del_ttl)
             lkeys = list(lookup_keys)
             das = dict(expire=empty_expire, primary_key=lkeys[0],
                        condition_keys=lkeys,
