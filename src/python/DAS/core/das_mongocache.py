@@ -888,9 +888,7 @@ class DASMongocache(object):
             print dastimestamp('DAS WARNING'), msg
             pass
         else: # we didn't merge anything, it is DB look-up failure
-            msg  = 'qhash %s, did not insert into das.merge, '
-            msg += 'while we have %s/%s aggregator/diff records'\
-                    % (dasquery.qhash, len(agen), len(gen))
+            msg  = 'qhash %s, did not insert into das.merge' % dasquery.qhash
             print dastimestamp('DAS WARNING'), msg
             empty_expire = etstamp()
             empty_record = {'das':{'expire':empty_expire,
