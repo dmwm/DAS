@@ -8,7 +8,7 @@ import contextlib
 import sys
 import cStringIO
 import time
-from DAS.keywordsearch.whoosh import ir_entity_attributes
+from DAS.keywordsearch.entity_matchers.kwd_chunks import ir_entity_attributes
 
 
 @contextlib.contextmanager

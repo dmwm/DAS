@@ -14,7 +14,7 @@ from DAS.keywordsearch.tokenizer import get_keyword_without_operator, \
     get_operator_and_param, test_operator_containment
 from DAS.keywordsearch.nlp import filter_stopwords
 from DAS.keywordsearch.metadata.schema_adapter_factory import get_schema
-from DAS.keywordsearch.whoosh.ir_entity_attributes import \
+from DAS.keywordsearch.entity_matchers.kwd_chunks.ir_entity_attributes import \
     SimpleIREntityAttributeMatcher
 
 

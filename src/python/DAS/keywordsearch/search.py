@@ -27,8 +27,8 @@ from DAS.keywordsearch.entity_matchers.name_matching \
     import keyword_schema_weights
 from DAS.keywordsearch.entity_matchers.value_matching \
     import keyword_value_weights
-from DAS.keywordsearch.entity_matchers.result_fields_by_chunks import \
-    MultiKwdAttributeMatcher
+from DAS.keywordsearch.entity_matchers.kwd_chunks.chunk_matcher \
+    import MultiKwdAttributeMatcher
 
 
 EN_STOPWORDS = stopwords.words('english')
