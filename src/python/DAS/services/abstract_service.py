@@ -187,21 +187,9 @@ class DASAbstractService(object):
         if  not self.write2cache:
             return
 
-        # check if provided generator has any items, if not we provide empty
-        # data record
-        try:
-            item = gen.next()
-        except StopIteration:
-            item = None
-        if  item:
-            result = itertools.chain([item], gen)
-        else:
-            prim_key = self.dasmapping.primary_key(self.name, api)
-            result = [{prim_key:[]}] # empty record with prim_key
-
         # before going to cache we should check/set possible misses, e.g.
         # primary key when error is thrown
-        result = self.set_misses(dasquery, api, result)
+        result = self.set_misses(dasquery, api, gen)
 
         # update the cache
         header = dasheader(self.name, dasquery, expire, api, url,

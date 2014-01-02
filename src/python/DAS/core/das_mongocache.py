@@ -899,14 +899,17 @@ class DASMongocache(object):
             msg  = 'qhash %s, did not insert into das.merge' % dasquery.qhash
             print dastimestamp('DAS WARNING'), msg
             empty_expire = etstamp()
-            das = dict(expire=empty_expire, primary_key=list(lookup_keys)[0],
-                       condition_keys=list(lookup_keys),
+            lkeys = list(lookup_keys)
+            das = dict(expire=empty_expire, primary_key=lkeys[0],
+                       condition_keys=lkeys,
                        instance=dasquery.instance,
                        system=['das'], services=dasquery.services,
                        record=record_codes('empty_record'),
                        ts=time.time(), api=[])
             empty_record = {'das':das, 'qhash': dasquery.qhash,
                             'cache_id':[], 'das_id': id_list}
+            for key in lkeys:
+                empty_record.update({key.split('.')[0]:[]})
             for key, val in dasquery.mongo_query['spec'].iteritems():
                 if  key.find('.') == -1:
                     empty_record[key] = []
