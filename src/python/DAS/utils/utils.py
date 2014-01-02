@@ -66,7 +66,8 @@ def record_codes(rtype):
     "Return das record code for given record type"
     codes = {'query_record': 0,
              'data_record': 1,
-             'empty_record': 2}
+             'empty_record': 2,
+             'gridfs_record': 3}
     return codes[rtype]
 
 def get_dbs_instance(url):
