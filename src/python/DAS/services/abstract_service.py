@@ -11,6 +11,7 @@ __author__ = "Valentin Kuznetsov"
 
 # system modules
 import time
+import itertools
 import DAS.utils.jsonwrapper as json
 
 # DAS modules
@@ -179,12 +180,24 @@ class DASAbstractService(object):
         # cache, so return at the end what we have in cache.
         self.api(dasquery)
 
-    def write_to_cache(self, dasquery, expire, url, api, args, result, ctime):
+    def write_to_cache(self, dasquery, expire, url, api, args, gen, ctime):
         """
         Write provided result set into DAS cache.
         """
         if  not self.write2cache:
             return
+
+        # check if provided generator has any items, if not we provide empty
+        # data record
+        try:
+            item = gen.next()
+        except StopIteration:
+            item = None
+        if  item:
+            result = itertools.chain([item], gen)
+        else:
+            prim_key = self.dasmapping.primary_key(self.name, api)
+            result = [{prim_key:[]}] # empty record with prim_key
 
         # before going to cache we should check/set possible misses, e.g.
         # primary key when error is thrown
@@ -357,7 +370,7 @@ class DASAbstractService(object):
                 keys2adjust.append(key)
         msg   = "adjust keys %s" % keys2adjust
         self.logger.debug(msg)
-        count = 1
+        count = 0
         if  keys2adjust:
             # adjust of the rows
             for row in yield_rows(row, genrows):
