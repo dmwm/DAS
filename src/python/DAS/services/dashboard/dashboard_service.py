@@ -47,7 +47,7 @@ class DashboardService(DASAbstractService):
             close = True
         else:
             data = source
-
+        records = 0
         try:
             elem  = ET.fromstring(data)
             for i in elem:
@@ -63,10 +63,14 @@ class DashboardService(DASAbstractService):
                                     row[key] = val
                         rowkey = self.map[api]['keys'][0]
                         yield {rowkey : row}
+                        records += 1
         except:
             yield {'error' : data}
+            records += 1
         if  close:
             source.close()
+        if  not records: # yeild empty record
+            yield {}
 
     def apicall(self, dasquery, url, api, args, dformat, expire):
         """
