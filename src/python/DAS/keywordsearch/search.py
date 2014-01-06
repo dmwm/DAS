@@ -8,19 +8,30 @@ import pprint
 
 from cherrypy import thread_data, request
 
+from nltk.corpus import stopwords
+
+
 from DAS.keywordsearch.config import USE_LOG_PROBABILITIES, DEBUG, \
     MINIMAL_DEBUG
 from DAS.keywordsearch.tokenizer import tokenize, cleanup_query
 from DAS.keywordsearch.presentation.result_presentation import \
     result_to_dasql, dasql_to_nl
-from DAS.keywordsearch.entry_points import get_entry_points
 from DAS.keywordsearch.metadata.schema_adapter_factory import get_schema
 from DAS.keywordsearch.config import K_RESULTS_TO_STORE
 from DAS.keywordsearch.rankers.exceptions import TimeLimitExceeded
-from DAS.keywordsearch.whoosh.ir_entity_attributes import \
-    load_index, build_index
+
+
 from DAS.keywordsearch.metadata.input_values_tracker \
     import init_trackers as init_value_trackers
+from DAS.keywordsearch.entity_matchers.name_matching \
+    import keyword_schema_weights
+from DAS.keywordsearch.entity_matchers.value_matching \
+    import keyword_value_weights
+from DAS.keywordsearch.entity_matchers.kwd_chunks.chunk_matcher \
+    import MultiKwdAttributeMatcher
+
+
+EN_STOPWORDS = stopwords.words('english')
 
 
 class KeywordSearch(object):
@@ -36,8 +47,8 @@ class KeywordSearch(object):
         self.ranker.initialize_ranker(self.schema)
 
         # build and load the whoosh index (listing fields in service outputs)
-        build_index(self.schema.list_result_fields())
-        load_index()
+        fields = self.schema.list_result_fields()
+        self.multi_kwd_searcher = MultiKwdAttributeMatcher(fields)
 
         # initialize the value trackers (primary_dataset, release, etc)
         init_value_trackers()
@@ -61,7 +72,8 @@ class KeywordSearch(object):
             print 'TOKENS:', tokens
         return query, tokens
 
-    def process_results(self, keywords, query):
+    @classmethod
+    def process_results(cls, query):
         """
         prepare the results to be shown
         """
@@ -103,8 +115,6 @@ class KeywordSearch(object):
             # for displaying the score bar, we want to obtain scores <= 1.0
             score_norm = max(1.0, max_score)
             for res in best_scores:
-                # TODO: len_normalized_.. is not used. only needed in old ranker
-                res['len_normalized_score'] = _get_score(res)
                 res['scorebar_normalized_score'] = _get_score(res) / score_norm
         if DEBUG:
             print '\n'.join(
@@ -119,9 +129,8 @@ class KeywordSearch(object):
         """
         self.set_dbs_inst(dbs_inst)
         query, tokens = self.tokenize_query(query)
-        keywords = [kw.strip() for kw in tokens
-                    if kw.strip()]
-        chunks, schema_ws, values_ws = get_entry_points(keywords)
+        keywords = [kw.strip() for kw in tokens if kw.strip()]
+        chunks, schema_ws, values_ws = self.get_entry_points(keywords)
 
         if MINIMAL_DEBUG:
             print '============= Q: %s, tokens: %s ' % (query, str(tokens))
@@ -145,4 +154,26 @@ class KeywordSearch(object):
             print exc
             err = exc
 
-        return err, self.process_results(keywords, query)
+        return err, self.process_results(query)
+
+    def get_entry_points(self, tokens):
+        """
+        calculates the entry points - assignment of individual keywords
+         to the corresponding most possible interpretations (not taking into
+         account their inter-dependencies)
+        """
+        keywords = [kw.strip() for kw in tokens
+                    if kw.strip()]
+        schema_ws = {}
+        values_ws = {}
+        for kwd_index, kwd in enumerate(keywords):
+            kw_value = kw_schema = kwd
+            if '=' in kwd and len(kwd.split('=')) == 2:
+                kw_schema, kw_value = kwd.split('=')
+            schema_ws[kwd] = keyword_schema_weights(kw_schema,
+                                                    kwd_idx=kwd_index)
+            if kwd not in EN_STOPWORDS and kw_value:
+                values_ws[kwd] = keyword_value_weights(kw_value)
+
+        chunks = self.multi_kwd_searcher.generate_chunks(keywords)
+        return chunks, schema_ws, values_ws

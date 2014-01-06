@@ -7,7 +7,7 @@ from DAS.keywordsearch.metadata.schema_adapter_factory import get_schema
 from DAS.keywordsearch.nlp import string_distance
 
 
-def keyword_schema_weights(keyword, keyword_index=-1):
+def keyword_schema_weights(keyword, kwd_idx=-1):
     """
     for each schema term (entity, entity attribute) calculates likelihood for
     the keyword to match it
@@ -23,7 +23,7 @@ def keyword_schema_weights(keyword, keyword_index=-1):
             result.extend([(string_distance(keyword, synonym), entity_long), ])
 
     # apply some simple patterns
-    if keyword_index == 0:
+    if kwd_idx == 0:
         if keyword == 'where':
             result.extend([(0.75, 'site.name'), ])
         if keyword == 'who':
