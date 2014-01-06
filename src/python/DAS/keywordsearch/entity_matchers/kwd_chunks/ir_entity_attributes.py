@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
 #pylint: disable-msg=C0103
-# pylint disabled: C0103 - we use short names
+# pylint disabled: C0103 - we use short names, helper functs are not constants
 """
 this is the IR-based ranker used in matching keywords into names of
 fields in service outputs. These may be composed of unclean,technical terms.
@@ -24,20 +24,22 @@ from DAS.keywordsearch.config import DEBUG as _DEBUG
 
 
 INDEX_DIR = os.environ.get('DAS_KWS_IR_INDEX', '/tmp/das')
-_USE_FAKE_FIELDS = False  # this also impact IDFs!!!
-# if not, include only processed data!
 
-tokenizer = SpaceSeparatedTokenizer()
-stopword_filter = StopFilter()
-lower_filter = LowercaseFilter()
+# Helper functions for manipulating keyword lists
+tokenize = SpaceSeparatedTokenizer()
+remove_stopwords = StopFilter()
+tolower = LowercaseFilter()
 stemmer = StemFilter()
 
-# Title do not contain stop words, so use a filter
-_text = lambda l: [t.text for t in l]
-f_kw_stemmed = lambda kw: _text(stemmer(stopword_filter(
-    lower_filter(tokenizer(kw)))))
-f_kw_no_stopword = lambda kw: _text(stopword_filter(
-    lower_filter(tokenizer(kw))))
+
+def kwlist_no_stopwords(kwds):
+    """ filter the keywords: remove stopwords, lower and tokenize """
+    return [t.text for t in remove_stopwords(tolower(tokenize(kwds)))]
+
+
+def kwlist_stemmed(kwds):
+    """ filter the keywords: STEM, remove stopwords, lower and tokenize """
+    return [t.text for t in stemmer(remove_stopwords(tolower(tokenize(kwds))))]
 
 
 class SimpleIREntityAttributeMatcher(object):
@@ -102,17 +104,17 @@ class SimpleIREntityAttributeMatcher(object):
                 return the list of keyword that were matched
                 """
                 # which keywords have been matched
-                keyword_list_no_stopw = f_kw_no_stopword(kwds)
+                keyword_list_no_stopw = kwlist_no_stopwords(kwds)
                 terms_matched = set(val for _, val in hit.matched_terms())
                 if _DEBUG:
                     print 'matched_terms_list', terms_matched
 
                 matched_kws = set()
                 for kw in keyword_list_no_stopw:
-                    keyword_stemmed = f_kw_stemmed(kw)[0]
+                    keyword_stemmed = kwlist_stemmed(kw)[0]
                     if _DEBUG:
                         print 'kw', kw, 'stemmed:', keyword_stemmed, \
-                            'kw no stopw', f_kw_no_stopword(kw)
+                            'kw no stopw', kwlist_no_stopwords(kw)
                     if keyword_stemmed in terms_matched or kw in terms_matched:
                         matched_kws |= set([kw])
                 return matched_kws
@@ -136,8 +138,8 @@ class SimpleIREntityAttributeMatcher(object):
         """
         prepares the search query over IR engine
         """
-        keyword_list_no_stopw = f_kw_no_stopword(keywords)
-        keyword_list_stemmed = f_kw_stemmed(keywords)
+        keyword_list_no_stopw = kwlist_no_stopwords(keywords)
+        keyword_list_stemmed = kwlist_stemmed(keywords)
 
         fields_to_search = ['fieldname', 'fieldname_processed_parents',
                             'fieldname_processed_current']
@@ -232,8 +234,8 @@ class RedundantFieldEnityAttributeIndexWriter(SimpleIREntityAttributeMatcher):
     informative).
     """
     def __build_search_query(self, keywords):
-        keyword_list_no_stopw = f_kw_no_stopword(keywords)
-        keyword_list_stemmed = f_kw_stemmed(keywords)
+        keyword_list_no_stopw = kwlist_no_stopwords(keywords)
+        keyword_list_stemmed = kwlist_stemmed(keywords)
 
         # build the terms to search
         fields_to_search = ['fieldname', 'fieldname_processed_parents',
