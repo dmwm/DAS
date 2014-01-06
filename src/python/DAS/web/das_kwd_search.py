@@ -50,14 +50,14 @@ class KeywordSearchHandler(object):
         """
         max_w = 50
         min_w = 3
-        score = max(min(q['len_normalized_score'], 1.0), 0.0)
+        score = max(min(q['score'], 1.0), 0.0)
         w = math.floor((max_w - min_w) * q['scorebar_normalized_score']) + min_w
         color_class = (score < 0.35) and 'low' or \
                       (score < 0.60) and 'avg' or 'high'
         return {'max_w': max_w,
                 'w': w,
                 'style': self.colored_scorebar and color_class or 'no-color',
-                'score': q['len_normalized_score']}
+                'score': q['score']}
 
     @classmethod
     def _prepare_trace(cls, q):
@@ -71,8 +71,7 @@ class KeywordSearchHandler(object):
             '<ul style="width: 500px;background-color: #fff;"><li>' + \
             '</li><li>'.join(str(item) for item in t) + \
             '</li></ul>' + \
-            'score: %.2f; query len norm score (-inf; ~1.0): %.2f' % (
-                q['score'], q['len_normalized_score'])
+            'score: {0:.2f}'.format(q['score'])
 
         return cgi.escape(thtml,  quote=True)
 
