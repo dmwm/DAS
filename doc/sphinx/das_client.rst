@@ -231,7 +231,7 @@ application:
 Here we provide a simple example of how to use das_client to find dataset
 summary information.
 
-.. code::
+.. doctest::
 
     # PLEASE NOTE: to use this example download das_client.py from
     # cmsweb.cern.ch/das/cli
