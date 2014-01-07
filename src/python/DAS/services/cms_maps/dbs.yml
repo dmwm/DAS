@@ -734,3 +734,42 @@ notations : [
     {"api_output":"mod_by", "rec_key":"modified_by", "api":""},
     {"api_output":"phygrp", "rec_key":"name", "api":""},
 ]
+---
+input_values: [
+    {
+        "input": "tier.name",
+        "url": "https://cmsweb.cern.ch/dbs/prod/global/DBSReader/datatiers",
+        "jsonpath_selector": "$[*].data_tier_name",
+        "test": "*RECO*"
+    },
+    {
+        "input": "datatype.name",
+        "url": "https://cmsweb.cern.ch/dbs/prod/global/DBSReader/datatypes",
+        "jsonpath_selector": "$[*].data_type",
+        "test": "mc"
+    },
+    {
+        "input": "status.name",
+        "url": "https://cmsweb.cern.ch/dbs/prod/global/DBSReader/datasetaccesstypes",
+        "jsonpath_selector": "$[0]['dataset_access_type'][*]",
+        "test": "valid"
+    },
+    {
+        "input": "release.name",
+        "url": "https://cmsweb.cern.ch/dbs/prod/global/DBSReader/releaseversions",
+        "jsonpath_selector": "$[0]['release_version'][*]",
+        "test": "CMSSW_4_*"
+    },
+    {
+        "input": "primary_dataset.name",
+        "url": "https://cmsweb.cern.ch/dbs/prod/global/DBSReader/primarydatasets",
+        "jsonpath_selector": "$[*].primary_ds_name",
+        "test": "RelVal160pre4Z-TT"
+    },
+    {
+        "input": "group.name",
+        "url": "https://cmsweb.cern.ch/dbs/prod/global/DBSReader/physicsgroups",
+        "jsonpath_selector": "$[*].physics_group_name",
+        "test": "analysis"
+    }
+]
