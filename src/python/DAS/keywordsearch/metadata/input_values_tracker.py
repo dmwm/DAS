@@ -24,7 +24,6 @@ from DAS.utils import jsonwrapper as json
 from DAS.utils.utils import dastimestamp
 from DAS.utils.das_db import get_db_uri, db_connection, create_indexes
 from DAS.utils.utils import get_key_cert
-from DAS.utils.thread import start_new_thread
 from DAS.utils.url_utils import HTTPSClientAuthHandler
 from DAS.utils.das_config import das_readconfig
 from DAS.core.das_mapping_db import DASMapping
@@ -41,9 +40,9 @@ STABLE_FIELDS = ['site.name', 'tier.name', 'datatype.name', 'status.name',
                  'group.name']
 
 
-def fieldname(field):
+def get_collection_name(field_name):
     """ gets name of collection where to store data """
-    return field.replace('.', '_')
+    return field_name.replace('.', '_')
 
 
 class InputValuesTracker(object):
@@ -52,14 +51,14 @@ class InputValuesTracker(object):
      in a separate collection to be used by keyword search and auto-completion.
     """
 
-    def __init__(self, field_data):
+    def __init__(self, cfg):
         config = das_readconfig().get('inputvals', {})
 
         self.dburi = get_db_uri()
-        self.dbcoll = fieldname(field_data['input'])
+        self.dbcoll = get_collection_name(cfg['input'])
         self.dbname = config.get('dbname', config.get('DBNAME', 'inputvals'))
 
-        self.field_data = field_data
+        self.cfg = cfg
         self.cache_size = config.get('cache_size', 1000)
         self.expire = config.get('expire', 3600)
         self.write_hash = config.get('write_hash', False)
@@ -68,10 +67,10 @@ class InputValuesTracker(object):
 
     @property
     def col(self):
-        "Return MongoDB collection object"
+        """Return MongoDB collection object"""
         conn = db_connection(self.dburi)
-        dbc  = conn[self.dbname]
-        col  = dbc[self.dbcoll]
+        db = conn[self.dbname]
+        col = db[self.dbcoll]
         return col
 
     def init(self):
@@ -79,7 +78,6 @@ class InputValuesTracker(object):
         Init db connection and check that it is alive
         """
         try:
-            conn = db_connection(self.dburi)
             indexes = [('value', ASCENDING), ('ts', ASCENDING)]
             create_indexes(self.col, indexes)
 
@@ -90,7 +88,7 @@ class InputValuesTracker(object):
 
     def update(self):
         """
-        Update some Values collection..
+        Update some the input values collection for current input field
         """
         if SKIP_UPDATES:
             return None
@@ -136,7 +134,7 @@ class InputValuesTracker(object):
             else:
                 for row in self.col.find(spec).skip(idx).limit(limit):
                     yield row['value']
-        except:
+        except Exception:
             pass
 
     def fetch_values(self):
@@ -153,7 +151,7 @@ class InputValuesTracker(object):
         params = {}
         encoded_data = urllib.urlencode(params, doseq=True)
 
-        service = self.field_data
+        service = self.cfg
         url = service['url'] + encoded_data
         print str(url)
         req = urllib2.Request(url)
@@ -183,8 +181,7 @@ def init_trackers():
     """ initialization """
     # get list of trackers
     mapping = DASMapping(config=das_readconfig())
-    inputvalues_uris = mapping.inputvalues_uris()
-    for provider in inputvalues_uris:
+    for provider in mapping.inputvalues_uris():
         TRACKERS[provider['input']] = InputValuesTracker(provider)
 
 
@@ -270,14 +267,14 @@ def input_value_matches(kwd):
     return scores_by_entity
 
 
-def test(mgr):
+def test(tracker):
     """ Test function """
-    mgr.update()
+    tracker.update()
     idx = 0
     limit = 10
-    print 'matching {} in {}:'.format(mgr.field_data['test'],
-                                      mgr.field_data['input'])
-    for row in mgr.find(mgr.field_data['test'], idx, limit):
+    print 'matching {} in {}:'.format(tracker.cfg['test'],
+                                      tracker.cfg['input'])
+    for row in tracker.find(tracker.cfg['test'], idx, limit):
         print row
 
 
