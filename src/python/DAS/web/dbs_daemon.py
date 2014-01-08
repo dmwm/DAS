@@ -98,41 +98,49 @@ class DBSDaemon(object):
         if SKIP_UPDATES:
             return None
 
-        time0 = round(time.time())
-        udict = {'$set':{'ts':time0}}
-        cdict = {'dataset':'__POPULATED__'}
-        gen = self.datasets()
-        #TODO: make sure the generator is not empty (service or connection failure), as this may cause the dataset cache to be dumped out
-        if  not self.col.count():
-            try: # perform bulk insert operation
-                while True:
-                    if  not self.col.insert(\
-                            itertools.islice(gen, self.cache_size)):
-                        break
-            except InvalidOperation as err:
-                # please note we need to inspect error message to
-                # distinguish InvalidOperation from generate exhastion
-                if  str(err) == 'cannot do an empty bulk insert':
-                    self.col.insert(cdict)
-                pass
-            except Exception as err:
-                pass
-        else: # we already have records, update their ts
-            for row in gen:
-                spec = dict(dataset=row['dataset'])
-                self.col.update(spec, udict, upsert=True)
+        dbc = self.col
+        if  not dbc:
+            print "%s DBSDaemon %s, no connection to DB" \
+                % (dastimestamp(), self.dbcoll)
+            return
 
-            # if no rows were returned, do not delete old cache
-            else:
-                msg = 'Service %s returned no results' % self.dbs_url
-                raise Exception(msg)
+        try:
+            time0 = round(time.time())
+            udict = {'$set':{'ts':time0}}
+            cdict = {'dataset':'__POPULATED__'}
+            gen = self.datasets()
+            msg = ''
+            if  not dbc.count():
+                try: # perform bulk insert operation
+                    while True:
+                        if  not dbc.insert(\
+                                itertools.islice(gen, self.cache_size)):
+                            break
+                except InvalidOperation as err:
+                    # please note we need to inspect error message to
+                    # distinguish InvalidOperation from generate exhastion
+                    if  str(err) == 'cannot do an empty bulk insert':
+                        dbc.insert(cdict)
+                    pass
+                except Exception as err:
+                    pass
+                # remove records with old ts
+                dbc.remove({'ts':{'$lt':time0-self.expire}})
+                msg = 'inserted new'
+            else: # we already have records, update their ts
+                for row in gen:
+                    spec = dict(dataset=row['dataset'])
+                    dbc.update(spec, udict, upsert=True)
+                msg = 'updated old'
 
-        # remove records with old ts
-        self.col.remove({'ts':{'$lt':time0-self.expire}})
-        if  find_one(self.col, cdict):
-            self.col.update(cdict, udict)
-        print "%s DBSDaemon updated %s collection in %s sec, nrec=%s" \
-        % (dastimestamp(), self.dbcoll, time.time()-time0, self.col.count())
+            if  find_one(dbc, cdict):
+                dbc.update(cdict, udict)
+            print "%s DBSDaemon %s, %s %s records in %s sec" \
+            % (dastimestamp(), self.dbcoll, msg, dbc.count(),
+                    round(time.time()-time0))
+        except Exception as exc:
+            print "%s DBSDaemon %s, fail to update, reason %s" \
+                % (dastimestamp(), self.dbcoll, str(exc))
 
     def find(self, pattern, idx=0, limit=10):
         """
@@ -254,7 +262,8 @@ def find_datasets(pattern, dbs_instance, dbname='dbs', idx=0, limit=10):
 def test(dbs_url):
     "Test function"
     uri = 'mongodb://localhost:8230'
-    mgr = DBSDaemon(dbs_url, uri)
+    config = {'preserve_on_restart':True}
+    mgr = DBSDaemon(dbs_url, uri, config)
     mgr.update()
     idx = 0
     limit = 10
