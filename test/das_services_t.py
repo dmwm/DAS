@@ -43,7 +43,7 @@ class testCMSFakeDataServices(unittest.TestCase):
         dburi         = config['mongodb']['dburi']
         self.dburi    = dburi
         logger        = PrintManager('TestCMSFakeDataServices', verbose=debug)
-        self.base     = 'http://localhost:8080' # URL of DASTestDataService
+        self.base     = 'http://127.0.0.1:8080' # URL of DASTestDataService
         self.expire   = 100
         config['logger']    = logger
         config['loglevel']  = debug
