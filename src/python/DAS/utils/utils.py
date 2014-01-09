@@ -81,6 +81,8 @@ def get_dbs_instance(url):
         return url.split('/')[3]
     elif url.find('localhost') != -1: # test instance
         return None
+    elif url.find('127.0.0.1') != -1: # test instance
+        return None
     else:
         raise Exception(msg)
 
