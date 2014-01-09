@@ -2,9 +2,9 @@ system : ip_service
 format : JSON
 ---
 urn : ip_locator
-url : "http://api.ipinfodb.com/v2/ip_query.php"
+url : "http://api.ipinfodb.com/v3/ip-city"
 expire : 30
-params : { "ip" : "required", "output": "json", "timezone": "true",
+params : { "ip" : "required", "format": "json",
            "key": "409b2ed52a2ad2743956eef1ab4842417fcf801af24a5ec9c501a2ce3dd8dbbe" }
 lookup : ip
 das_map : [
