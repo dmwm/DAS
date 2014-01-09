@@ -744,7 +744,7 @@ class DASMongocache(object):
                         % (dasquery, nrec)
                 print dastimestamp('DAS WARNING'), msg
                 for rec in self.col.find(spec, exhaust=True):
-                    if  rec.has_key('query'):
+                    if  'query' in rec:
                         print dastimestamp('DAS das record'), rec
             self.update_das_expire(dasquery, etstamp(2*self.del_ttl))
 
