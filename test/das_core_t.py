@@ -6,6 +6,7 @@ Unit test for DAS core module
 """
 
 import os
+import socket
 import unittest
 
 from pymongo.connection import Connection
@@ -47,15 +48,15 @@ class testDASCore(unittest.TestCase):
 
     def testIPService(self):
         """test DASCore with IP service"""
+        ipaddr = socket.gethostbyname('cmsweb.cern.ch')
         # test DAS workflow
-        query  = "ip=137.138.141.145"
+        query  = "ip=%s" % ipaddr
         dquery = DASQuery(query)
         result = self.das.call(dquery)
         expect = "ok"
         self.assertEqual(expect, result)
 
         # test results
-        ipaddr = '137.138.141.145'
         query  = "ip=%s | grep ip.address" % ipaddr
         dquery = DASQuery(query)
         result = self.das.get_from_cache(dquery)
