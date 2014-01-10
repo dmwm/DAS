@@ -1,6 +1,8 @@
 #from DAS.web.utils import quote
 
+#if $proposed_queries:
 <b>Did you mean any of the queries below?</b><br />
+#end if
 
 #if $err:
         <div class="kws-timeout">
@@ -10,6 +12,7 @@
 #end if
 
 
+#if $proposed_queries:
 <div id="filter-by-entity">
 #if $hi_score_result_types
 
@@ -81,5 +84,6 @@
     jQuery(initialize_kws_results);
 </script>
 #end if
+#end if  ## end of "if $proposed_queries:"
 <!-- end of kwdsearch_results.tmpl -->
 
