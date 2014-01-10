@@ -322,6 +322,14 @@ def get_global_dbs_inst():
     return dasmapping.dbs_global_instance()
 
 
+def list_dbs_instances():
+    """ list all DBS instances """
+    from DAS.core.das_mapping_db import DASMapping
+    dasconfig = das_readconfig()
+    dasmapping = DASMapping(dasconfig)
+    return dasmapping.dbs_instances()
+
+
 if __name__ == '__main__':
     test_dbs2()
     test_find_static()
