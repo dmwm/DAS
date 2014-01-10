@@ -18,6 +18,7 @@ import threading
 from datetime import date
 from urlparse import urlparse, parse_qsl
 from cherrypy import expose, HTTPError
+from cherrypy import response
 from cherrypy.lib.static import serve_file
 from bson.objectid import ObjectId
 from pymongo.errors import AutoReconnect, ConnectionFailure
@@ -365,7 +366,9 @@ class DASWebService(DASWebManager):
         if not self.adjust:
             return
         uinput = kwargs.get('input', '')
-        kwargs['input'] = identify_apparent_query_patterns(uinput)
+        inst = kwargs.get('instance', self.dbs_global)
+
+        kwargs['input'] = identify_apparent_query_patterns(uinput, inst)
 
     def _get_dbsmgr(self, inst):
         """
@@ -453,8 +456,14 @@ class DASWebService(DASWebManager):
             das_parser_error(uinput, str(type(err)) + ' ' + str(err))
             return 1, error_msg(str(err))
         except Exception as err:
-            # for non Wildcard parsing errors, show the Keyword Search
             das_parser_error(uinput, str(type(err)) + ' ' + str(err))
+
+            # show multiple dataset matches for 1 keyword queries
+            if hasattr(response, 'dataset_matches_msg'):
+                return 1, error_msg(response.dataset_matches_msg,
+                                    show_kws=self.is_kws_enabled())
+
+            # for non Wildcard parsing errors, show the Keyword Search
             return 1, error_msg(str(err), show_kws=self.is_kws_enabled())
 
         # DAS query validation
