@@ -7,9 +7,39 @@ if so returns a valid DAS Query
 """
 from DAS.utils.regex import NON_AMBIGUOUS_INPUT_PATTERNS, \
     DATASET_PATTERN_RELAXED
+from DAS.keywordsearch.entity_matchers.value_matching_dataset import \
+    match_value_dataset
+from DAS.web.dbs_daemon import list_dbs_instances
+from cherrypy import response
 
 
-def identify_apparent_query_patterns(uinput):
+def match_dataset_all_inst(kwd, cur_inst):
+    """ list matching dataset patterns in all DBS instances """
+    if len(kwd) < 3:
+        return []
+    matches = []
+    for inst in list_dbs_instances():
+        score, data = match_value_dataset(kwd, inst)
+        if not score:
+            continue
+        data['inst'] = inst
+        data['match'] = data.get('adjusted_keyword', kwd)
+        # score matches in other DBS instances lower
+        score = score - 0.15 if inst != cur_inst else score
+        data['score'] = score
+        matches.append(data)
+    return sorted(matches, key=lambda item: item['score'], reverse=True)
+
+
+def format_dataset_match(match, dbs_inst):
+    """ return an adjusted dataset query """
+    new_query = 'dataset={}'.format(match['match'])
+    #if match['inst'] != dbs_inst:
+    new_query += ' instance={}'.format(match['inst'])
+    return new_query
+
+
+def identify_apparent_query_patterns(uinput, inst=None):
     """
     identify and rewrite the input that is little ambiguous directly into DAS QL
      (the results will contain links to related entities so it's OK if user
@@ -51,6 +81,37 @@ def identify_apparent_query_patterns(uinput):
         # starts with slash,  contains no  #, and not ending with '.root'
         if DATASET_PATTERN_RELAXED.match(uinput):
             return 'dataset={}'.format(uinput)
+
+    # on no matches, try matching datasets on either dbs instance
+    # TODO: currrent DBS instance!
+    dbs_inst = inst
+    inst_matches = match_dataset_all_inst(kwd=uinput, cur_inst=dbs_inst)
+
+    # in case of unique match submit adjusted query immediately
+    if len(inst_matches) == 1:
+        match = inst_matches[0]
+
+        # if the match is over current DBS instance, immediate redirect
+        if match['inst'] == dbs_inst:
+            return format_dataset_match(match, dbs_inst)
+        else:
+            # ask user for a confirmation
+            msg = 'P.S. The input matches datasets only in a different' \
+                  ' DBS instance than currently selected:'
+            msg += '\n'
+            msg += format_dataset_match(match, dbs_inst)
+            response.dataset_matches_msg = msg
+
+    elif len(inst_matches) > 0:
+        # we will display all the matches but will not execute any query
+        msg = 'P.S. The input is ambiguous. ' \
+              'It matches these dataset patterns over some DBS instances:'
+        msg += '\n'
+        msg += '\n'.join(format_dataset_match(m, dbs_inst)
+                         for m in inst_matches)
+        print msg
+        response.dataset_matches_msg = msg
+
     return uinput
 
 

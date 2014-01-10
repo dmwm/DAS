@@ -14,11 +14,13 @@ from DAS.keywordsearch.config import DEBUG
 from DAS.web.dbs_daemon import find_datasets
 
 
-def match_value_dataset(kwd):
+def match_value_dataset(kwd, dbs_inst=None):
     """ return keyword matches to dataset values in dbsmanager """
-    if not hasattr(request, 'dbs_inst'):
-        return None, None
-    dbs_inst = request.dbs_inst
+    # if no specific dbs_inst passed, get the current one from request
+    if not dbs_inst:
+        if not hasattr(request, 'dbs_inst'):
+                return None, None
+        dbs_inst = request.dbs_inst
 
     dataset_score = None
     upd_kwd = kwd
