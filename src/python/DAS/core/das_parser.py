@@ -226,7 +226,7 @@ class QLManager(object):
         # look-up special key condition
         requested_system = query.get('system', None)
         if  requested_system:
-            if  isinstance(requested_system, str):
+            if  isinstance(requested_system, basestring):
                 requested_system = [requested_system]
             return list( set(slist) & set(requested_system) )
         return slist
