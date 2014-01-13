@@ -1,0 +1,126 @@
+#!/bin/bash
+# import reset DAS database state and import DAS Maps
+# also import keylearning and inputvals
+# usage: das_db_import action [[MAPS_FILE] METADATA_DIR]
+# param: action = forced_update | ifchanged
+#
+# environment variables used:
+# STAGEDIR (environment variable)
+
+STAGEDIR=${STAGEDIR:-"/tmp/das_tmp_stage"}
+DASROOT=`python -c "import DAS; print '/'.join(DAS.__file__.split('/')[:-1])"`
+ACTION=$1
+DASMAPS_FILE=${2:-"$DASROOT/services/cms_maps/das_maps.js"}
+METADATA_DIR=${3:-"$DASROOT/kws_data/db_dumps"}
+
+# Helper: Update and clean a MongoDB database(s) and its collections
+# Parameters:
+# 1: object_name
+# 2-n: list of strings specifying db_collection  to be updated
+#
+# If the update scripts have changes this will happen:
+# * call clean_${object_name}.js
+# * import update_{db_col,..}.js files into mongodb
+update_db()
+{
+  local obj="$1"
+  local updates=${@:2}  # all subsequent params are the updates
+
+  # calculate stamp over (possibly multiple) collection updates
+  echo "update_db($1)"
+  stamp=$(cd $STAGEDIR && printf "%s\n" $updates | xargs -i md5sum "update_{}.js")
+  oldstamp=$(cat ${STAGEDIR}/${obj}-schema-stamp 2>/dev/null)
+  #echo "stamp: $stamp  oldstamp: $oldstamp"
+  if [ ! -f ${STAGEDIR}/${obj}-schema-stamp ] || [ X"$oldstamp" != X"$stamp" ]; then
+    set -e
+    # this seem to exit with 0 even if DB being cleaned do not exist
+    # still we have to check if clean script exists, in case of multiple collections...
+    if [ -f ${STAGEDIR}/clean_${obj}.js ]; then
+        echo "Clean ${obj}"
+        mongo --port 8230 ${STAGEDIR}/clean_${obj}.js
+    fi
+
+    for entry in ${updates[@]}
+    do
+        db=$(echo ${entry} | cut -f1 -d_) coll=$(echo ${entry} | cut -f2- -d_)
+        echo "Updating db: ${db} col: ${coll}"
+        mongoimport --port 8230 --db ${db} --collection ${coll} --file ${STAGEDIR}/update_${entry}.js
+    done
+    # TODO: what if some file is missing?!
+    echo "$stamp" > ${STAGEDIR}/${obj}-schema-stamp
+    set +e
+  else
+    echo "- no changes needed."
+  fi
+}
+
+
+# PREPARE THE UPDATES
+# -------------------
+
+# prepares main DAS data (DASMaps) for being imported to DB
+prepare_das_db_update(){
+    # prepare clean up of DAS DB: mapping db and other "caches"
+    (echo 'mapping = db.getSisterDB("mapping");'
+     echo 'mapping.dropDatabase();'
+     echo 'parser = db.getSisterDB("parser");'
+     echo 'parser.db.drop();'
+     echo 'das = db.getSisterDB("das");'
+     echo 'das.dropDatabase();') > $STAGEDIR/clean_mapping.js
+    cp $DASMAPS_FILE $STAGEDIR/update_mapping_db.js
+}
+
+force_dasmap_update(){
+    mkdir -p $STAGEDIR
+    rm -f $STAGEDIR/*mapping*-schema-stamp
+}
+
+force_metadata_update(){
+    mkdir -p $STAGEDIR
+    rm -f $STAGEDIR/*keylearning*-schema-stamp
+    rm -f $STAGEDIR/*inputvals*-schema-stamp
+}
+
+# prepare metadata (input values, keylearning) for being imported to DB
+prepare_metadata_db_update(){
+    # keylearning
+    (echo 'keylearning = db.getSisterDB("keylearning");'
+     echo 'keylearning.dropDatabase();') > $STAGEDIR/clean_keylearning.js
+    cp $METADATA_DIR/update_keylearning_db.js $STAGEDIR/
+
+    # inputvals
+    (echo 'inputvals = db.getSisterDB("inputvals");'
+     echo 'inputvals.dropDatabase();') > $STAGEDIR/clean_inputvals.js
+    cp $METADATA_DIR/update_inputvals*.js $STAGEDIR/
+}
+
+
+# run the updates now
+run_db_update(){
+    cmd="update_db"
+    $cmd "mapping" "mapping_db"
+    $cmd "keylearning" "keylearning_db"
+    $cmd "inputvals" inputvals_{datatype,group,release,site,status,tier}_name
+}
+
+
+# ------------ MAIN --------------------------------------------
+if [ "$ACTION" == "forced_update_now" ]; then
+    # force the cleanup and update - ignore "schema-stamps" and run it now
+    force_dasmap_update
+    force_metadata_update
+
+    prepare_das_db_update
+    prepare_metadata_db_update
+
+    run_db_update
+elif [ "$ACTION" == "process_db_updates" ]; then
+    # update MongoDB using what was staged, if any
+    # e.g. as a cron job constantly checking for changes in maps
+    run_db_update
+else
+    # just prepare update to be run later (e.g. when MongoDB is available)
+    # e.g. could be run as post-install trigger
+    prepare_das_db_update
+    prepare_metadata_db_update
+fi
