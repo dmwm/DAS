@@ -353,6 +353,8 @@ class DBSService(DASAbstractService):
         """
         if  instance in self.instances:
             return url.replace(self.prim_instance, instance)
+        else:
+            return None
         return url
 
     def adjust_params(self, api, kwds, inst=None):
