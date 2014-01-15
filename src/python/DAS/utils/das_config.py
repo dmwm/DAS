@@ -186,6 +186,10 @@ DASOption('das', 'emptyset_expire', 'int', 5),
 # list of data services participated in DAS
 DASOption('das', 'services', 'list',
                 ['google_maps', 'ip', 'postalcode'], destination='services'),
+# Choice of main DBS
+DASOption('das', 'main_dbs', 'string', 'dbs'),
+# Choice of DBS instances, use empty list to allow read them from DAS maps
+DASOption('das', 'dbs_instances', 'list', []),
 # number of DASCore workers
 # defines how many data-service calls will run at onces
 DASOption('das', 'core_workers', 'int', 50),

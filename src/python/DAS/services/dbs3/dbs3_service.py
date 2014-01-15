@@ -426,6 +426,7 @@ class DBS3Service(DASAbstractService):
         self.instances = self.dasmapping.dbs_instances(self.name)
         self.extended_expire = config['dbs'].get('extended_expire', 0)
         self.extended_threshold = config['dbs'].get('extended_threshold', 0)
+        self.dbs_choice = config['das'].get('main_dbs', 'dbs3')
 
     def apicall(self, dasquery, url, api, args, dformat, expire):
         "DBS3 implementation of AbstractService:apicall method"
@@ -477,8 +478,9 @@ class DBS3Service(DASAbstractService):
             elif isinstance(url, list):
                 urls = [u.replace(self.prim_instance, instance) for u in url]
                 return urls
-        # TODO: hack to work ONLY with DBS2 global instance name
-        if  instance.find('cms_dbs_') != -1:
+        # FIXME: temp hack to allow query DBS3 global instance
+        #        when user asks for DBS2 global one
+        if  self.dbs_choice == 'dbs' and instance.find('cms_dbs_') != -1:
             if  instance == 'cms_dbs_prod_global':
                 return url
             return None # no other DBS2 instnaces is allowed

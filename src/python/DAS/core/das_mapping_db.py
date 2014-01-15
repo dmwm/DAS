@@ -125,6 +125,8 @@ class DASMapping(object):
         self.dbname   = config['mappingdb']['dbname']
         self.colname  = config['mappingdb']['collname']
         self.map_test = config.get('map_test', True)
+        self.main_dbs = config['das'].get('main_dbs', 'dbs')
+        self.dbsinsts = config['das'].get('dbs_instances', [])
 
         msg = "%s@%s" % (self.dburi, self.dbname)
         self.logger.info(msg)
@@ -378,13 +380,17 @@ class DASMapping(object):
     # ==================
     # Informational APIs
     # ==================
-    def dbs_global_instance(self, system='dbs'):
+    def dbs_global_instance(self, system=None):
         "Retrive from mapping DB DBS url and extract DBS instance"
+        if  not system:
+            system = self.main_dbs
         url = self.dbs_url(system)
         return get_dbs_instance(url)
 
-    def dbs_url(self, system='dbs'):
+    def dbs_url(self, system=None):
         "Retrive from mapping DB DBS url"
+        if  not system:
+            system = self.main_dbs
         systems = self.list_systems()
         dbses   = set(['dbs', 'dbs3'])
         if  dbses & set(systems) != dbses:
@@ -401,8 +407,14 @@ class DASMapping(object):
                 return url
         return url
 
-    def dbs_instances(self, system='dbs'):
+    def dbs_instances(self, system=None):
         "Retrive from mapping DB DBS instances"
+        # use dbs istances from the config
+        if  self.dbsinsts and not system:
+            return self.dbsinsts
+        # default dbs
+        if  not system:
+            system = self.main_dbs
         systems = self.list_systems()
         dbses   = set(['dbs', 'dbs3'])
         if  dbses & set(systems) != dbses:
