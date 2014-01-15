@@ -190,9 +190,14 @@ class DBSDaemon(object):
         req = urllib2.Request(url)
         try:
             stream = urllib2.urlopen(req)
+        except urllib2.HTTPError:
+            msg = 'Fail to contact %s' % url
+            print dastimestamp('DAS ERROR'), msg
+            raise Exception(msg)
         except Exception as exc:
             print_exc(exc)
             msg = 'Fail to contact %s' % url
+            print dastimestamp('DAS ERROR'), msg
             raise Exception(msg)
         gen = qlxml_parser(stream, 'dataset')
         for row in gen:
