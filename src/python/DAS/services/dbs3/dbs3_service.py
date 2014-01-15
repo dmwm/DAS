@@ -472,18 +472,20 @@ class DBS3Service(DASAbstractService):
         """
         Adjust URL for a given instance
         """
-        if  instance in self.instances:
-            if  isinstance(url, basestring):
-                return url.replace(self.prim_instance, instance)
-            elif isinstance(url, list):
-                urls = [u.replace(self.prim_instance, instance) for u in url]
-                return urls
         # FIXME: temp hack to allow query DBS3 global instance
         #        when user asks for DBS2 global one
         if  self.dbs_choice == 'dbs' and instance.find('cms_dbs_') != -1:
             if  instance == 'cms_dbs_prod_global':
                 return url
             return None # no other DBS2 instnaces is allowed
+        if  instance in self.instances:
+            if  isinstance(url, basestring):
+                return url.replace(self.prim_instance, instance)
+            elif isinstance(url, list):
+                urls = [u.replace(self.prim_instance, instance) for u in url]
+                return urls
+        else:
+            return None
         return url
 
     def adjust_params(self, api, kwds, inst=None):
