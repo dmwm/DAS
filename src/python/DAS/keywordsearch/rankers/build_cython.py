@@ -29,7 +29,7 @@ def copy_to_ext_dir():
     src = os.path.join(build_dir, 'fast_recursive_ranker.c')
     dst = os.path.join(build_dir, '../../extensions/fast_recursive_ranker.c')
     print 'copying result into extensions dir:' \
-          'i.e. {} into {}...'.format(src, dst)
+          'i.e. {0} into {1}...'.format(src, dst)
     shutil.copy(src, dst)
 
 if __name__ == "__main__":

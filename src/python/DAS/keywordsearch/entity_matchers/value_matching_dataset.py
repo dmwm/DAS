@@ -23,6 +23,11 @@ def match_value_dataset(kwd, dbs_inst=None):
         dbs_inst = request.dbs_inst
 
     dataset_score = None
+
+    # make sure the kwd is unicode
+    if not isinstance(kwd, unicode) and isinstance(kwd, str):
+        kwd = unicode(kwd)
+
     upd_kwd = kwd
 
     # dbsmgr.find returns a generator, check if it's non empty
