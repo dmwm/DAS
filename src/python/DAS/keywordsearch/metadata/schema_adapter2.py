@@ -421,7 +421,7 @@ class DasSchemaAdapter(object):
         #print 'ENTITY FIELDS (BY LOOKUP):'
         #pprint.pprint(dict(self._fields_dict))
         print 'ENTITY FIELDS (BY LOOKUP MULTI ENTITY):'
-        pprint.pprint(["{}: {}".format(lookup,
+        pprint.pprint(["{0}: {1}".format(lookup,
                                        self._fields_dict[lookup].keys())
                       for lookup in self._fields_dict.keys()
                       if ',' in lookup])
