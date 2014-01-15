@@ -33,9 +33,9 @@ def match_dataset_all_inst(kwd, cur_inst):
 
 def format_dataset_match(match, dbs_inst):
     """ return an adjusted dataset query """
-    new_query = 'dataset={}'.format(match['match'])
+    new_query = 'dataset={0}'.format(match['match'])
     #if match['inst'] != dbs_inst:
-    new_query += ' instance={}'.format(match['inst'])
+    new_query += ' instance={0}'.format(match['inst'])
     return new_query
 
 
@@ -75,12 +75,12 @@ def identify_apparent_query_patterns(uinput, inst=None):
     matches = [daskey for daskey, pattern in NON_AMBIGUOUS_INPUT_PATTERNS
                if pattern.match(uinput)]
     if len(matches) == 1:
-        return '{}={}'.format(matches[0], uinput)
+        return '{0}={1}'.format(matches[0], uinput)
     elif len(matches) == 0:
         # on no matches, try slightly more ambiguous dataset pattern:
         # starts with slash,  contains no  #, and not ending with '.root'
         if DATASET_PATTERN_RELAXED.match(uinput):
-            return 'dataset={}'.format(uinput)
+            return 'dataset={0}'.format(uinput)
 
     # on no matches, try matching datasets on either dbs instance
     # TODO: currrent DBS instance!
