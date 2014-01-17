@@ -115,7 +115,7 @@ class DASOptionParser:
                                default=False, dest="das_headers", help=msg)
         msg = 'specify power base for size_format, default is 10 (can be 2)'
         self.parser.add_option("--base", action="store", type="int",
-                               default=10, dest="base", help=msg)
+                               default=0, dest="base", help=msg)
     def get_opt(self):
         """
         Returns parse list of options
@@ -128,10 +128,12 @@ def convert_time(val):
         return time.strftime('%d/%b/%Y_%H:%M:%S_GMT', time.gmtime(val))
     return val
 
-def size_format(uinput, ibase=10):
+def size_format(uinput, ibase=0):
     """
     Format file size utility, it converts file size into KB, MB, GB, TB, PB units
     """
+    if  not ibase:
+        return uinput
     try:
         num = float(uinput)
     except Exception as _exc:
