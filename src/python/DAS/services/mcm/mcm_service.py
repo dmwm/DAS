@@ -44,12 +44,19 @@ class MCMService(DASAbstractService):
         gen       = json_parser(data, self.logger)
         counter   = 0
         for rec in gen:
-            row = rec['results']
+            if  'results' in rec:
+                row = rec['results']
+            else:
+                row = rec
             for key in ['_id', '_rev']:
                 if  key in row:
                     del row[key]
             if  row:
-                yield {'mcm':row}
+                if  api == 'dataset4mcm':
+                    for val in row.values():
+                        yield {'dataset':{'name': val}}
+                else:
+                    yield {'mcm':row}
             counter += 1
         msg  = "api=%s, format=%s " % (api, dformat)
         msg += "prim_key=%s yield %s rows" % (prim_key, counter)

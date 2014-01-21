@@ -34,6 +34,16 @@ das_map : [
      "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+"},
 ]
 ---
+urn : dataset4mcm
+url : "https://cms-pdmv.cern.ch/mcm/public/restapi/requests/output"
+expire : 600
+params : {"mcm": "required"}
+lookup : dataset
+das_map : [
+    {"das_key": "dataset", "rec_key":"dataset.name"},
+    {"das_key": "mcm", "rec_key": "mcm.prepid", "api_arg":"mcm"},
+]
+---
 notations : [
     {"api_output":"results", "rec_key":"mcm", "api":""},
     {"api_output":"total_events", "rec_key":"nevents", "api":""},
