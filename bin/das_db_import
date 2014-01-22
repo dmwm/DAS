@@ -28,7 +28,7 @@ update_db()
 
   # calculate stamp over (possibly multiple) collection updates
   echo "update_db($1)"
-  stamp=$(cd $STAGEDIR && printf "%s\n" $updates | xargs -i md5sum "update_{}.js")
+  stamp=$(cd $STAGEDIR && printf "%s\n" $updates | xargs -I md5sum "update_{}.js")
   oldstamp=$(cat ${STAGEDIR}/${obj}-schema-stamp 2>/dev/null)
   #echo "stamp: $stamp  oldstamp: $oldstamp"
   if [ ! -f ${STAGEDIR}/${obj}-schema-stamp ] || [ X"$oldstamp" != X"$stamp" ]; then
@@ -83,6 +83,7 @@ force_metadata_update(){
 
 # prepare metadata (input values, keylearning) for being imported to DB
 prepare_metadata_db_update(){
+    echo "copying initial metadata from: $METADATA_DIR"
     # keylearning
     (echo 'keylearning = db.getSisterDB("keylearning");'
      echo 'keylearning.dropDatabase();') > $STAGEDIR/clean_keylearning.js

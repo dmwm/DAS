@@ -24,7 +24,7 @@ MAPSDIR=$(cd "${MAPSDIR}"; pwd)
 
 dasroot=`python -c "import DAS; print '/'.join(DAS.__file__.split('/')[:-1])"`
 echo "rebuilding the DAS maps"
-(cd "$dasroot" && create_das_js "${MAPSDIR}")
+(cd "$dasroot" && das_create_json_maps "${MAPSDIR}")
 
 # the created maps are located here
 if [ "$MAPTYPE" == "production" ]; then
