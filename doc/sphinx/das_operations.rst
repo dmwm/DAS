@@ -181,6 +181,6 @@ They are located at $DAS_ROOT/bin.
   tool, see [PYLINT]_.
 - das_config is a tool to create DAS configuration file;
 - das_update_database is a tool to update DAS maps, and initialize other metadata
-- das_drop_maps is a tool that generates json DB dumps from yml dasmap files. TODO: shall be renamed
+- das_maps_yml2json is a tool that generates json DB dumps from YML dasmaps.
 - das_db_import is a helper used to import the DB dumps including dasmaps, keylearning, inputvals
 - das_mapreduce is a tool to create map/reduce function for DAS;
