@@ -2,6 +2,12 @@
 # this is mostly intended to be run in development environment
 # e.g. bin/das_update_database src/python/DAS/services/cms_maps production
 
+if [ $# -eq 0 ]; then
+    echo "Usage: das_update_database dir_to_maps [production|testbed]"
+    echo "e.g. das_update_database src/python/DAS/services/cms_maps production"
+    exit
+fi
+
 MAPSDIR=${1}
 MAPTYPE=${2:-"production"}
 WHEN_IMPORT="forced_update_now"
@@ -12,7 +18,7 @@ MAPSDIR=$(cd "${MAPSDIR}"; pwd)
 
 dasroot=`python -c "import DAS; print '/'.join(DAS.__file__.split('/')[:-1])"`
 echo "rebuilding the DAS maps"
-(cd $dasroot && create_das_js "${MAPSDIR}")
+(cd "$dasroot" && create_das_js "${MAPSDIR}")
 
 # the created maps are located here
 if [ "$MAPTYPE" == "production" ]; then
