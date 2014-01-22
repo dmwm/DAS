@@ -5,6 +5,15 @@ Release 1.X.Y series
 --------------------
 This release series is targeted to DAS production stability and quality.
 
+- 2.5.X
+
+  - Change behavior of DAS CLI to show bytes as is and upon user request its
+    representation in certain base, e.g. --base=2 will show MiB notations, etc.
+  - Support DBS3 instances with slashes, e.g. prod/global, int/global
+  - Extend list of supported DBS3 instances, in addition to global and
+    phys0[1-3], I added instances with slashes, e.g. int/global. If instances
+    does not have slash it is considered to come from prod DBS URL.
+
 - 2.4.X
 
   - Re-factor RequestManager code to use internal store instead of MongoDB one
