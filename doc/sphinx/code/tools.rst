@@ -42,7 +42,7 @@ DAS map reduce tools
 
 DAS mapping db tools
 --------------------
-.. automodule:: DAS.tools.das_mapping_db
+.. automodule:: DAS.tools.das_maps_yml2json
         :members:
 
 DAS robot tools

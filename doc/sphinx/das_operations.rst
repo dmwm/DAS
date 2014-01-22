@@ -27,11 +27,17 @@ In order to start each of server you need to setup your environment, see
 
 Setting up DAS maps
 -------------------
-Each data-service is registered with DAS via its DAS map. All maps are located
-in $DAS_ROOT/src/python/DAS/services/cms_maps area. We provide a single admin script
-to install available maps. It is located in $DAS_ROOT/bin/ area which should be
-in your path once your setup your environment *source setup.sh*. Then you can simply
-call *das_map* and it will install all the maps specified in your services configuration.
+Data-services are registered via the service mappings (DAS Maps) which define
+the relationships between the services and how their inputs or outputs shall
+be transformed.
+
+To initialize or update the DAS maps (along with other metadata) call the
+bin/das_update_database with location of maps. The CMS maps are located in
+$DAS_ROOT/src/python/DAS/services/cms_maps directory.
+
+ .. doctest::
+    das_update_database $DAS_ROOT/src/python/DAS/services/cms_maps [production]
+
 
 Apache redirect rules
 ---------------------
@@ -174,6 +180,7 @@ They are located at $DAS_ROOT/bin.
 - das_code_quality.sh is a bash script to check DAS code quality. It is based on pylint
   tool, see [PYLINT]_.
 - das_config is a tool to create DAS configuration file;
-- das_map is a tool to create DAS maps;
+- das_update_database is a tool to update DAS maps, and initialize other metadata
+- das_maps_yml2json is a tool that generates json DB dumps from YML dasmaps.
+- das_db_import is a helper used to import the DB dumps including dasmaps, keylearning, inputvals
 - das_mapreduce is a tool to create map/reduce function for DAS;
-
