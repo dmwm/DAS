@@ -410,7 +410,7 @@ class DASMapping(object):
     def dbs_instances(self, system=None):
         "Retrive from mapping DB DBS instances"
         # use dbs istances from the config
-        if  self.dbsinsts and not system:
+        if  self.dbsinsts:
             return self.dbsinsts
         # default dbs
         if  not system:
