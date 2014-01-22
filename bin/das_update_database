@@ -13,6 +13,12 @@ MAPTYPE=${2:-"production"}
 WHEN_IMPORT="forced_update_now"
 
 set -e
+
+# check that we're able to locate das map dir
+if [ -z "${MAPSDIR}" ]; then
+    echo "Unable to locate DAS Maps: $das_map_dir"
+    exit 1
+fi
 #use absolute mapsdir path
 MAPSDIR=$(cd "${MAPSDIR}"; pwd)
 
