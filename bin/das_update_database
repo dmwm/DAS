@@ -2,14 +2,17 @@
 # this is mostly intended to be run in development environment
 # e.g. bin/das_update_database src/python/DAS/services/cms_maps production
 
-if [ $# -eq 0 ]; then
-    echo "Usage: das_update_database dir_to_maps [production|testbed]"
-    echo "e.g. das_update_database src/python/DAS/services/cms_maps production"
+if [ $# -eq 0 ] || [ "$1" == "-h" ] || [ "$1" == "-help" ] || [ "$1" == "--help" ]; then
+    echo "Usage: das_update_database dir_to_maps [production|testbed] <kws_data/db_dumps dir>"
+    echo "E.g. :"
+    echo "       das_update_database src/python/DAS/services/cms_maps production"
+    echo "       das_update_database src/python/DAS/services/cms_maps testbed src/kws_data/db_dumps"
     exit
 fi
 
 MAPSDIR=${1}
 MAPTYPE=${2:-"production"}
+METADATA_DIR=${3:-""}
 WHEN_IMPORT="forced_update_now"
 
 set -e
@@ -34,5 +37,11 @@ else
 fi
 echo "using map file: $map_file"
 
-# stage maps for importing and run import
-das_db_import "${WHEN_IMPORT}" "$map_file"
+# stage maps for importing and run import, first test location of metadata dir
+if  [ -z "METADATA_DIR" ]; then
+    das_db_import "${WHEN_IMPORT}" "$map_file" $METADATA_DIR
+elif  [ -d $PWD/src/kws_data/db_dumps ]; then
+    das_db_import "${WHEN_IMPORT}" "$map_file" $PWD/src/kws_data/db_dumps
+else
+    das_db_import "${WHEN_IMPORT}" "$map_file"
+fi
