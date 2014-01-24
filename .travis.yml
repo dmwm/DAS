@@ -23,5 +23,6 @@ install:
 # command to run tests
 script: 
   - source ./init_env.sh
+  - touch /tmp/x509up_u$UID # hack for tests requiring certificates
   - python setup.py test
   #  - nosetests
