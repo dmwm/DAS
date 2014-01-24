@@ -2,12 +2,14 @@ language: python
 services: mongodb
 python:
   - "2.6"
-  - "2.7"  
+  - "2.7"
+  - "3.3"
+  
 # command to install dependencies
 install: 
   - export PYCURL_SSL_LIBRARY=openssl # try openssl or gnutls
-  - pip install -r requirements_freezed.txt # install dependencies
-  - pip install coverage pep8 pylint
+  - pip install --use-mirrors -r requirements_freezed.txt  # install dependencies
+  - pip install --use-mirrors coverage pep8 pylint flake8
   # TODO: install YUI via pip, but this is not (?) needed for unit tests  
   - python -m nltk.downloader words stopwords wordnet # wordnet is used by lematizer, and seem to lag
 
@@ -26,9 +28,10 @@ script:
   - source ./init_env.sh
   - touch /tmp/x509up_u$UID  # hack for tests requiring certificates
   - python setup.py test
-  - pep8 --max-line-length=80 --statistics --repeat src/ || true  # for now, dont fail on pep8
-  - das_code_quality 9 false  # run pylint with threshold 9
+  - flake8 --max-line-length=100 --statistics --exit-zero src # like pep8 but better, could also add --show-source
+  - das_code_quality 9 false  # run pylint with threshold 9 || true
   #  - nosetests
   
 notifications:
-  email: false  
+  email: false
+
