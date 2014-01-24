@@ -31,7 +31,7 @@ script:
   - touch /tmp/x509up_u$UID  # hack for tests requiring certificates
   - python setup.py test
   - flake8 --max-line-length=100 --statistics --exit-zero src # like pep8 but better, could also add --show-source
-  - das_code_quality 9 false  # run pylint with threshold 9 || true
+  - das_code_quality 9 false  || true  # run pylint with threshold 9
   #  - nosetests
   
 notifications:
