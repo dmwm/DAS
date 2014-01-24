@@ -6,4 +6,5 @@ It fetches and aggregates data on demand upon user queries.
 It serves as next generation of data discovery for
 CMS experiment (http://cms.cern.ch)
 
-For more information please consult doc section.
+For more information on installation, usage and available functionality
+ read the docs online at http://das.readthedocs.org .
