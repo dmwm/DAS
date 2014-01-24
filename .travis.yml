@@ -3,13 +3,15 @@ services: mongodb
 python:
   - "2.6"
   - "2.7"
-  - "3.3"
+#  - "3.3"  # dont work, e.g. pip cheetah fails
   
+# TODO: remove old DAS files from site-packages (some wont be overriden)
+
 # command to install dependencies
 install: 
   - export PYCURL_SSL_LIBRARY=openssl # try openssl or gnutls
-  - pip install --use-mirrors -r requirements_freezed.txt  # install dependencies
-  - pip install --use-mirrors coverage pep8 pylint flake8
+  - pip install --use-mirrors --download-cache -r requirements_freezed.txt  # install dependencies
+  - pip install --use-mirrors --download-cache coverage pep8 pylint flake8
   # TODO: install YUI via pip, but this is not (?) needed for unit tests  
   - python -m nltk.downloader words stopwords wordnet # wordnet is used by lematizer, and seem to lag
 
@@ -34,4 +36,15 @@ script:
   
 notifications:
   email: false
+  
+matrix:
+  fast_finish: true
+  
+cache:
+  directories:
+    - $HOME/.pip-cache/
+    - $HOME/virtualenv/python2.7/lib/python2.7/site-packages
+    - $HOME/virtualenv/python2.6/lib/python2.6/site-packages
+    - $HOME/nltk_data
 
+    
