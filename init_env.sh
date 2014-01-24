@@ -9,4 +9,4 @@ export DAS_IMAGESPATH=$DAS_ROOT/web/images
 # TODO: YUI is not yet installed automatically
 export YUI_ROOT=$DAS_ROOT/web/js
 
-export NLTK_DATA=/tmp/das_nltk_data${TRAVIS_JOB_NUMBER:-}
+#export NLTK_DATA=/tmp/das_nltk_data${TRAVIS_JOB_NUMBER:-}
