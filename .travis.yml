@@ -7,6 +7,7 @@ python:
 install: 
   - export PYCURL_SSL_LIBRARY=openssl # try openssl or gnutls
   - pip install -r requirements_freezed.txt # install dependencies
+  - pip install coverage pep8 pylint
   # TODO: install YUI via pip, but this is not (?) needed for unit tests  
   - python -m nltk.downloader words stopwords wordnet # wordnet is used by lematizer, and seem to lag
 
@@ -18,13 +19,15 @@ install:
     # install  
   - python setup.py install
   - source ./init_env.sh
-  - das_update_database src/python/DAS/services/cms_maps production # initialize database
+  - das_update_database src/python/DAS/services/maps production # initialize database
 
 # command to run tests
 script: 
   - source ./init_env.sh
-  - touch /tmp/x509up_u$UID # hack for tests requiring certificates
+  - touch /tmp/x509up_u$UID  # hack for tests requiring certificates
   - python setup.py test
+  - pep8 --max-line-length=80 --statistics --repeat src/ || true  # for now, dont fail on pep8
+  - das_code_quality 9 false  # run pylint with threshold 9
   #  - nosetests
   
 notifications:
