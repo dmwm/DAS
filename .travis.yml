@@ -2,6 +2,7 @@ language: python
 services: mongodb
 python:
   - "2.6"
+  - "2.7"  
 # command to install dependencies
 install: 
   - export PYCURL_SSL_LIBRARY=gnutls #or openssl
