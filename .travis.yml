@@ -10,8 +10,8 @@ python:
 # command to install dependencies
 install: 
   - export PYCURL_SSL_LIBRARY=openssl # try openssl or gnutls
-  - pip install --use-mirrors --download-cache -r requirements_freezed.txt  # install dependencies
-  - pip install --use-mirrors --download-cache coverage pep8 pylint flake8
+  - pip install --use-mirrors --download-cache $HOME/.pip-cache/ -r requirements_freezed.txt  # install dependencies
+  - pip install --use-mirrors --download-cache $HOME/.pip-cache/ coverage pep8 pylint flake8
   # TODO: install YUI via pip, but this is not (?) needed for unit tests  
   - python -m nltk.downloader words stopwords wordnet # wordnet is used by lematizer, and seem to lag
 
