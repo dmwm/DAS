@@ -80,7 +80,10 @@ class TestCommand(Command):
             print exc
             raise exc
         t = TextTestRunner(verbosity = 2)
-        t.run(tests)
+        result = t.run(tests)
+        # return a non-zero exit status on failure -- useful in CI
+        if not result.wasSuccessful():
+            sys.exit(1)
 
 class CleanCommand(Command):
     """
