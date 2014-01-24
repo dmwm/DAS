@@ -1,0 +1,19 @@
+language: python
+services: mongodb
+python:
+  - "2.6"
+# command to install dependencies
+install: 
+  - export PYCURL_SSL_LIBRARY=gnutls #or openssl
+  - pip install -r requirements_freezed.txt # install dependencies
+  # TODO: install YUI via pip, but this is not (?) needed for unit tests  
+  - python -m nltk.downloader words wordnet stopwords  
+  - python setup.py install # Install DAS
+  - source ./init_env.sh
+  - das_update_database src/python/DAS/services/cms_maps production # initialize database
+
+# command to run tests
+script: 
+  - source ./init_env.sh
+  - python setup.py test
+  #  - nosetests
