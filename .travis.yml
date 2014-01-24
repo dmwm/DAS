@@ -7,8 +7,14 @@ install:
   - export PYCURL_SSL_LIBRARY=gnutls #or openssl
   - pip install -r requirements_freezed.txt # install dependencies
   # TODO: install YUI via pip, but this is not (?) needed for unit tests  
-  - python -m nltk.downloader words wordnet stopwords  
-  - python setup.py install # Install DAS
+  - python -m nltk.downloader words wordnet stopwords
+
+    # a hack to use default MongoDB port, which is available in travis
+  - sed -i -e 's/8230/27017/g'  etc/das.cfg
+  - sed -i -e 's/8230/27017/g'  bin/das_db_import
+
+    # install  
+  - python setup.py install
   - source ./init_env.sh
   - das_update_database src/python/DAS/services/cms_maps production # initialize database
 
