@@ -26,3 +26,6 @@ script:
   - touch /tmp/x509up_u$UID # hack for tests requiring certificates
   - python setup.py test
   #  - nosetests
+  
+notifications:
+  email: false  
