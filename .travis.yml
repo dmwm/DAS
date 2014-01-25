@@ -12,7 +12,7 @@ python:
 install: 
   - export PYCURL_SSL_LIBRARY=openssl # try openssl or gnutls
   - pip install --use-mirrors -r requirements_freezed.txt  # install dependencies
-  - pip install --use-mirrors  #  pylint flake8 # not used yet: coverage
+  #- pip install --use-mirrors   pylint flake8 # not used yet: coverage
 
   - python -m nltk.downloader -e words stopwords wordnet || python -m nltk.downloader -e words stopwords wordnet
 
