@@ -14,7 +14,8 @@ install:
   - pip install --use-mirrors -r requirements_freezed.txt  # install dependencies
   #- pip install --use-mirrors   pylint flake8 # not used yet: coverage
 
-  - timeout 90 python -m nltk.downloader -e words stopwords wordnet || timeout 300 python -m nltk.downloader -e words stopwords wordnet
+  - git clone https://github.com/vidma/das_nltk_data.git  $HOME/nltk_data/
+  #- timeout 90 python -m nltk.downloader -e words stopwords wordnet || timeout 300 python -m nltk.downloader -e words stopwords wordnet
 
     # a hack to use default MongoDB port, which is available in travis
   - sed -i -e 's/8230/27017/g'  etc/das.cfg
@@ -46,7 +47,7 @@ cache:
   directories:
 #    - $HOME/virtualenv/python2.7/lib/python2.7/site-packages/
 #    - $HOME/virtualenv/python2.6/lib/python2.6/site-packages/
-    - $HOME/nltk_data/
+#    - $HOME/nltk_data/
 #    - $HOME/virtualenv/python2.7/build/
 #    - $HOME/virtualenv/python2.6/build/
       
