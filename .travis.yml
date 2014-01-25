@@ -14,7 +14,7 @@ install:
   - pip install --use-mirrors -r requirements_freezed.txt  # install dependencies
   #- pip install --use-mirrors   pylint flake8 # not used yet: coverage
 
-  - python -m nltk.downloader -e words stopwords wordnet || python -m nltk.downloader -e words stopwords wordnet
+  - timeout 90 python -m nltk.downloader -e words stopwords wordnet || timeout 300 python -m nltk.downloader -e words stopwords wordnet
 
     # a hack to use default MongoDB port, which is available in travis
   - sed -i -e 's/8230/27017/g'  etc/das.cfg
