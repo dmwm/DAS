@@ -43,8 +43,8 @@ matrix:
 cache:
   directories:
     - $HOME/.pip-cache/
-    - $HOME/virtualenv/python2.7/lib/python2.7/site-packages
-    - $HOME/virtualenv/python2.6/lib/python2.6/site-packages
-    - $HOME/nltk_data
+    - $HOME/virtualenv/python2.7/lib/python2.7/site-packages/
+    - $HOME/virtualenv/python2.6/lib/python2.6/site-packages/
+    - $HOME/nltk_data/
 
     
