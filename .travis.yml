@@ -10,8 +10,8 @@ python:
 # command to install dependencies
 install: 
   - export PYCURL_SSL_LIBRARY=openssl # try openssl or gnutls
-  - pip install --use-mirrors --download-cache $HOME/.pip-cache/ -r requirements_freezed.txt  # install dependencies
-  - pip install --use-mirrors --download-cache $HOME/.pip-cache/ coverage pep8 pylint flake8
+  - pip install --use-mirrors -r requirements_freezed.txt  # install dependencies
+  - pip install --use-mirrors pylint flake8 # not used yet: coverage
   # TODO: install YUI via pip, but this is not (?) needed for unit tests  
   - python -m nltk.downloader -e words stopwords wordnet || python -m nltk.downloader -e words stopwords wordnet
 
@@ -43,7 +43,6 @@ matrix:
   
 cache:
   directories:
-    - $HOME/.pip-cache/
     - $HOME/virtualenv/python2.7/lib/python2.7/site-packages/
     - $HOME/virtualenv/python2.6/lib/python2.6/site-packages/
     - $HOME/nltk_data/
