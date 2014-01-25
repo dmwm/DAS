@@ -5,14 +5,15 @@ python:
   - "2.7"
 #  - "3.3"  # dont work, e.g. pip cheetah fails
   
-# TODO: remove old DAS files from site-packages (some wont be overriden)
+
+# TODO: install YUI via pip, but this is not (?) needed for unit tests  
 
 # command to install dependencies
 install: 
   - export PYCURL_SSL_LIBRARY=openssl # try openssl or gnutls
   - pip install --use-mirrors -r requirements_freezed.txt  # install dependencies
-  - pip install --use-mirrors pylint flake8 # not used yet: coverage
-  # TODO: install YUI via pip, but this is not (?) needed for unit tests  
+  - pip install --use-mirrors  #  pylint flake8 # not used yet: coverage
+
   - python -m nltk.downloader -e words stopwords wordnet || python -m nltk.downloader -e words stopwords wordnet
 
     # a hack to use default MongoDB port, which is available in travis
@@ -20,7 +21,7 @@ install:
   - sed -i -e 's/8230/27017/g'  bin/das_db_import
   - rm test/dbs3_t.py   # temp disable dbs3_t as it prevents imports
 
-    # install  
+    # install
   - python setup.py install
   - source ./init_env.sh
   - das_update_database src/python/DAS/services/maps production # initialize database
@@ -30,8 +31,8 @@ script:
   - source ./init_env.sh
   - touch /tmp/x509up_u$UID  # hack for tests requiring certificates
   - python setup.py test
-  - flake8 --max-line-length=100 --statistics --exit-zero src # like pep8 but better, could also add --show-source
-  - das_code_quality 9 false  || true  # run pylint with threshold 9
+  #- flake8 --max-line-length=100 --statistics --exit-zero src # like pep8 but better, could also add --show-source
+  # - das_code_quality 9 false  || true  # run pylint with threshold 9
   #  - nosetests
   
 notifications:
@@ -43,11 +44,11 @@ matrix:
   
 cache:
   directories:
-    - $HOME/virtualenv/python2.7/lib/python2.7/site-packages/
-    - $HOME/virtualenv/python2.6/lib/python2.6/site-packages/
+#    - $HOME/virtualenv/python2.7/lib/python2.7/site-packages/
+#    - $HOME/virtualenv/python2.6/lib/python2.6/site-packages/
     - $HOME/nltk_data/
-    - $HOME/virtualenv/python2.7/build/
-    - $HOME/virtualenv/python2.6/build/
+#    - $HOME/virtualenv/python2.7/build/
+#    - $HOME/virtualenv/python2.6/build/
       
 
     
