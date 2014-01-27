@@ -2,10 +2,9 @@ language: python
 services: mongodb
 python:
   - "2.6"
-#  - "2.7"
+  - "2.7"
 #  - "3.3"  # dont work, e.g. pip cheetah fails
   
-
 # TODO: install YUI via pip, but this is not (?) needed for unit tests  
 
 # command to install dependencies
@@ -15,7 +14,7 @@ install:
   #- pip install --use-mirrors   pylint flake8 # not used yet: coverage
 
   - git clone https://github.com/vidma/das_nltk_data.git  $HOME/nltk_data/
-  #- timeout 90 python -m nltk.downloader -e words stopwords wordnet || timeout 300 python -m nltk.downloader -e words stopwords wordnet
+  #- python -m nltk.downloader -e words stopwords wordnet
 
     # a hack to use default MongoDB port, which is available in travis
   - sed -i -e 's/8230/27017/g'  etc/das.cfg
@@ -34,7 +33,7 @@ script:
   - python setup.py test
   #- flake8 --max-line-length=100 --statistics --exit-zero src # like pep8 but better, could also add --show-source
   # - das_code_quality 9 false  || true  # run pylint with threshold 9
-  #  - nosetests
+
   
 notifications:
   email: false
@@ -42,14 +41,4 @@ notifications:
 # speedup the build slightly
 matrix:
   fast_finish: true
-  
-cache:
-  directories:
-#    - $HOME/virtualenv/python2.7/lib/python2.7/site-packages/
-#    - $HOME/virtualenv/python2.6/lib/python2.6/site-packages/
-#    - $HOME/nltk_data/
-#    - $HOME/virtualenv/python2.7/build/
-#    - $HOME/virtualenv/python2.6/build/
-      
 
-    
