@@ -68,11 +68,22 @@ class TestCommand(Command):
         testfiles.sort()
         try:
             tests = TestLoader().loadTestsFromNames(testfiles)
-        except:
+        except Exception, exc:
             print "\nFail to load unit tests", testfiles
-            raise
+            # check which tests are failing to get imported
+            for test in testfiles:
+                try:
+                    print "trying to import:",  test
+                    __import__(test)
+                except Exception, import_err:
+                    print "failed importing: ", test, import_err
+            print exc
+            raise exc
         t = TextTestRunner(verbosity = 2)
-        t.run(tests)
+        result = t.run(tests)
+        # return a non-zero exit status on failure -- useful in CI
+        if not result.wasSuccessful():
+            sys.exit(1)
 
 class CleanCommand(Command):
     """
