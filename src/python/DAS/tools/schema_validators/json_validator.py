@@ -67,7 +67,13 @@ def validate_verbose(rules, item, print_success=False):
     else:
         print 'can not validate the record:'
         pprint.pprint(item)
-        pprint.pprint(errors)
+
+        for err, details in errors:
+            print err
+            #pprint.pprint(details)
+            print details
+            print '------------'
+
         return False
     return True
 

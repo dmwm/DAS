@@ -96,13 +96,31 @@ NOTATION_RECORD = And(
 # schema of "arecord"
 ARECORD_RECORD = {'arecord': dict}
 
+# a record defining how input values can be fetched from given service
+INPUTVALUES_RECORD = And(
+    {'input_values': [
+        {'url': _str,
+         'input': _str,
+         'jsonpath_selector': _str,
+         Optional('test'): _str}, ],
+     'type': 'input_values',
+     'system': _str,
+     'hash': _str},
+    check_hash)
+
+# TODO: could even check if sum of tokens matches, but this is not important
+VERIF_TOKEN_RECORD = {'verification_token': _str,
+                      'type': 'verification_token'}
+
 # define a list of complementary rules, where at least one must match, this
 # instead of just Schema(Or(a, b, c)) will provide more informative feedback
 SCHEMA_RULES = {
     'arecord_record': Schema(ARECORD_RECORD),
     'map_record': Schema(MAP_RECORD),
     'presentation_record': Schema(PRESENTATION_RECORD),
-    'notation_record': Schema(NOTATION_RECORD)}
+    'notation_record': Schema(NOTATION_RECORD),
+    'inputvalues_record': Schema(INPUTVALUES_RECORD),
+    'verification_token': Schema(VERIF_TOKEN_RECORD)}
 
 
 def main():
