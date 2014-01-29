@@ -2,7 +2,7 @@
 # import reset DAS database state and import DAS Maps
 # also import keylearning and inputvals
 # usage: das_db_import action [[MAPS_FILE] METADATA_DIR]
-# param: action = forced_update | ifchanged
+# param: action = forced_update | update_if_changed | stage_update
 #
 # environment variables used:
 # STAGEDIR (environment variable)
@@ -12,6 +12,10 @@ DASROOT=`python -c "import DAS; print '/'.join(DAS.__file__.split('/')[:-1])"`
 ACTION=$1
 DASMAPS_FILE=${2:-"$DASROOT/services/cms_maps/das_maps.js"}
 METADATA_DIR=${3:-"$DASROOT/kws_data/db_dumps"}
+
+# figure out which md5sum utility exists
+MD5CMD=$(for cmd in md5 md5sum; do type $cmd >/dev/null 2>&1 && echo $cmd && break; done);
+
 
 # Helper: Update and clean a MongoDB database(s) and its collections
 # Parameters:
@@ -28,7 +32,7 @@ update_db()
 
   # calculate stamp over (possibly multiple) collection updates
   echo "update_db($1)"
-  stamp=$(cd $STAGEDIR && printf "%s\n" $updates | xargs -I md5sum "update_{}.js")
+  stamp=$(cd $STAGEDIR && printf "%s\n" $updates | xargs -I{} $MD5CMD "update_{}.js")
   oldstamp=$(cat ${STAGEDIR}/${obj}-schema-stamp 2>/dev/null)
   #echo "stamp: $stamp  oldstamp: $oldstamp"
   if [ ! -f ${STAGEDIR}/${obj}-schema-stamp ] || [ X"$oldstamp" != X"$stamp" ]; then
@@ -115,7 +119,7 @@ if [ "$ACTION" == "forced_update_now" ]; then
     prepare_metadata_db_update
 
     run_db_update
-elif [ "$ACTION" == "process_db_updates" ]; then
+elif [ "$ACTION" == "update_if_changed" ]; then
     # update MongoDB using what was staged, if any
     # e.g. as a cron job constantly checking for changes in maps
     run_db_update
