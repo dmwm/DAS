@@ -83,7 +83,8 @@ def main():
         with open(opts.get_verification_token_for) as file_:
             token = verification_token(json.loads(line)
                                        for line in file_ if line)
-            print {'verification_token': token, 'type': 'verification_token'}
+            print json.dumps({'verification_token': token,
+                              'type': 'verification_token'})
 
 
 #
