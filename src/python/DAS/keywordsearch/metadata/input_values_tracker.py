@@ -69,8 +69,7 @@ class InputValuesTracker(object):
     def col(self):
         """Return MongoDB collection object"""
         conn = db_connection(self.dburi)
-        db = conn[self.dbname]
-        col = db[self.dbcoll]
+        col = conn[self.dbname][self.dbcoll]
         return col
 
     def init(self):
