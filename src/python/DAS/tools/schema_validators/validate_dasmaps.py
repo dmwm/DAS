@@ -1,4 +1,3 @@
-__author__ = 'vidma'
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
 # __author__ = 'Vidmantas Zemleris'

@@ -1,3 +1,7 @@
+#-*- coding: ISO-8859-1 -*-
+#pylint: disable-msg=C0111,C0103
+#pylint disabled: C0111(missing-docstring), C0103(invalid-name)
+# File taken from: https://github.com/halst/schema
 __version__ = '0.2.0'
 
 

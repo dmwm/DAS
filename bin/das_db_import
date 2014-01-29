@@ -66,12 +66,24 @@ update_db()
 # ----------------------
 validate_dasmaps(){
     local dasmaps="${DASMAPS_FILE}"
-    echo "Validating DASMaps"
+    echo "Validating DASMaps: $dasmaps"
     set -e
     python "${JSON_VALIDATOR_DIR}/validate_dasmaps.py" $dasmaps
     set +e
 }
 
+validate_metadata(){
+    echo "Validating metadata (keylearning, inputvals)"
+    set -e
+    python "${JSON_VALIDATOR_DIR}/validate_keylearning.py" "${KEYLEARNING_FILE}"
+
+    for file in ${INPUTVAL_FILES}
+    do
+        echo "validating: $file"
+        python "${JSON_VALIDATOR_DIR}/validate_inputvals.py" "$file"
+    done
+    set +e
+}
 
 
 # PREPARE THE UPDATES
@@ -79,9 +91,6 @@ validate_dasmaps(){
 
 # prepares main DAS data (DASMaps) for being imported to DB
 prepare_das_db_update(){
-    # first validate the dasmaps
-    validate_dasmaps
-
     # prepare clean up of DAS DB: mapping db and other "caches"
     (echo 'mapping = db.getSisterDB("mapping");'
      echo 'mapping.dropDatabase();'
@@ -105,17 +114,8 @@ force_metadata_update(){
 
 # prepare metadata (input values, keylearning) for being imported to DB
 prepare_metadata_db_update(){
-    # validate
-    echo "Validating metadata (keylearning, inputvals)"
-    set -e
-    python "${JSON_VALIDATOR_DIR}/validate_keylearning.py" "${KEYLEARNING_FILE}"
-
-    for file in ${INPUTVAL_FILES}
-    do
-        echo "validating: $file"
-        python "${JSON_VALIDATOR_DIR}/validate_inputvals.py" "$file"
-    done
-    set +e
+    # first validate the update files
+    validate_metadata
 
     # stage the files
     set -e
@@ -144,6 +144,10 @@ run_db_update(){
 
 # ------------ MAIN --------------------------------------------
 if [ "$ACTION" == "forced_update_now" ]; then
+    # validate the update files first
+    validate_dasmaps
+    validate_metadata
+
     # force the cleanup and update - ignore "schema-stamps" and run it now
     force_dasmap_update
     force_metadata_update
@@ -161,6 +165,12 @@ elif [ "$ACTION" == "update_if_changed" ]; then
 else
     # just prepare update to be run later (e.g. when MongoDB is available)
     # e.g. could be run as post-install trigger
+
+    # validate the update files
+    validate_dasmaps
+    validate_metadata
+
+    # stage the files to be loaded into MongoDB
     prepare_das_db_update
     prepare_metadata_db_update
 fi
