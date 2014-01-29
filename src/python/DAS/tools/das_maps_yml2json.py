@@ -53,6 +53,9 @@ def main():
         if  system: # notations map must have system
             arecord = {'type': 'service', 'count': count, 'system': system}
             print json.dumps(dict(arecord=arecord))
+        # output record(s) containing uris for listing allowed input_values
+        for rec in read_service_map(opts.umap, field='input_values'):
+            print json.dumps(rec)
 
     if  opts.nmap:
         count = 0

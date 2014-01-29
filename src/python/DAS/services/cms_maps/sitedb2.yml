@@ -66,3 +66,10 @@ notations : [
         {"api_output": "user_group", "rec_key":"name", "api":"group_responsibilities"},
         {"api_output": "alias", "rec_key":"name", "api":""},
 ]
+---
+input_values: [
+  {"input": "site.name",
+   "url": "https://cmsweb.cern.ch/sitedb/data/prod/site-names",
+   "jsonpath_selector": "$.result[*][2]",
+   "test": "T1*"},
+]

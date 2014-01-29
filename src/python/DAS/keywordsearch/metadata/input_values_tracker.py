@@ -24,59 +24,25 @@ from DAS.utils import jsonwrapper as json
 from DAS.utils.utils import dastimestamp
 from DAS.utils.das_db import get_db_uri, db_connection, create_indexes
 from DAS.utils.utils import get_key_cert
-from DAS.utils.thread import start_new_thread
 from DAS.utils.url_utils import HTTPSClientAuthHandler
 from DAS.utils.das_config import das_readconfig
+from DAS.core.das_mapping_db import DASMapping
 
 from DAS.keywordsearch.config import DEBUG
 
 
-# Shall we keep existing Datasets on server restart (very useful for debuging)
+# Shall we keep existing records on server restart (very useful for debuging)
 KEEP_EXISTING_RECORDS_ON_RESTART = 1
 SKIP_UPDATES = 0
-VALUES_PROVIDERS = [
-    {'field': 'site.name',
-     'url': 'https://cmsweb.cern.ch/sitedb/data/prod/site-names',
-     'jsonpath': "$.result[*][2]",
-     'test': 'T1*'},
-    {'field': 'tier.name',
-     'url': 'https://cmsweb.cern.ch/dbs/prod/global/DBSReader/datatiers',
-     'jsonpath': '$[*].data_tier_name',
-     'test': '*RECO*'},
-    {'field': 'datatype.name',
-     'url': 'https://cmsweb.cern.ch/dbs/prod/global/DBSReader/datatypes',
-     'jsonpath': '$[*].data_type',
-     'test': 'mc'},
-    {'field': 'status.name',
-     'url':
-        'https://cmsweb.cern.ch/dbs/prod/global/DBSReader/datasetaccesstypes',
-     'jsonpath': "$[0]['dataset_access_type'][*]",
-     'test': 'valid'},
-    {'field': 'release.name',
-     # DEV URL was:
-     # https://cmsweb-testbed.cern.ch/dbs/dev/global/DBSReader/releaseversions
-     'url': 'https://cmsweb.cern.ch/dbs/prod/global/DBSReader/releaseversions',
-     'jsonpath': "$[0]['release_version'][*]",
-     'test': 'CMSSW_4_*'},
-
-    {'field': 'primary_dataset.name',
-     'url': 'https://cmsweb.cern.ch/dbs/prod/global/DBSReader/primarydatasets',
-     'jsonpath': '$[*].primary_ds_name',
-     'test': 'RelVal160pre4Z-TT'},
-
-    {'field': 'group.name',
-     'url': 'https://cmsweb.cern.ch/dbs/prod/global/DBSReader/physicsgroups',
-     'jsonpath': '$[*].physics_group_name',
-     'test': 'analysis'},
-]
-
+# if values matches fields' regexp but the field is stable, the KWS will ignore
+# this match
 STABLE_FIELDS = ['site.name', 'tier.name', 'datatype.name', 'status.name',
                  'group.name']
 
 
-def fieldname(field):
+def get_collection_name(field_name):
     """ gets name of collection where to store data """
-    return field.replace('.', '_')
+    return field_name.replace('.', '_')
 
 
 class InputValuesTracker(object):
@@ -85,14 +51,14 @@ class InputValuesTracker(object):
      in a separate collection to be used by keyword search and auto-completion.
     """
 
-    def __init__(self, field_data):
+    def __init__(self, cfg):
         config = das_readconfig().get('inputvals', {})
 
         self.dburi = get_db_uri()
-        self.dbcoll = fieldname(field_data['field'])
+        self.dbcoll = get_collection_name(cfg['input'])
         self.dbname = config.get('dbname', config.get('DBNAME', 'inputvals'))
 
-        self.field_data = field_data
+        self.cfg = cfg
         self.cache_size = config.get('cache_size', 1000)
         self.expire = config.get('expire', 3600)
         self.write_hash = config.get('write_hash', False)
@@ -101,10 +67,9 @@ class InputValuesTracker(object):
 
     @property
     def col(self):
-        "Return MongoDB collection object"
+        """Return MongoDB collection object"""
         conn = db_connection(self.dburi)
-        dbc  = conn[self.dbname]
-        col  = dbc[self.dbcoll]
+        col = conn[self.dbname][self.dbcoll]
         return col
 
     def init(self):
@@ -112,7 +77,6 @@ class InputValuesTracker(object):
         Init db connection and check that it is alive
         """
         try:
-            conn = db_connection(self.dburi)
             indexes = [('value', ASCENDING), ('ts', ASCENDING)]
             create_indexes(self.col, indexes)
 
@@ -123,7 +87,7 @@ class InputValuesTracker(object):
 
     def update(self):
         """
-        Update DBS collection with a fresh copy of datasets
+        Update some the input values collection for current input field
         """
         if SKIP_UPDATES:
             return None
@@ -169,7 +133,7 @@ class InputValuesTracker(object):
             else:
                 for row in self.col.find(spec).skip(idx).limit(limit):
                     yield row['value']
-        except:
+        except Exception:
             pass
 
     def fetch_values(self):
@@ -186,21 +150,21 @@ class InputValuesTracker(object):
         params = {}
         encoded_data = urllib.urlencode(params, doseq=True)
 
-        service = self.field_data
+        service = self.cfg
         url = service['url'] + encoded_data
         print str(url)
         req = urllib2.Request(url)
 
-        # ensure we get json (sitedb is messed and randomly returns xml)
-        if service['jsonpath']:
+        # ensure we get json (sitedb is messed up and randomly returns xml)
+        if service['jsonpath_selector']:
             req.add_header('Accept', 'application/json')
             #print req.get_full_url()
 
         stream = urllib2.urlopen(req)
 
-        if service['jsonpath']:
+        if service['jsonpath_selector']:
             response = json.load(stream)
-            jsonpath_expr = parse(service['jsonpath'])
+            jsonpath_expr = parse(service['jsonpath_selector'])
             results = jsonpath_expr.find(response)
             stream.close()
 
@@ -214,8 +178,10 @@ TRACKERS = {}
 
 def init_trackers():
     """ initialization """
-    for provider in VALUES_PROVIDERS:
-        TRACKERS[provider['field']] = InputValuesTracker(provider)
+    # get list of trackers
+    mapping = DASMapping(config=das_readconfig())
+    for provider in mapping.inputvalues_uris():
+        TRACKERS[provider['input']] = InputValuesTracker(provider)
 
 
 def get_fields_tracked(only_stable=False):
@@ -300,22 +266,22 @@ def input_value_matches(kwd):
     return scores_by_entity
 
 
-def test(service):
+def test(tracker):
     """ Test function """
-    mgr = InputValuesTracker(service)
-    mgr.update()
+    tracker.update()
     idx = 0
     limit = 10
-    print 'trying %s on %s' % (service['test'], service['field'])
-    for row in mgr.find(service['test'], idx, limit):
+    print 'matching {} in {}:'.format(tracker.cfg['test'],
+                                      tracker.cfg['input'])
+    for row in tracker.find(tracker.cfg['test'], idx, limit):
         print row
 
 
 def test_all():
     """ test all providers """
     init_trackers()
-    for provider in VALUES_PROVIDERS:
-        test(provider)
+    for tracker in TRACKERS.values():
+        test(tracker)
 
 
 if __name__ == '__main__':

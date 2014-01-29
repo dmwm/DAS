@@ -823,3 +823,16 @@ class DASMapping(object):
         if  daskey in self.diffkeycache:
             return self.diffkeycache[daskey]
         return []
+
+    def inputvalues_uris(self):
+        """
+        Return the info on how to fetch the list of allowed input values for
+        certain commonly used input fields (from enabled DAS systems only)
+        """
+        uris = []
+        for row in self.col.find({'type': 'input_values'}, exhaust=True):
+            # check that system is active
+            if row['system'] not in self.services:
+                continue
+            uris.extend(row['input_values'])
+        return uris

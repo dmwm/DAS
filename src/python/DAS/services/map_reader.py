@@ -17,6 +17,9 @@ Each map should provide the following fields:
       - pattern, optional pattern
     - notations (the map of notations)
     - presentation (the map for presentation layer)
+    - input_values (describe how to fetch list of possible input values,
+        for inputs of low arity, e.g. in CMS that's release, primary_dataset)
+
 """
 __author__ = "Valentin Kuznetsov"
 
@@ -88,6 +91,11 @@ def read_service_map(filename, field="uri"):
                                 ts=tstamp)
                 if  validator(record):
                     yield record
+            if field == 'input_values' and 'input_values' in metric:
+                record = dict(input_values=metric['input_values'],
+                              system=system)
+                if validator(record):
+                    yield record
         if  field == 'notations' and not notations and system: # no notations
             record = dict(notations=[], system=system, ts=tstamp)
             if  validator(record):
@@ -99,6 +107,8 @@ def add_record_type(record):
         record.update({'type':'presentation'})
     elif 'notations' in record:
         record.update({'type':'notation'})
+    elif 'input_values' in record:
+        record.update({'type':'input_values'})
     else:
         record.update({'type':'service'})
 
@@ -113,6 +123,8 @@ def validator(record):
         must_have_keys += ['system', 'notations', 'ts', 'hash']
     elif 'presentation' in record:
         must_have_keys += ['presentation', 'ts', 'hash']
+    elif 'input_values' in record:
+        must_have_keys += ['input_values']
     else:
         must_have_keys += ['system', 'format', 'urn', 'url', 'expire',
                             'params', 'das_map', 'ts', 'hash']
