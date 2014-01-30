@@ -24,7 +24,8 @@ install:
     # install
   - python setup.py install
   - source ./init_env.sh
-  - das_create_json_maps src/python/DAS/services/maps # generate DAS maps
+  - dasroot=`python -c "import DAS; print '/'.join(DAS.__file__.split('/')[:-1])"`
+  - ( cd "$dasroot" && das_create_json_maps src/python/DAS/services/maps ) # generate DAS maps
   - das_update_database src/python/DAS/services/maps/das_maps_dbs_prod.js # initialize database
 
 # command to run tests
