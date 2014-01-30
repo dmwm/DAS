@@ -12,6 +12,10 @@ DASROOT=`python -c "import DAS; print '/'.join(DAS.__file__.split('/')[:-1])"`
 ACTION=$1
 DASMAPS_FILE=${2:-"$DASROOT/services/cms_maps/das_maps.js"}
 METADATA_DIR=${3:-"$DASROOT/kws_data/db_dumps"}
+JSON_VALIDATOR_DIR="$DASROOT/tools/schema_validators"
+KEYLEARNING_FILE="$METADATA_DIR/update_keylearning_db.js"
+INPUTVAL_FILES="$METADATA_DIR/update_inputvals*.js"
+
 
 # figure out which md5sum utility exists
 MD5CMD=$(for cmd in md5 md5sum; do type $cmd >/dev/null 2>&1 && echo $cmd && break; done);
@@ -58,6 +62,29 @@ update_db()
   fi
 }
 
+# UPDATE FILE VALIDATION
+# ----------------------
+validate_dasmaps(){
+    local dasmaps="${DASMAPS_FILE}"
+    echo "Validating DASMaps: $dasmaps"
+    set -e
+    python "${JSON_VALIDATOR_DIR}/validate_dasmaps.py" $dasmaps
+    set +e
+}
+
+validate_metadata(){
+    echo "Validating metadata (keylearning, inputvals)"
+    set -e
+    python "${JSON_VALIDATOR_DIR}/validate_keylearning.py" "${KEYLEARNING_FILE}"
+
+    for file in ${INPUTVAL_FILES}
+    do
+        echo "validating: $file"
+        python "${JSON_VALIDATOR_DIR}/validate_inputvals.py" "$file"
+    done
+    set +e
+}
+
 
 # PREPARE THE UPDATES
 # -------------------
@@ -87,16 +114,22 @@ force_metadata_update(){
 
 # prepare metadata (input values, keylearning) for being imported to DB
 prepare_metadata_db_update(){
+    # first validate the update files
+    validate_metadata
+
+    # stage the files
+    set -e
     echo "copying initial metadata from: $METADATA_DIR"
     # keylearning
     (echo 'keylearning = db.getSisterDB("keylearning");'
      echo 'keylearning.dropDatabase();') > $STAGEDIR/clean_keylearning.js
-    cp $METADATA_DIR/update_keylearning_db.js $STAGEDIR/
+    cp  "${KEYLEARNING_FILE}" $STAGEDIR/
 
     # inputvals
     (echo 'inputvals = db.getSisterDB("inputvals");'
      echo 'inputvals.dropDatabase();') > $STAGEDIR/clean_inputvals.js
-    cp $METADATA_DIR/update_inputvals*.js $STAGEDIR/
+    cp ${INPUTVAL_FILES} $STAGEDIR/
+    set +e
 }
 
 
@@ -111,6 +144,10 @@ run_db_update(){
 
 # ------------ MAIN --------------------------------------------
 if [ "$ACTION" == "forced_update_now" ]; then
+    # validate the update files first
+    validate_dasmaps
+    validate_metadata
+
     # force the cleanup and update - ignore "schema-stamps" and run it now
     force_dasmap_update
     force_metadata_update
@@ -122,10 +159,18 @@ if [ "$ACTION" == "forced_update_now" ]; then
 elif [ "$ACTION" == "update_if_changed" ]; then
     # update MongoDB using what was staged, if any
     # e.g. as a cron job constantly checking for changes in maps
+
+    # TODO: validate again before updating?
     run_db_update
 else
     # just prepare update to be run later (e.g. when MongoDB is available)
     # e.g. could be run as post-install trigger
+
+    # validate the update files
+    validate_dasmaps
+    validate_metadata
+
+    # stage the files to be loaded into MongoDB
     prepare_das_db_update
     prepare_metadata_db_update
 fi
