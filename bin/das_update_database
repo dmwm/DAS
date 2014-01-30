@@ -3,45 +3,33 @@
 # e.g. bin/das_update_database src/python/DAS/services/cms_maps production
 
 if [ $# -eq 0 ] || [ "$1" == "-h" ] || [ "$1" == "-help" ] || [ "$1" == "--help" ]; then
-    echo "Usage: das_update_database dir_to_maps [production|testbed] <kws_data/db_dumps dir>"
+    echo "Usage: das_update_database <dasmap.js> <kws_data/db_dumps dir>"
     echo "E.g. :"
-    echo "       das_update_database src/python/DAS/services/cms_maps production"
-    echo "       das_update_database src/python/DAS/services/cms_maps testbed src/kws_data/db_dumps"
+    echo "       das_update_database das_maps_dbs_prod.js"
+    echo "       das_update_database das_maps_dbs_prod.js src/kws_data/db_dumps"
     exit
 fi
 
-MAPSDIR=${1}
-MAPTYPE=${2:-"production"}
-METADATA_DIR=${3:-""}
+MAPFILE=${1}
+METADATA_DIR=${2:-""}
 WHEN_IMPORT="forced_update_now"
 
 set -e
 
-# check that we're able to locate das map dir
-if [ -z "${MAPSDIR}" ]; then
-    echo "Unable to locate DAS Maps: $das_map_dir"
+# check that we're able to locate das map file
+if [ ! -f "${MAPFILE}" ]; then
+    echo "Unable to locate DAS map file: $MAPFILE"
+    echo "Use das_create_json_maps command to create one"
     exit 1
 fi
-#use absolute mapsdir path
-MAPSDIR=$(cd "${MAPSDIR}"; pwd)
 
-dasroot=`python -c "import DAS; print '/'.join(DAS.__file__.split('/')[:-1])"`
-echo "rebuilding the DAS maps"
-(cd "$dasroot" && das_create_json_maps "${MAPSDIR}")
-
-# the created maps are located here
-if [ "$MAPTYPE" == "production" ]; then
-    map_file="${MAPSDIR}/das_maps.js"
-else
-    map_file="${MAPSDIR}/das_testbed_maps.js"
-fi
-echo "using map file: $map_file"
+echo "using map file: $MAPFILE"
 
 # stage maps for importing and run import, first test location of metadata dir
 if  [ -z "METADATA_DIR" ]; then
-    das_db_import "${WHEN_IMPORT}" "$map_file" $METADATA_DIR
+    das_db_import "${WHEN_IMPORT}" "$MAPFILE" $METADATA_DIR
 elif  [ -d $PWD/src/kws_data/db_dumps ]; then
-    das_db_import "${WHEN_IMPORT}" "$map_file" $PWD/src/kws_data/db_dumps
+    das_db_import "${WHEN_IMPORT}" "$MAPFILE" $PWD/src/kws_data/db_dumps
 else
-    das_db_import "${WHEN_IMPORT}" "$map_file"
+    das_db_import "${WHEN_IMPORT}" "$MAPFILE"
 fi
