@@ -47,9 +47,7 @@ build_das_maps()
         # testbed maps, replace with testbed urls
         for amap in `ls $tdir/*.yml`
         do
-            /bin/cat $amap | sed "s/cmsweb.cern.ch/cmsweb-testbed.cern.ch/g" > $amap.tmp
-            rm -f $amap
-            mv $amap.tmp $amap
+            sed -i -e "s/cmsweb.cern.ch/cmsweb-testbed.cern.ch/g" $amap
         done
         map_file="$dir/das_testbed_maps.js"
     fi
@@ -57,16 +55,24 @@ build_das_maps()
     export PYTHONPATH=$PYTHONPATH:$PWD/src/python
     for amap in `ls $tdir/*.yml`
     do
-        $cmd --uri-map=$amap >> $map_file
-        $cmd --notation-map=$amap >> $map_file
-        $cmd --presentation-map=$amap >> $map_file
+        $cmd --uri-map=$amap | grep -v "###" >> $map_file
+        $cmd --notation-map=$amap | grep -v "###" >> $map_file
+        $cmd --presentation-map=$amap | grep -v "###" >> $map_file
     done
-    /bin/cat $map_file | grep -v "###" > $map_file.tmp
+
+    # create map files for every DBS instance namespace
+    for inst in "prod" "int" "dev"
+    do
+        fname=${map_file%%.*}
+        mfile=${fname}_dbs_$inst.js
+        cp $map_file $mfile
+        sed -i -e "s,dbs/prod,dbs/$inst,g" $mfile
+        # add verification token (md5) to every map
+        $cmd --get-verification-token-for=$mfile | grep -v "###" >> $mfile
+        echo "Created: $mfile"
+    done
     rm -f $map_file
-    mv $map_file.tmp $map_file
     rm -rf $tdir
-    $cmd --get-verification-token-for=$map_file | grep -v "###" >> $map_file
-    echo "Created: $map_file"
 
 }
 
