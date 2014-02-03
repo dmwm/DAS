@@ -1,10 +1,10 @@
 #!/bin/bash
 
 # find out where DAS is installed on a system
-daspython=`env | grep PYTHONPATH | grep DAS`
-if [ -n "$daspython" ]; then
-    dasroot=`python -c "import DAS; print '/'.join(DAS.__file__.split('/')[:-1])"`
-else
+dasroot=`python -c "import DAS; print '/'.join(DAS.__file__.split('/')[:-1])"`
+if [ -z "$dasroot" ]; then
+    # if DAS is not installed, use current dir
+    echo "Warning: unable to import DAS, using the working directory"
     dasroot=$PWD
 fi
 
