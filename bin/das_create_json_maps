@@ -70,6 +70,8 @@ build_das_maps()
         # add verification token (md5) to every map
         $cmd --get-verification-token-for=$mfile | grep -v "###" >> $mfile
         echo "Created: $mfile"
+        # clean-up back-up files
+        rm -f ${mfile}-e
     done
     rm -f $map_file
     rm -rf $tdir
