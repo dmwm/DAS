@@ -7,5 +7,5 @@ export DAS_JSPATH=$DAS_ROOT/web/js
 export DAS_CSSPATH=$DAS_ROOT/web/css
 export DAS_IMAGESPATH=$DAS_ROOT/web/images
 # TODO: YUI is not yet installed automatically
-export YUI_ROOT=$DAS_ROOT/web/js
+export YUI_ROOT=$DAS_ROOT/web/js/yui
 
