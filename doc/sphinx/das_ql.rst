@@ -46,3 +46,25 @@ file and dataset keys and file.size, dataset.name key attributes:
     file dataset=/a/b/c | grep file.size>1 | sum(file.size)
     file dataset=/a/b*
 
+
+Special keywords
+----------------
+DAS has a several special keywords: *system, date, instance, records*.
+
+- The *system* keyword is used to retrieve a records only from specified
+  system (data-service), e.g. DBS.
+- The *date* can be used in different queries and accepts values in
+  YYYYMMDD format as well as can be specified as *last* value, e.g.
+  *date last 24h, date last 60m*, where h, m are
+  hours, minutes, respectively.
+- The *records* keyword can be used to retrieve DAS records regardless
+  from their content. For instance, if one user place a query
+  *site=T1_CH_CERN\**, the DAS requests data from several data-services
+  (Phedex, SiteDB), while the output results will only show site
+  related records. If user wants to see which other records exists
+  in DAS cache for given parameter, he/she can use
+  *records site=T1_CH_CERN\** to do that. In that case user will get back
+  all records (site, block records) associated with given condition.
+
+
+.. include:: das_queries.rst

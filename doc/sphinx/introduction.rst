@@ -1,12 +1,13 @@
 Introduction
 ============
 
-DAS stands for *Data Aggregation System*. It provides a
-a common layer above various data services, to allow end users
+DAS is an opensource virtual data service integration platform.
+The acronym DAS stands for *Data Aggregation System*. It provides a
+a common layer above various data services, allowing end users
 to query one (or more) of them with a more natural, 
-search-engine-like interface. It is developed for the [CMS]_
+search-engine-like interface. It is being developed for the [CMS]_
 High Energy Physics experiment on the [LHC]_, at CERN,
-Geneva, Switzerland. Although it is currently only used for
+Geneva, Switzerland. Although it is currently only used at
 the CMS experiment, it was designed to have a general-purpose
 architecture which would be applicable to other domains.
 
