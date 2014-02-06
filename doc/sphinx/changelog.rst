@@ -7,6 +7,8 @@ This release series is targeted to DAS production stability and quality.
 
 - 2.5.X
 
+  - Improve error handling, add DASHTMLParser to parse HTML content coming from
+    data-providers (e.g. when service is down)
   - Change behavior of DAS CLI to show bytes as is and upon user request its
     representation in certain base, e.g. --base=2 will show MiB notations, etc.
   - Support DBS3 instances with slashes, e.g. prod/global, int/global
