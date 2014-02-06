@@ -17,7 +17,7 @@ from   types import InstanceType
 # DAS modules
 from   DAS.utils.das_timer import das_timer
 from   DAS.utils.utils import expire_timestamp, extract_http_error
-from   DAS.utils.utils import http_timestamp
+from   DAS.utils.utils import http_timestamp, dastimestamp
 from   DAS.utils.pycurl_manager import RequestHandler
 from   DAS.utils.pycurl_manager import REQUEST_HANDLER
 from   DAS.utils.regex import int_number_pattern
@@ -85,19 +85,19 @@ def getdata_pycurl(url, params, headers=None, expire=3600, post=None,
         data = {'error': 'Unable to contact %s' % contact,
                 'reason': msg, 'ts':time.time()}
         try:
-            err  = '%s %s' % (contact, extract_http_error(httperror.read()))
-            data.update({'error':err})
+            reason = extract_http_error(httperror.read())
+            data.update({'reason': reason, 'request': msg})
             msg += '\n' + err
         except Exception as exp:
             data.update({'httperror': None})
             msg += '\n' + str(exp)
-        print msg
+        print dastimestamp('getdata_pycurl'), msg
         data = json.dumps(data)
         expire = expire_timestamp(error_expire)
     except Exception as exp:
         msg  = 'HTTPError, system=%s, url=%s, args=%s, headers=%s' \
                     % (system, url, json.dumps(params), json.dumps(headers))
-        print msg + '\n' + str(exp)
+        print dastimestamp('getdata_pycurl'), msg + '\n' + str(exp)
         data = {'error': 'Unable to contact %s' % contact,
                 'reason': msg, 'ts':time.time()}
         data = json.dumps(data)
