@@ -3,6 +3,9 @@
 *.so
 .*.swp
 *.log
+# ignore generated JS files
+src/python/DAS/services/cms_maps/*.js
+src/python/DAS/services/maps/*.js
 doc/.build
 doc/_build
 doc/build
