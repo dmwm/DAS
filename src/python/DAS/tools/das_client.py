@@ -116,6 +116,11 @@ class DASOptionParser:
         msg = 'specify power base for size_format, default is 10 (can be 2)'
         self.parser.add_option("--base", action="store", type="int",
                                default=0, dest="base", help=msg)
+
+        msg = 'a file which contains a cached json dictionary for query -> files mapping'
+        self.parser.add_option("--cache", action="store", type="string",
+                               default=None, dest="cache", help=msg)
+
     def get_opt(self):
         """
         Returns parse list of options
@@ -311,6 +316,15 @@ def print_summary(rec):
             print '%s: %s' % (pkey, val)
         print
 
+def print_from_cache(cache, query):
+    "print the list of files reading it from cache"
+    data = open(cache).read()
+    jsondict = json.loads(data)
+    if query in jsondict:
+      print "\n".join(jsondict[query])
+      exit(0)
+    exit(1)
+
 def main():
     """Main function"""
     optmgr  = DASOptionParser()
@@ -332,9 +346,13 @@ def main():
         cli_msg  = jsondict.get('client_message', None)
         if  cli_msg:
             print "DAS CLIENT WARNING: %s" % cli_msg
+        if  not jsondict.has_key("status") and opts.cache:
+            print_from_cache(opts.cache, query)
         if  'status' not in jsondict:
             print 'DAS record without status field:\n%s' % jsondict
             sys.exit(EX_PROTOCOL)
+        if  jsondict["status"] != 'ok' and opts.cache:
+            print_from_cache(opts.cache, query)
         if  jsondict['status'] != 'ok':
             print "status: %s, reason: %s" \
                 % (jsondict.get('status'), jsondict.get('reason', 'N/A'))
