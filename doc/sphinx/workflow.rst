@@ -1,7 +1,7 @@
 .. _das_requestflow:
 
-DAS request flow
-================
+Resolving queries over data services
+====================================
 This diagram illustrates the request flow triggered by a user query.
 
 .. figure:: _images/das_requestflow.png 
@@ -22,8 +22,8 @@ according to the *notation* map for each of those services.
 
 .. _das_workflow:
 
-DAS workflow
-============
+Query processing steps
+======================
 DAS workflow consists of the following steps:
 
 - parse input query

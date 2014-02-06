@@ -1,4 +1,4 @@
-DAS CLI tool
+DAS Command Line Interface (CLI) tool
 ============
 The DAS Command Line Interface (CLI) tool can be downloaded directly from
 DAS server. It is python-based tool and does not require any additional
@@ -106,7 +106,7 @@ also requested:
      'status': 'ok',
      'timestamp': 1379782017.68}
 
-Using DAS CLI tool in other applications
+Using DAS CLI tool from other applications
 ++++++++++++++++++++++++++++++++++++++++
 
 It is possible to plug DAS CLI tool into other python applications. This can be

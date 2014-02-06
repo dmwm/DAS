@@ -1,5 +1,5 @@
 Dependencies
-============
+------------
 DAS is written in python and relies on standard python modules.
 The design back-end is `MongoDB <http://www.mongodb.org>`_,
 which provides *schema-less* storage and a generic query language.

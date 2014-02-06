@@ -3,8 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Data Aggregation System
-=======================
+Data Aggregation System (DAS) for Virtual Data Service Integration
+==================================================================
 
 * **Version**: |version|
 * **Last modified**: |today|
@@ -14,31 +14,13 @@ Contents:
 
 .. toctree::
    :maxdepth: 2
-
-   introduction.rst
-   installation.rst
-   das_ql.rst
-   das_queries.rst
-   das_client.rst
-   architecture.rst
-   workflow.rst
-   das_server.rst
-   das_records.rst
-   mapping.rst
-   analytics.rst
-   das_cache.rst
-   das_merge.rst
-   das_logging.rst
-   das_analytics.rst
-   code.rst
-   new_service.rst
-   das_config.rst
-   cms_operations.rst
-   das_operations.rst
-   benchmark.rst
-   dependencies.rst
-   changelog.rst
-   references.rst
+   
+   about_das
+   installation
+   das_setup
+   das_internals
+   changelog
+   references
 
 Indices and tables
 ------------------

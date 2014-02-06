@@ -1,13 +1,5 @@
-.. _das_config:
-
-DAS configurations
-==================
-
-.. toctree::
-   :maxdepth: 2
-
 DAS configuration file
-----------------------
+======================
 
 DAS configuration consists of a single file, $DAS_ROOT/etc/das.cfg. Its structure is
 shown below:

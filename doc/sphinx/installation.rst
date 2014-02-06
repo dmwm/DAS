@@ -72,65 +72,7 @@ a different PYCURL_SSL_LIBRARY, e.g.:
 For more details continue reading below.
 
 
-Source code
------------
-
-DAS source code is freely available from [DAS]_ github repository. To install
-it on your system you need to use `git` which can be found from [GIT]_ web
-site.
-
-Prerequisites
--------------
-DAS depends on the following software:
-
-- MongoDB and pymongo module
-- libcurl library
-- YUI library (Yahoo UI)
-- python modules:
-
-  - yajl (Yet Another JSON library) or cjson (C-JSON module)
-  - CherryPy
-  - Cheetah
-  - PLY
-  - PyYAML
-  - pycurl
-
-To install MongoDB visit their web site [Mongodb]_, download latest binary tar ball,
-unpack it and make its bin directory available in your path.
-
-To install libcurl library visit its web site [CURL]_ and install it on your
-system.
-
-To install YUI library, visit Yahoo developer web site [YUI]_ and install
-version 2 of their yui library.
-
-To install python dependencies it is easier to use standard python installer
-*pip*. In on your to get it download virtual environment [VENV]_
-and run it as following:
-
-.. doctest::
-
-    curl -O https://raw.github.com/pypa/virtualenv/master/virtualenv.py
-    python virtualenv.py <install_dir>
-
-Once it is installed you need to setup your path to point to *install_dir/bin*
-and then invoke pip:
-
-.. doctest::
-
-    export PATH=<install_dir>/bin:$PATH
-    pip install python-cjson
-    pip install czjson
-    pip install CherryPy
-    pip install Cheetah
-    pip install PyYAML
-    pip install yajl
-    pip install pymongo
-    pip install ply
-    pip install pycurl
-
-
-DAS installation and configuration (old)
+DAS installation (old)
 ----------------------------------------
 
 To get DAS release just clone it from GIT repository:
@@ -167,3 +109,41 @@ environment, its context should be something like:
 
 where I installed all packages under local $dir/install area and keep DAS under
 $dir/soft/DAS.
+
+
+.. rubric:: Source code
+
+DAS source code is freely available from [DAS]_ github repository. To install
+it on your system you need to use `git` which can be found from [GIT]_ web
+site.
+
+.. rubric:: Prerequisites
+
+DAS depends on the following software:
+
+- MongoDB and pymongo module
+- libcurl library
+- YUI library (Yahoo UI)
+- python modules:
+
+  - yajl (Yet Another JSON library) or cjson (C-JSON module)
+  - CherryPy
+  - Cheetah
+  - PLY
+  - PyYAML
+  - pycurl
+
+To install MongoDB visit their web site [Mongodb]_, download latest binary tar ball,
+unpack it and make its bin directory available in your path.
+
+To install libcurl library visit its web site [CURL]_ and install it on your
+system.
+
+To install YUI library, visit Yahoo developer web site [YUI]_ and install
+version 2 of their yui library.
+
+To install python dependencies it is easier to use standard python installer
+*pip* (see above).
+
+
+.. include:: dependencies.rst
