@@ -11,6 +11,7 @@ __author__ = "Valentin Kuznetsov"
 # system modules
 import os
 import re
+import cgi
 import sys
 import time
 import copy
@@ -25,6 +26,7 @@ import itertools
 import xml.etree.cElementTree as ET
 from   itertools import groupby
 from   bson.objectid import ObjectId
+from HTMLParser import HTMLParser
 
 # DAS modules
 from   DAS.utils.ddict import DotDict, convert_dot_notation
@@ -35,6 +37,32 @@ from   DAS.utils.regex import last_time_pattern, date_yyyymmdd_pattern
 from   DAS.utils.regex import rr_time_pattern, das_time_pattern
 from   DAS.utils.regex import http_ts_pattern
 import DAS.utils.jsonwrapper as json
+
+class DASHTMLParser(HTMLParser):
+    """
+    Minimalistic HTML parser suitable to parsing HTML content from data-providers.
+    This class is intended to use in xml/json parsers as HTML handler.
+    """
+    def __init__(self):
+        HTMLParser.__init__(self)
+        self.write  = False
+        self.output = []
+    def handle_starttag(self, tag, attrs):
+        "Handle start tag, set write flag to True when encounter body tag"
+        if  tag == 'body':
+            self.write = True
+    def handle_endtag(self, tag):
+        "Handle start tag, set write flag to False when encounter body tag"
+        if  tag == 'body':
+            self.write = False
+    def handle_data(self, data):
+        "Handle data"
+        if  data and self.write:
+            self.output.append(data.strip())
+    def content(self):
+        "Return escaped content of the web page"
+        out = '\n'.join(self.output)
+        return out and cgi.escape(out, quote=True) or ''
 
 def upper_lower(ilist):
     "Return list of lower and upper words from given list"
@@ -1228,11 +1256,19 @@ def xml_parser(source, prim_key, tags=None):
             if  isinstance(source, str):
                 data = json.loads(source)
                 yield data
+                return
         except:
             pass
         msg = 'XML parser, data stream is not parseable: %s' % str(exc)
         print_exc(msg)
         context = []
+        parser = DASHTMLParser()
+        parser.feed(source)
+        err = 'XML parser, data stream is not parseable: %s' % str(exc)
+        reason = parser.content()
+        jsondict = {'error': err, 'reason': reason}
+        yield jsondict
+        return
     root      = None
     for item in context:
         event, elem = item
@@ -1320,9 +1356,13 @@ def json_parser(source, logger=None):
         try:
             jsondict = json.load(source)
         except Exception as exc:
+            source.seek(0) # seek to start of the source stream
+            parser = DASHTMLParser()
+            parser.feed(source.read())
+            reason = parser.content()
+            jsondict = {'error': str(exc), 'reason': reason}
             print_exc(exc)
             source.close()
-            raise
         source.close()
     else:
         data = source
@@ -1332,19 +1372,26 @@ def json_parser(source, logger=None):
             data = unicode(data, errors='ignore')
             res  = data.replace('null', '\"null\"')
         elif isinstance(data, object) and hasattr(data, 'read'): # StringIO
-            res = data.read()
+            res  = data.read()
         else:
             res  = data
         try:
             jsondict = json.loads(res)
         except:
-            msg  = "json_parser, WARNING: fail to JSON'ify data:"
-            msg += "\n%s\ndata type %s" % (res, type(res))
-            if  logger:
-                logger.warning(msg)
+            if  'html' in data.lower(): # we got HTML stream
+                err = 'JSON parser error'
+                parser = DASHTMLParser()
+                parser.feed(data)
+                reason = parser.content()
+                jsondict = {'error': err, 'reason': reason}
             else:
-                print msg
-            jsondict = eval(res, { "__builtins__": None }, {})
+                msg  = "json_parser, WARNING: fail to JSON'ify data:"
+                msg += "\n%s\ndata type %s" % (res, type(res))
+                if  logger:
+                    logger.warning(msg)
+                else:
+                    print msg
+                jsondict = eval(res, { "__builtins__": None }, {})
     yield jsondict
 
 def plist_parser(source):
@@ -1573,6 +1620,10 @@ def extract_http_error(err):
     such message. If it fails it just str(err) and return.
     """
     msg  = str(err)
+    if  'html' in msg.lower():
+        parser = DASHTMLParser()
+        parser.feed(msg)
+        return parser.content()
     try:
         err = json.loads(err)
         if  'message' in err:
