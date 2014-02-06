@@ -346,7 +346,7 @@ def main():
         cli_msg  = jsondict.get('client_message', None)
         if  cli_msg:
             print "DAS CLIENT WARNING: %s" % cli_msg
-        if  not jsondict.has_key("status") and opts.cache:
+        if  'status' not in jsondict and opts.cache:
             print_from_cache(opts.cache, query)
         if  'status' not in jsondict:
             print 'DAS record without status field:\n%s' % jsondict
