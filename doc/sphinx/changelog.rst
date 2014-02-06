@@ -7,6 +7,11 @@ This release series is targeted to DAS production stability and quality.
 
 - 2.5.X
 
+  - Switch to <dbs_namespace>/<dbs_instance> schema for DBS3 maps, e.g.
+    prod/global, int/global, prod/phys01, int/phys01
+  - Reorganize DAS map upload (new scripts: das_create_json_maps,
+    das_update_database)
+  - Add support for Travis CI
   - Improve error handling, add DASHTMLParser to parse HTML content coming from
     data-providers (e.g. when service is down)
   - Change behavior of DAS CLI to show bytes as is and upon user request its
