@@ -167,7 +167,7 @@ def adjust_values(func, gen, links, pkey):
             continue
         if  key.lower() == 'error':
             key = '<span %s>WARNING</span>' % red
-            val = json.dumps(val) + '<br/>'
+            val = json.dumps(val) + ', click on show link to get more info<br/>'
         if  lookup:
             if  key.find('Member') != -1 and val:
                 link = '/das/request?input=user%3D'
@@ -338,6 +338,14 @@ class CMSRepresentation(DASRepresentation):
         for key in idict.keys():
             if  key == 'das' or key.find('_id') != -1:
                 continue
+            val = idict[key]
+            if  isinstance(val, list):
+                for elem in val:
+                    if  'error' in elem:
+                        yield 'error', elem['error'], None, None, None
+            else:
+                if  'error' in val:
+                    yield 'error', val['error'], None, None, None
             for item in self.dasmapping.presentation(key):
                 try:
                     daskey = item['das']
