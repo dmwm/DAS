@@ -60,6 +60,9 @@ class TestOptionParser(object):
         self.parser.add_option("--limit", action="store", type="int",
             default=0, dest="limit",
             help="specify number of rows to retrieve within a test, default all")
+        self.parser.add_option("--file", action="store", type="string",
+            default=None, dest="qfile",
+            help="read queries from given file")
         self.parser.add_option("--seed", action="store", type="string",
             default="dataset=/A*/*/*", dest="query",
             help="seed query, e.g. dataset=/A*/*/*")
@@ -149,6 +152,7 @@ def main():
     thr      = 600
     debug    = opts.debug
     query    = opts.query
+    qfile    = opts.qfile
     lkeys    = [k.strip().replace('_', ',') for k in opts.lkeys.split(',')]
     uinput   = query.replace('dataset=', '')
     if  query.find('dataset=') == -1:
@@ -168,12 +172,15 @@ def main():
     time0    = time.time()
     idx      = 0
     limit    = 0 # fetch all datasets
-    data     = get_data(host, query, idx, limit, debug, thr, ckey, cert)
-    if  isinstance(data, dict):
-        jsondict = data
+    if  qfile: # read queries from query file
+        status = 'qfile'
     else:
-        jsondict = json.loads(data)
-    status   = jsondict.get('status', None)
+        data     = get_data(host, query, idx, limit, debug, thr, ckey, cert)
+        if  isinstance(data, dict):
+            jsondict = data
+        else:
+            jsondict = json.loads(data)
+        status   = jsondict.get('status', None)
     pool     = {}
     out      = Queue()
     if  status == 'ok':
@@ -189,16 +196,16 @@ def main():
             if  ntests > len(datasets):
                 msg  = 'Number of tests exceed number of found datasets. '
                 msg += 'Please use another value for ntests'
-                msg += 'ndatasets=%s, ntests=%s' % (len(datasets), opts.ntests)
+                msg += 'ndatasets=%s, ntests=%s' % (len(datasets), ntests)
                 print '\nERROR:', msg
                 sys.exit(1)
             datasets.sort()
             if  debug:
                 print "Found %s datasets" % len(datasets)
-                print "First %s datasets:" % opts.ntests
-                for dataset in datasets[:opts.ntests]:
+                print "First %s datasets:" % ntests
+                for dataset in datasets[:ntests]:
                     print dataset
-            for dataset in datasets[:opts.ntests]:
+            for dataset in datasets[:ntests]:
                 jdx   = random.randint(0, len(lkeys)-1)
                 skey  = lkeys[jdx] # get random select key
                 query = '%s dataset=%s' % (skey, dataset)
@@ -207,6 +214,18 @@ def main():
                 proc  = Process(target=run, args=args)
                 proc.start()
                 pool[proc.name] = proc
+    elif status == 'qfile':
+        counter = 0
+        for line in open(qfile, 'r').readlines():
+            if  counter >= ntests:
+                break
+            query = line.replace('\n', '')
+            idx   = 0 # always start from first record
+            args  = (out, host, query, idx, limit, debug, thr, ckey, cert)
+            proc  = Process(target=run, args=args)
+            proc.start()
+            pool[proc.name] = proc
+            counter += 1
     else:
         print 'DAS cli fails status=%s, query=%s' % (status, query)
         print jsondict
@@ -237,7 +256,7 @@ def main():
         except:
             break
     print "+++ SUMMARY:"
-    print "# queries  :", opts.ntests
+    print "# queries  :", ntests
     print "status ok  :", tot_ok
     print "status fail:", len(tot_fail), tot_fail
     print "nresults 0 :", len(tot_zero), tot_zero
