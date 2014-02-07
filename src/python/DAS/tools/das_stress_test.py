@@ -153,6 +153,7 @@ def main():
     debug    = opts.debug
     query    = opts.query
     qfile    = opts.qfile
+    limit    = opts.limit
     lkeys    = [k.strip().replace('_', ',') for k in opts.lkeys.split(',')]
     uinput   = query.replace('dataset=', '')
     if  query.find('dataset=') == -1:
@@ -170,11 +171,11 @@ def main():
             print "Unable to load psutil package, turn off monitoring"
     # setup initial parameters
     time0    = time.time()
-    idx      = 0
-    limit    = 0 # fetch all datasets
     if  qfile: # read queries from query file
         status = 'qfile'
     else:
+        idx      = 0
+        limit    = 0 # fetch all datasets
         data     = get_data(host, query, idx, limit, debug, thr, ckey, cert)
         if  isinstance(data, dict):
             jsondict = data
