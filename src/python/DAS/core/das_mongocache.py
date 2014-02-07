@@ -21,7 +21,6 @@ from   types import GeneratorType
 import datetime
 import itertools
 import fnmatch
-import threading
 
 # DAS modules
 from DAS.core.das_ql import das_record_keys
@@ -126,14 +125,13 @@ def etstamp(delta=20):
     """
     return time.time() + delta
 
-def cleanup_worker(dburi, dbname, collections, sleep):
+def cleanup_worker(dburi, dbname, collections, del_ttl, sleep):
     """DAS cache cleanup worker"""
     while True:
         conn = db_connection(dburi)
-        spec = {'das.expire': { '$lt':time.time()}}
+        spec = {'das.expire': { '$lt':time.time()-del_ttl}}
         for col in collections:
-            with threading.Lock():
-                conn[dbname][col].remove(spec)
+            conn[dbname][col].remove(spec)
         time.sleep(sleep)
 
 class DASMongocache(object):
@@ -208,7 +206,7 @@ class DASMongocache(object):
                   config['dasdb']['mergecollection']]
         sleep  = config['dasdb'].get('cleanup_interval', 600)
         if  config['dasdb'].get('cleanup_worker', True):
-            args = (self.dburi, self.dbname, cols, sleep)
+            args = (self.dburi, self.dbname, cols, self.del_ttl, sleep)
             start_new_thread(thname, cleanup_worker, args, unique=True)
 
     @property
@@ -319,7 +317,7 @@ class DASMongocache(object):
         # this delta is required to ensure the time required to
         # process DAS request
         spec = {'qhash':dasquery.qhash,
-                'das.expire':{'$lt':time.time()+self.del_ttl}}
+                'das.expire':{'$lt':time.time()-self.del_ttl}}
         col.remove(spec)
 
     def check_services(self, dasquery):
