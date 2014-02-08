@@ -415,7 +415,8 @@ params: {
     "status":"optional"}
 lookup: file
 das_map : [
-        {"das_key": "file", "rec_key": "file.name", "api_arg": "pattern_lfn"},
+        {"das_key": "file", "rec_key": "file.name", "api_arg": "pattern_lfn",
+         "pattern":"/.*/.*/.*\\.root"},
         {"das_key": "run", "rec_key": "run.run_number", "api_arg": "run_number",
          "pattern": "^[0-9]{3,10}"},
         {"das_key": "dataset", "rec_key": "dataset.name", "api_arg": "path",
