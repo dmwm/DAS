@@ -480,9 +480,14 @@ class DBS3Service(DASAbstractService):
             return None # no other DBS2 instnaces is allowed
         if  instance in self.instances:
             if  isinstance(url, basestring):
+                if  '/' in instance and '/' not in self.prim_instance:
+                    return url.replace('prod/%s' % self.prim_instance, instance)
                 return url.replace(self.prim_instance, instance)
             elif isinstance(url, list):
-                urls = [u.replace(self.prim_instance, instance) for u in url]
+                if  '/' in instance and '/' not in self.prim_instance:
+                    urls = [u.replace('prod/%' % self.prim_instance, instance) for u in url]
+                else:
+                    urls = [u.replace(self.prim_instance, instance) for u in url]
                 return urls
         else:
             return None
