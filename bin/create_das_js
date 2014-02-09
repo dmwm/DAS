@@ -48,6 +48,9 @@ build_das_maps()
             /bin/cat $amap | sed "s/cmsweb.cern.ch/cmsweb-testbed.cern.ch/g" > $amap.tmp
             rm -f $amap
             mv $amap.tmp $amap
+            /bin/cat $amap | sed "s,dbs/prod/global,dbs/int/global,g" > $amap.tmp
+            rm -f $amap
+            mv $amap.tmp $amap
         done
         map_file="$dir/das_testbed_maps.js"
     fi
