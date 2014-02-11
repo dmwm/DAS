@@ -15,6 +15,7 @@ import httplib
 from   types import InstanceType
 
 # DAS modules
+from   DAS import DAS_SERVER
 from   DAS.utils.das_timer import das_timer
 from   DAS.utils.utils import expire_timestamp, extract_http_error
 from   DAS.utils.utils import http_timestamp, dastimestamp
@@ -62,6 +63,10 @@ class HTTPSClientAuthHandler(urllib2.HTTPSHandler):
 def getdata(url, params, headers=None, expire=3600, post=False,
     error_expire=300, verbose=0, ckey=None, cert=None, doseq=True, system=None):
     "Fetch data from remote URL for given set of parameters"
+    if  headers:
+        headers.update({'User-Agent': DAS_SERVER})
+    else:
+        headers = {'User-Agent': DAS_SERVER}
 #    return getdata_urllib(url, params, headers, expire, post, \
 #                error_expire, verbose, ckey, cert, doseq, system)
     return getdata_pycurl(url, params, headers, expire, post, \
