@@ -80,7 +80,8 @@ class KWSWebService(DASWebManager):
         try:
             self.dasmgr = DASCore(multitask=False)
             # be notified on DASMaps reload
-            self.dasmgr.mapping.on_reload += [self.dasmap_reload_handler]
+            if not self.dasmap_reload_handler in self.dasmgr.mapping.on_reload:
+                self.dasmgr.mapping.on_reload += [self.dasmap_reload_handler]
 
             self.dbs_instances = self.dasmgr.mapping.dbs_instances()
             self.dbs_global = self.dasmgr.mapping.dbs_global_instance()

@@ -117,7 +117,26 @@ class DASMapping(object):
     """
     This class manages DAS mapping DB.
     """
-    def __init__(self, config):
+    __cached_inst = None
+    __cached_params = None
+
+    def __new__(cls, config):
+        """
+        creates a new instance of the class and cache it or return an existing
+         instance if one exists (only when the params match).
+
+        only the last instance is cached, but this simplifies the implementation
+        as the param 'config' might be a complex unhashable object.
+        """
+        # check if we can reuse an existing instance
+        if cls.__cached_inst and cls.__cached_params == config:
+            print "DASMapping::__new__: returning a cached instance"
+            return cls.__cached_inst
+
+        # otherwise create and initialize a new instance
+        print "DASMapping::__new__: creating a new instance"
+        self = object.__new__(cls)
+
         self.verbose  = config['verbose']
         self.logger   = PrintManager('DASMapping', self.verbose)
         self.services = config['services']
@@ -155,6 +174,11 @@ class DASMapping(object):
         self.dbs_global_url = None     # to be determined at run time
         self.dbs_inst_names = None     # to be determined at run time
         self.load_maps(notify=False)
+
+        # cache the instance and return it
+        DASMapping.__cached_inst = self
+        DASMapping.__cached_params = config
+        return self
 
     @property
     def col(self):
