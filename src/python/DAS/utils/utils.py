@@ -1378,13 +1378,14 @@ def json_parser(source, logger=None):
         try:
             jsondict = json.loads(res)
         except:
-            if  'html' in data.lower(): # we got HTML stream
+            try: # try to parse HTML
                 err = 'JSON parser error'
                 parser = DASHTMLParser()
-                parser.feed(data)
+                parser.feed(res)
                 reason = parser.content()
                 jsondict = {'error': err, 'reason': reason}
-            else:
+            except Exception as exc:
+                print exc
                 msg  = "json_parser, WARNING: fail to JSON'ify data:"
                 msg += "\n%s\ndata type %s" % (res, type(res))
                 if  logger:
