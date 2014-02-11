@@ -29,6 +29,7 @@ except:
     import StringIO
 
 # DAS modules
+from DAS import DAS_SERVER
 from DAS.utils.jsonwrapper import json
 from DAS.utils.regex import pat_http_msg, pat_expires
 from DAS.utils.utils import expire_timestamp
@@ -59,7 +60,7 @@ class RequestHandler(object):
         if  not config:
             config = {}
         self.nosignal = config.get('nosignal', 1)
-        self.timeout = config.get('timeout', 300)
+        self.timeout = config.get('timeout', 400)
         self.connecttimeout = config.get('connecttimeout', 30)
         self.followlocation = config.get('followlocation', 1)
         self.maxredirs = config.get('maxredirs', 5)
@@ -216,7 +217,7 @@ def datasets(url, cert, ckey, pattern, verbose=None):
     # NOTE: DBS3 API does not allow to pass details parameter for
     # dataset patterns, only for fully qualified dataset.
     params  = {'dataset':pattern, 'dataset_access_type': 'VALID'}
-    headers = {'Accept':'text/json;application/json'}
+    headers = {'Accept':'text/json;application/json', 'User-Agent': DAS_SERVER}
     reqmgr  = RequestHandler()
     data, _expire = reqmgr.getdata(url, params, headers, \
                 ckey=ckey, cert=cert, verbose=verbose)
