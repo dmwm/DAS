@@ -7,6 +7,13 @@ This release series is targeted to DAS production stability and quality.
 
 - 2.5.X
 
+  - Set DAS_SERVER in DAS/__init__.py module which will be used in HTTP
+    User-Agent header. The DAS_SERVER uses version which will be updated upon
+    deployment to specific release name. Therefore the User-Agent string will
+    change once we deploy new DAS release. It has the following pattern:
+    das-server/<DAS release>::python/<python version>, e.g.
+    das-server/2.4.8::python/2.7
+  - Change DASMapping to be singleton
   - Switch to <dbs_namespace>/<dbs_instance> schema for DBS3 maps, e.g.
     prod/global, int/global, prod/phys01, int/phys01
   - Reorganize DAS map upload (new scripts: das_create_json_maps,
