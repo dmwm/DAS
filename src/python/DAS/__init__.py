@@ -9,3 +9,7 @@ DAS modules
 """
 __author__ = "Valentin Kuznetsov"
 version = "development"
+
+import sys
+vinfo = sys.version_info[:2]
+DAS_SERVER = 'das-server/%s::python/%s.%s' % (version, vinfo[0], vinfo[-1])
