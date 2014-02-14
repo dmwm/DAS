@@ -216,17 +216,13 @@ def main():
                 proc.start()
                 pool[proc.name] = proc
     elif status == 'qfile':
-        counter = 0
-        for line in open(qfile, 'r').readlines():
-            if  counter >= ntests:
-                break
-            query = line.replace('\n', '')
+        flist = [f.replace('\n', '') for f in open(qfile, 'r').readlines()]
+        for query in random.sample(flist, ntests):
             idx   = 0 # always start from first record
             args  = (out, host, query, idx, limit, debug, thr, ckey, cert)
             proc  = Process(target=run, args=args)
             proc.start()
             pool[proc.name] = proc
-            counter += 1
     else:
         print 'DAS cli fails status=%s, query=%s' % (status, query)
         print jsondict
