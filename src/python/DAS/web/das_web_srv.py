@@ -128,6 +128,7 @@ class DASWebService(DASWebManager):
             main_dbs_url = self.dbs_url
             dbs_urls = []
             print "### DBS URL:", self.dbs_url
+            print "### DBS global instance:", self.dbs_global
             print "### DBS instances:", self.dbs_instances
             if  not self.dbs_url or not self.dbs_instances:
                 return # just quit
