@@ -140,7 +140,7 @@ def process_dataset_wildcards(pattern, dbs_inst):
         while '*Zmm*' would still give: ['/*/*Zmm*/*', '/*Zmm*/*/*']
 
     Tests:
-    >>> dbs_inst='cms_dbs_prod_global'
+    >>> dbs_inst='prod/global'
 
     >>> process_dataset_wildcards('*Zmm*CMSSW*RECO*', dbs_inst)
     [u'/RelValZmm*/CMSSW*/*RECO']
