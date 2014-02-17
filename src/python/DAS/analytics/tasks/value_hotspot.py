@@ -62,7 +62,7 @@ class ValueHotspot(HotspotBase):
                    'help':'Cache filling jobs are spawned to refresh data this many seconds before expiry'},
                   {'name':'fields', 'type':'list', 'default':None,
                    'help':'Fields that should be queried, each resulting in "field key=<value>". An attempt will be made to determine them from the mapping if unspecified.'},
-                  {'name':'instance', 'type':'string', 'default':'cms_dbs_prod_global',
+                  {'name':'instance', 'type':'string', 'default':'prod/global',
                    'help':'DBS instance to include in queries'}]
 
     def __init__(self, **kwargs):
@@ -72,7 +72,7 @@ class ValueHotspot(HotspotBase):
         self.find_supersets = kwargs.get('find_supersets', False)
         self.preempt = int(kwargs.get('preempt', 60))
         self.fields = kwargs.get('fields', None)
-        self.instance = kwargs.get('instance', 'cms_dbs_prod_global')
+        self.instance = kwargs.get('instance', 'prod/global')
 
         HotspotBase.__init__(self,
                              identifier="valuehotspot-%s" % \
