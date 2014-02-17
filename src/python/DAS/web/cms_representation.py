@@ -177,7 +177,15 @@ def adjust_values(func, gen, links, pkey):
                 elif isinstance(val, basestring):
                     val = '<a href="%s%s">%s</a>' \
                         % (link, quote(val), quote(val))
-            if  isinstance(val, list):
+            if  key.find('Config urls') != -1 and val:
+                if  isinstance(val, list):
+                    urls = []
+                    for vdx in range(len(val)):
+                        urls.append('<a href="%s">Link-%d</a>' % (val[vdx], vdx+1))
+                    value = ', '.join(urls)
+                else:
+                    value = '<a href="%s">Link</a>' % val
+            elif  isinstance(val, list):
                 value = ', '.join([str(v) for v in val])
                 try:
                     length = len(set(val))
