@@ -142,8 +142,9 @@ def process_dataset_wildcards(pattern, dbs_inst):
     Tests:
     >>> dbs_inst='prod/global'
 
-    >>> process_dataset_wildcards('*Zmm*CMSSW*RECO*', dbs_inst)
-    [u'/RelValZmm*/CMSSW*/*RECO']
+    # this dataset seem not available anymore...
+    #>>> process_dataset_wildcards('*Zmm*CMSSW*RECO*', dbs_inst)
+    #[u'/RelValZmm*/CMSSW*/*RECO']
 
     >>> process_dataset_wildcards('*Zmm*', dbs_inst)
     ['/*/*Zmm*/*', '/*Zmm*/*/*']
