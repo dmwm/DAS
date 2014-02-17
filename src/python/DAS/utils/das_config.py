@@ -96,10 +96,15 @@ DASOption('dasdb', 'record_ttl', 'int', 24*60*60),
 DASOption('dasdb', 'cleanup_worker', 'bool', True),
 # Inerval for clean-up worker
 DASOption('dasdb', 'cleanup_interval', 'int', 600),
-# delta TTL control a buffer above expiration timestamp to ensure that
-# DAS will safely clean-up records and will not create racing condition
-# between clean-up thread and request ones
+# delta TTL controls a buffer above expiration timestamp to ensure that
+# DAS record will not disappear upon request, i.e. DAS server can be
+# busy processing other requests and if upon request record was in cache
+# and during processing chain was clean-up will make request disappear
 DASOption('dasdb', 'delta_ttl', 'int', 60),
+# cleanup delta TTL controls an offset for clean-up work daemon
+# this daemon responsible to clean-up DAS cache periodically and it's
+# better to have an offset to ensure that only old records will be wiped out
+DASOption('dasdb', 'cleanup_delta_ttl', 'int', 3600),
 
 #
 # DAS web server options

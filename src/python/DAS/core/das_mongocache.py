@@ -150,7 +150,8 @@ class DASMongocache(object):
         self.mapping = config['dasmapping']
         self.logging = config['dasdb'].get('logging', False)
         self.rec_ttl = config['dasdb'].get('record_ttl', 24*60*60)
-        self.del_ttl = config['dasdb'].get('delta_ttl', 100)
+        self.del_ttl = config['dasdb'].get('delta_ttl', 60)
+        self.cleanup_del_ttl = config['dasdb'].get('cleanup_delta_ttl', 3600)
         self.retry   = config['dasdb'].get('retry', 3)
         self.das_son_manipulator = DAS_SONManipulator()
 
@@ -206,7 +207,7 @@ class DASMongocache(object):
                   config['dasdb']['mergecollection']]
         sleep  = config['dasdb'].get('cleanup_interval', 600)
         if  config['dasdb'].get('cleanup_worker', True):
-            args = (self.dburi, self.dbname, cols, self.del_ttl, sleep)
+            args = (self.dburi, self.dbname, cols, self.cleanup_del_ttl, sleep)
             start_new_thread(thname, cleanup_worker, args, unique=True)
 
     @property
@@ -314,10 +315,10 @@ class DASMongocache(object):
         mdb.add_son_manipulator(self.das_son_manipulator)
         col    = mdb[collection]
         # use additional delta to check data record expiration
-        # this delta is required to ensure the time required to
-        # process DAS request
+        # we add this delta to ensure that there is no records close to
+        # current timestamp which may expire during request processing
         spec = {'qhash':dasquery.qhash,
-                'das.expire':{'$lt':time.time()-self.del_ttl}}
+                'das.expire':{'$lt':time.time()+self.del_ttl}}
         col.remove(spec)
 
     def check_services(self, dasquery):

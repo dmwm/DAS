@@ -253,8 +253,6 @@ class DASCore(object):
         status = None
         error  = None
         reason = None
-        for col in ['merge', 'cache']:
-            self.rawcache.remove_expired(dasquery, col)
         if  dasquery and 'fields' in dasquery.mongo_query:
             fields = dasquery.mongo_query['fields']
             if  fields and isinstance(fields, list) and 'queries' in fields:
