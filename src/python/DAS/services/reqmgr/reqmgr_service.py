@@ -60,31 +60,11 @@ def configs(url, args, verbose=False):
         return
     base = 'https://%s' % url.split('/')[2]
     ids  = findReqMgrIds(dataset, base, verbose)
-    # probe to find configs in showWorkload
-    urls = ['%s/reqmgr/view/showWorkload?requestName=%s' % (base, i) for i in ids]
-    gen  = urlfetch_getdata(urls, CKEY, CERT, headers)
-    config_urls = []
-    for row in gen:
-        if  'error' not in row:
-            for line in row['data'].split('\n'):
-                if  line.rfind("/configFile") != -1:
-                    cfg = line.split('=')[-1].strip()
-                    cfg = cfg.replace('<br/>', '').replace("'",'')
-                    config_urls.append(cfg)
-    if  config_urls:
-        urls = config_urls
-    else:
-        urls = ['%s/%s/configFile' % (url, i) for i in ids]
-    gen  = urlfetch_getdata(urls, CKEY, CERT, headers)
-    for row in gen:
-        if  'error' in row:
-            error  = row.get('error')
-            reason = row.get('reason', '')
-            yield {'error':error, 'reason':reason}
-        else:
-            config = {'data':row['data'], 'dataset':dataset, 'name':'ReqMgr',
-                      'ids': ids, 'urls': urls}
-            yield {'config':config}
+    # find configs via ReqMgr REST API
+    urls = ['%s/couchdb/reqmgr_config_cache/%s/configFile' \
+            % (base, i) for i in ids if len(i) == 32]
+    config = {'dataset':dataset, 'name':'ReqMgr', 'urls': urls}
+    yield {'config': config}
 
 class ReqMgrService(DASAbstractService):
     """
