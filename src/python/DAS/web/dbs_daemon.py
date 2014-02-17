@@ -22,6 +22,7 @@ from pymongo import ASCENDING
 # DAS modules
 import DAS.utils.jsonwrapper as json
 from DAS.utils.utils import qlxml_parser, dastimestamp, print_exc
+from DAS.utils.utils import get_dbs_instance
 from DAS.utils.das_db import db_connection, is_db_alive, create_indexes
 from DAS.utils.das_db import find_one
 from DAS.utils.utils import get_key_cert, genkey
@@ -33,21 +34,6 @@ from DAS.utils.das_db import query_db
 
 SKIP_UPDATES = 0
 
-def dbs_instance(dbsurl):
-    """Parse dbs instance from provided DBS url"""
-    if  dbsurl[-1] == '/':
-        dbsurl = dbsurl[:-1]
-    if  dbsurl.find('DBSServlet') != -1:
-        # http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet
-        dbsinst = dbsurl.split('/')[-3]
-    elif dbsurl.find('DBSReader') != -1:
-        # http://cmsweb.cern.ch/dbs/prod/global/DBSReader
-        dbsinst = dbsurl.split('/')[-3]
-    else:
-        msg = 'Unable to parse dbs instance from provided url %s' % dbsurl
-        raise Exception(msg)
-    return dbsinst
-
 class DBSDaemon(object):
     """
     DBSDaemon fetch list of known datasets from DBS2/DBS3
@@ -58,7 +44,7 @@ class DBSDaemon(object):
         if  not config:
             config = {}
         self.dburi      = dburi
-        self.dbcoll     = dbs_instance(dbs_url)
+        self.dbcoll     = get_dbs_instance(dbs_url)
         self.dbs_url    = dbs_url
         self.dbname     = config.get('dbname', 'dbs')
         self.cache_size = config.get('cache_size', 1000)
