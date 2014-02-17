@@ -95,7 +95,7 @@ def main():
     t0 = time.time()
     query = opts.query
     if  'instance' not in query:
-        query += ' instance=cms_dbs_prod_global'
+        query += ' instance=prod/global'
     debug = opts.verbose
     dascore = DASCore(debug=debug, nores=opts.noresults)
     if  opts.hash:
