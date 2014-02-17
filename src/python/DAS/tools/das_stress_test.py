@@ -28,7 +28,7 @@ from   multiprocessing import Process, Queue
 from DAS.tools.das_client import get_data
 from DAS.core.das_query import DASQuery
 
-DBS_GLOBAL='cms_dbs_prod_global'
+DBS_GLOBAL='prod/global'
 
 class TestOptionParser(object):
     "Test option parser"
