@@ -121,7 +121,7 @@ PAT_TIERS = \
 
 # slashes handling in dataset Wildcard queries
 # allowed characters: letters, numbers, dashes and obviously  *
-DATASET_FORBIDDEN_SYMBOLS = re.compile(r'[^a-zA-Z0-9_\-*]*')
+DATASET_FORBIDDEN_SYMBOLS = re.compile(r'[^a-zA-Z0-9_\-*/]*')
 
 
 # rules for rewriting little ambiguous input into DASQL
