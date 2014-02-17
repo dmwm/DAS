@@ -52,6 +52,11 @@ def findReqMgrIds(dataset, base='https://cmsweb.cern.ch', verbose=False):
                     ids.append(rec['id'])
     return ids
 
+def rurl(base, ids):
+    "Construct reqmgr config url"
+    rurl = '%s/couchdb/reqmgr_config_cache/%s/configFile' % (base, ids)
+    return rurl
+
 def configs(url, args, verbose=False):
     """Find config info in ReqMgr"""
     headers = {'Accept': 'application/json;text/json'}
@@ -61,23 +66,43 @@ def configs(url, args, verbose=False):
     base = 'https://%s' % url.split('/')[2]
     ids  = findReqMgrIds(dataset, base, verbose)
     # for hash ids find configs via ReqMgr REST API
-    urls = ['%s/couchdb/reqmgr_config_cache/%s/configFile' \
-            % (base, i) for i in ids if len(i) == 32]
+    urls = [rurl(base, i) for i in ids if len(i) == 32]
     # for non-hash ids probe to find configs in showWorkload
-    req_urls = ['%s/reqmgr/view/showWorkload?requestName=%s' \
+    req_urls = ['%s/couchdb/reqmgr_workload_cache/%s' \
             % (base, i) for i in ids if len(i) != 32]
     if  req_urls:
         gen  = urlfetch_getdata(req_urls, CKEY, CERT, headers)
         config_urls = []
         for row in gen:
             if  'error' not in row:
-                for line in row['data'].split('\n'):
-                    if  line.rfind("/configFile") != -1:
-                        cfg = line.split('=')[-1].strip()
-                        cfg = cfg.replace('<br/>', '').replace("'",'')
-                        config_urls.append(cfg)
+                rdict = json.loads(row['data'])
+                for key in rdict.keys():
+                    val = rdict[key]
+                    if  key.endswith('ConfigCacheID'):
+                        if  isinstance(val, basestring):
+                            config_urls.append(rurl(base, val))
+                    elif isinstance(val, dict):
+                        for kkk in val.keys():
+                            if  kkk.endswith('ConfigCacheID'):
+                                vvv = val[kkk]
+                                if  isinstance(vvv, basestring):
+                                    config_urls.append(rurl(base, vvv))
         if  config_urls:
             urls += config_urls
+#    req_urls = ['%s/reqmgr/view/showWorkload?requestName=%s' \
+#            % (base, i) for i in ids if len(i) != 32]
+#    if  req_urls:
+#        gen  = urlfetch_getdata(req_urls, CKEY, CERT, headers)
+#        config_urls = []
+#        for row in gen:
+#            if  'error' not in row:
+#                for line in row['data'].split('\n'):
+#                    if  line.rfind("/configFile") != -1:
+#                        cfg = line.split('=')[-1].strip()
+#                        cfg = cfg.replace('<br/>', '').replace("'",'')
+#                        config_urls.append(cfg)
+#        if  config_urls:
+#            urls += config_urls
     urls = list(set(urls))
     config = {'dataset':dataset, 'name':'ReqMgr', 'urls': urls}
     yield {'config': config}
