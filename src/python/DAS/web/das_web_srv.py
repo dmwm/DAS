@@ -52,6 +52,8 @@ from DAS.web.request_manager import RequestManager
 from DAS.web.dbs_daemon import DBSDaemon
 from DAS.web.cms_representation import CMSRepresentation
 from DAS.web.cms_adjust_input import identify_apparent_query_patterns
+from DAS.web.cms_query_hints import hint_dataset_in_other_insts, \
+    hint_dataset_case_insensitive
 from DAS.utils.global_scope import SERVICES
 from DAS.core.das_exceptions import WildcardMultipleMatchesException
 import DAS.utils.jsonwrapper as json
@@ -76,10 +78,17 @@ class DASWebService(DASWebManager):
     """
     DAS web service interface.
     """
+
+    HINTS_TMPL  = '<table style="width:100%">' \
+                  '<tr><td valign="top">{page:s}</td>' \
+                  '<td valign="top" align="right">' \
+                  '  {hints:s}</td></tr></table>'
+
     def __init__(self, dasconfig):
         DASWebManager.__init__(self, dasconfig)
         config = dasconfig['web_server']
         self.pid_pat     = re.compile(r'^[a-z0-9]{32}')
+        # TODO: self.base shall be automatically included in all tmpls
         self.base        = config['url_base']
         self.interval    = config.get('status_update', 2500)
         self.engine      = config.get('engine', None)
@@ -856,6 +865,7 @@ class DASWebService(DASWebManager):
 
     def get_page_content(self, kwargs, complete_msg=True):
         """Retrieve page content for provided set of parameters"""
+        html_views = ['list', 'table']
         page = ''
         try:
             view = kwargs.get('view', 'list')
@@ -873,6 +883,11 @@ class DASWebService(DASWebManager):
 
                 func = getattr(self, view + "view")
                 page = func(head, data)
+
+                if view in html_views:
+                    page = self.HINTS_TMPL.format(
+                                page=page,
+                                hints=self.render_hints_loader(kwargs))
         except HTTPError as _err:
             raise
         except Exception as exc:
@@ -880,6 +895,15 @@ class DASWebService(DASWebManager):
             msg  = gen_error_msg(kwargs)
             page = self.templatepage('das_error', msg=msg)
         return page
+
+    def render_hints_loader(self, kwargs):
+        """ make the hints to be loaded via ajax """
+        print kwargs
+        return self.templatepage(
+            'hints_via_ajax',
+            uinput=kwargs['input'],
+            inst=kwargs.get('instance', self.dbs_global),
+            kws_host='')
 
     @expose
     def download(self, lfn):
@@ -1078,3 +1102,27 @@ class DASWebService(DASWebManager):
                                'info': 'dataset'})
         return result
 
+    #@exposedasjson
+    @expose
+    @enable_cross_origin
+    @checkargs(['query', 'instance'])
+    def hints(self, **kwargs):
+        query = kwargs.get('query', '').strip()
+        dbsinst = kwargs.get('instance', self.dbs_global)
+        hints = [hint_dataset_in_other_insts,
+                 hint_dataset_case_insensitive]
+        results = (hint(query, dbsinst)
+                   for hint in hints)
+        results = (r for r in results
+                   if r and r.get('results'))
+        if False:
+            results = list(results)
+            import pprint
+            print pprint.pprint(results)
+        results_rendered = ''.join(
+            self.templatepage('hint', hint=hint, base=self.base)
+            for hint in results)
+        if not results_rendered:
+            return ''
+        return '<div id="cms-hints-sidebar">' \
+               '{0:s}</div>'.format(results_rendered)

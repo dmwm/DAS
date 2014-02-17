@@ -1,0 +1,36 @@
+#from json import dumps as jsonize
+#assert isinstance($uinput, basestring)
+#assert isinstance($inst, basestring)
+#assert isinstance($kws_host, basestring)
+
+#set $js_uinput = $jsonize($uinput)
+#set $js_inst = $jsonize($inst)
+#set $js_kws_host = $jsonize($kws_host)
+
+<!--<link rel="stylesheet" href="/das/css/?f=opentip.css&f=kwsearch.css" />
+<script src="/das/js/?f=opentip-prototype-excanvas.min.js&f=kwdsearch.js" type="text/javascript"></script>
+-->
+<div id="cms-hints-container">
+    <br />
+    <b>Loading some hints...</b>
+    <br /><br />
+</div>
+
+<script type="text/javascript">
+// TODO: it must a setting
+var KWS_HOST = $js_kws_host; //e.g. "https://localhost"
+new Ajax.Request(KWS_HOST + "/das/hints", {
+    method: "get",
+    parameters: {
+        query: $js_uinput,
+        instance: $js_inst
+    },
+  onSuccess: function(transport) {
+      \$("cms-hints-container").update(transport.responseText);
+    initialize_kws_results.defer();
+  },
+  onFailure: function(err) {
+        \$("cms-hints-container").update("");
+  }
+});
+</script>

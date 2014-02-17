@@ -1,0 +1,26 @@
+#from DAS.web.utils import quote
+#set title=$quote($hint.title)
+
+<div class="hint-block">
+    <b>$title</b><br/>
+    #if 'descr' in $hint
+        #set descr=$quote($hint.descr)
+        <p>$descr</p>
+    #end if
+    <ul class="result">
+    #for result in $hint.results
+        #set query=$quote($result.query)
+        <li><a href="$base/request?input=$query">$result.match</a>
+        #if 'examples' in result and $result.examples
+            <ul class="examples">
+            #for example in $result.examples
+                #set example=$quote($example)
+                <li>$example</li>
+            #end for
+            </ul>
+        #end if
+        </li>
+    #end for
+    </ul>
+
+</div>
