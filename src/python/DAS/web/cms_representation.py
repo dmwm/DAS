@@ -181,10 +181,10 @@ def adjust_values(func, gen, links, pkey):
                 if  isinstance(val, list):
                     urls = []
                     for vdx in range(len(val)):
-                        urls.append('<a href="%s">Link-%d</a>' % (val[vdx], vdx+1))
+                        urls.append('<a href="%s">config-%d</a>' % (val[vdx], vdx+1))
                     value = ', '.join(urls)
                 else:
-                    value = '<a href="%s">Link</a>' % val
+                    value = '<a href="%s">config</a>' % val
             elif  isinstance(val, list):
                 value = ', '.join([str(v) for v in val])
                 try:
