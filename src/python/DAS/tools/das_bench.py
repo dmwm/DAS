@@ -227,7 +227,7 @@ def runjob(nclients, host, method, params, headers, idx, limit,
         # keyword search
         if method == '/das/kws_async':
             params = {'input': dasquery or 'Zmm number of events',
-                      'instance': 'cms_dbs_prod_global'}
+                      'instance': 'prod/global'}
             headers = {'Accept': 'text/html'}
 
         ###
