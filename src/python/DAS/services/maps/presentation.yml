@@ -370,6 +370,7 @@ config : [
          "config dataset=/a/b/c",
          ]
         },
+        {"das":"config.urls", "ui":"Config urls"},
         {"das":"config.type", "ui":"Type"},
         {"das":"config.version", "ui":"Version"},
         {"das":"config.release_version", "ui":"Release"},
