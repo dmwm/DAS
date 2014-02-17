@@ -37,8 +37,8 @@ class DASOptionParser:
         self.parser.add_option("-v", "--verbose", action="store",
             type="int", default=0, dest="verbose", help="verbose output")
         self.parser.add_option("--inst", action="store", type="string",
-            default="cms_dbs_prod_global", dest="instance",
-            help="specify DBS instance, default cms_dbs_prod_global")
+            default="prod/global", dest="instance",
+            help="specify DBS instance, default prod/global")
         self.parser.add_option("--mworkers", action="store", type="int",
             default=10, dest="mworkers",
             help="specify number of maintainer workers to run")
@@ -53,7 +53,7 @@ class DASOptionParser:
         "Returns parse list of options"
         return self.parser.parse_args()
 
-def datasets(inst='cms_dbs_prod_global'):
+def datasets(inst='prod/global'):
     "Provide list of datasets"
     dasconfig = das_readconfig()
     conn = db_connection(dasconfig['mongodb']['dburi'])
