@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
-#pylint: disable-msg=W0703,R0911,R0912,R0914,R0915
+#pylint: disable=W0703,R0911,R0912,R0914,R0915
 
 """
 DAS query utils.

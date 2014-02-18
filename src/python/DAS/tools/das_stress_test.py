@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #-*- coding: utf-8 -*-
-#pylint: disable-msg=R0903,R0912,R0913,R0914,R0915,W0702
+#pylint: disable=R0903,R0912,R0913,R0914,R0915,W0702
 """
 File       : stress_test.py
 Author     : Valentin Kuznetsov <vkuznet@gmail.com>

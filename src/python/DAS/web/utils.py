@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
-#pylint: disable-msg=R0912,R0915,W0702,R0914
+#pylint: disable=R0912,R0915,W0702,R0914
 """
 Set of useful utilities used by DAS web applications
 """

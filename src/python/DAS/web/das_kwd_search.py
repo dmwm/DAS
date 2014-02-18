@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
-#pylint: disable-msg=C0103
+#pylint: disable=C0103
 
 """
 handles the keyword search and presentation of its results in Web UI

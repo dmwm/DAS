@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
-#pylint: disable-msg=R0913,W0703,W0702
+#pylint: disable=R0913,W0703,W0702
 """
 File: dbs_daemon.py
 Author: Valentin Kuznetsov <vkuznet@gmail.com>

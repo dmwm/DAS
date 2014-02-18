@@ -1,5 +1,5 @@
 #-*- coding: ISO-8859-1 -*-
-#pylint: disable-msg=C0111,C0103
+#pylint: disable=C0111,C0103
 #pylint disabled: C0111(missing-docstring), C0103(invalid-name)
 """
 Allows to validate files containing multiple json documents such as

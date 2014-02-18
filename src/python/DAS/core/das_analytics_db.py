@@ -1,12 +1,11 @@
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
+#pylint: disable=C0326
 
 """
 DAS analytics DB module.
 """
 
-__revision__ = "$Id: das_analytics_db.py,v 1.19 2010/04/14 16:56:28 valya Exp $"
-__version__ = "$Revision: 1.19 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules

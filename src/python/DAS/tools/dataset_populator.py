@@ -1,5 +1,6 @@
 #!/usr/bin/env python
-#pylint: disable-msg=R0903
+#-*- coding: utf-8 -*-
+#pylint: disable=R0903
 """
 DAS dataset populator. It splits into two parts:
     - Populator class which feeds DAS with dataset info

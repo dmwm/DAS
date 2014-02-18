@@ -1,4 +1,4 @@
-#pylint: disable-msg=C0301,C0103,C0111
+#pylint: disable=C0301,C0103,C0111
 "Random data generation and storage for queryspammer"
 
 import multiprocessing

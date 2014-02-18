@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
-#pylint: disable-msg=R0903
+#pylint: disable=R0903
 """
 File: das_singleton.py
 Author: Valentin Kuznetsov <vkuznet@gmail.com>

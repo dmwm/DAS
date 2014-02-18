@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
-#pylint: disable-msg=W0702,R0913,R0912,R0915,R0904,R0914
+#pylint: disable=W0702,R0913,R0912,R0915,R0904,R0914
 """
 DBS3 data-service plugin.
 NOTE: DBS3 APIs provide flat namespace JSON records. It means

@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+#-*- coding: utf-8 -*-
 
 """
 DAS map reader which transform DAS YML files into JSON docs and

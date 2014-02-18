@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
-#pylint: disable-msg=C0103
+#pylint: disable=C0103
 # pylint disabled: C0103 - we use short names, helper functs are not constants
 """
 this is the IR-based ranker used in matching keywords into names of

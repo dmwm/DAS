@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
-#pylint: disable-msg=W0703
+#pylint: disable=W0703
 """
 General utilities for DAS analytics.
 """

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
-#pylint: disable-msg=W0702,R0201,R0904,C0103
+#pylint: disable=W0702,R0201,R0904,C0103
 """
 DAS web interface to test various CMS data services
 """

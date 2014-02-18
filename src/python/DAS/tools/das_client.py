@@ -1,5 +1,6 @@
 #!/usr/bin/env python
-#pylint: disable-msg=C0301,C0103,R0914,R0903
+#-*- coding: utf-8 -*-
+#pylint: disable=C0301,C0103,R0914,R0903
 
 """
 DAS command line tool

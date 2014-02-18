@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
-#pylint: disable-msg=W0703,R0913,R0912,R0914,R0915,R0902,R0903,R0904
+#pylint: disable=W0703,R0913,R0912,R0914,R0915,R0902,R0903,R0904
 
 """
 DAS mongocache manager.

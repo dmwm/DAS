@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
-#pylint: disable-msg=R0921,R0903
+#pylint: disable=R0921,R0903
 """
 A class that picks some random data and watches for changes,
 the establish actual TTL instead of advertised.

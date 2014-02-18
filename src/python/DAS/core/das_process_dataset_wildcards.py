@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
-#pylint: disable-msg=W0511
+#pylint: disable=W0511
 """
 File: das_process_dataset_wildcards.py
 Author: Vidmantas Zemleris

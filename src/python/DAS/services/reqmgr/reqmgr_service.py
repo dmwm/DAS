@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
-#pylint: disable-msg=W0702,W0613,R0912,R0913
+#pylint: disable=W0702,W0613,R0912,R0913
 """
 ReqMgr service
 """

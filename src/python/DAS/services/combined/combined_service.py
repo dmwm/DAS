@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
-#pylint: disable-msg=R0914,R0904,R0912,R0915,R0913,W0702,W0703
+#pylint: disable=R0914,R0904,R0912,R0915,R0913,W0702,W0703
 
 """
 Combined DAS service (DBS+Phedex). It can be used to get

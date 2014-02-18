@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
-#pylint: disable-msg=W0511
+#pylint: disable=W0511
 # i.e. allow TODOs
 """
 KWS web interface, based on WMCore/WebTools

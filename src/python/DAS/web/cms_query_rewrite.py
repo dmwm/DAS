@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
-#pylint: disable-msg=C0103,W0511
+#pylint: disable=C0103,W0511
 """
 Handles the simple case of query rewriting which can be accomplished
 through one nested query which retrieves entity by it's PK.

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
-#pylint: disable-msg=C0301,C0103
+#pylint: disable=C0301,C0103
 
 """
 General purpose DAS logger class. 

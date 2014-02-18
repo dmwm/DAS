@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
-#pylint: disable-msg=C0301
+#pylint: disable=C0301
 
 """
 DAS autocomplete function for web UI

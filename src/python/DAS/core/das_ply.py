@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
-#pylint: disable-msg=C0103,C0301,R0201,W0703
+#pylint: disable=C0103,C0301,R0201,W0703
 
 """
 DAS Query Language parser based on PLY.

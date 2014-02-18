@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #-*- coding: utf-8 -*-
-#pylint: disable-msg=
+#pylint: disable=
 """
 File       : url_proxy.py
 Author     : Valentin Kuznetsov <vkuznet AT gmail dot com>

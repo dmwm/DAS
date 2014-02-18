@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
-#pylint: disable-msg=R0912
+#pylint: disable=R0912
 """
 Data-provider map reader. Service maps are represented in YAML format.
 Each map should provide the following fields:

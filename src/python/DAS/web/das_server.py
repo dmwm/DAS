@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
-#pylint: disable-msg=W0702,E1101
+#pylint: disable=W0702,E1101
 """
 DAS server based on CherryPy web framework. We define Root class and
 pass it into CherryPy web server.

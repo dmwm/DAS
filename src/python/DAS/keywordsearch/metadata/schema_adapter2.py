@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
-#pylint: disable-msg=C0103,C0111,C0301,W0201
+#pylint: disable=C0103,C0111,C0301,W0201
 # disabled: invalid name,missing docstring, line too long,
 # attribute defined not in __init__ -- the way how it's implemented
 

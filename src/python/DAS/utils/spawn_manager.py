@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #-*- coding: utf-8 -*-
-#pylint: disable-msg=R0903
+#pylint: disable=R0903
 """
 File       : spawn_manager.py
 Author     : Valentin Kuznetsov <vkuznet AT gmail dot com>

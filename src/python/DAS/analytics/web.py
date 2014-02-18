@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
-#pylint: disable-msg=W0613,W0511,W0703
+#pylint: disable=W0613,W0511,W0703
 """
 DAS Analytics web server
 """

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
-#pylint: disable-msg=R0921,R0903
+#pylint: disable=R0921,R0903
 """
 Report associated with the lifetime task, to show how often data
 actually changes for different services (and hence whether we should

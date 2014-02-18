@@ -1,5 +1,5 @@
 # coding=utf-8
-#pylint: disable-msg=C0111
+#pylint: disable=C0111
 # pylint disabled: missing docstrings
 
 from functools import wraps

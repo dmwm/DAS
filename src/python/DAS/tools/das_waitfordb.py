@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+#-*- coding: utf-8 -*-
 """
 A tiny module allowing to block limited amount of time until DB is ready.
 This moght be useful in scripting environment, e.g. to run tasks

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
-#pylint: disable-msg=R0903
+#pylint: disable=R0903
 """
 This is intended to produce some statistics
 about the API calls DAS is making, a la QueryReport.

@@ -44,7 +44,7 @@ do
         echo "File $f has has_key dict method (obsolete in python3), please fix this issue"
         exit 1
     fi
-    out=`pylint $f | grep "Your code"`
+    out=`pylint --disable=C0326 $f | grep "Your code"`
     msg=`echo $out | grep -v "No config" | awk '{split($0,a,"at "); split(a[2],b,"/"); split(b[1],c,".");if(c[1]<THR) print "FAIL, score "b[1]"/10"; else print "PASS"}' THR=$thr`
     if  [ "$msg" != "PASS" ] && [ "$immediate" == "true" ]; then
         echo "${RED}--- $msg${NO_COLOUR}"

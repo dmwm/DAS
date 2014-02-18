@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
-#pylint: disable-msg=W0201,W0703,W0702,R0914,R0912,R0904,R0915,W0107,C0321
+#pylint: disable=W0201,W0703,W0702,R0914,R0912,R0904,R0915,W0107,C0321
 """
 File: cms_representation.py
 Author: Valentin Kuznetsov <vkuznet@gmail.com>

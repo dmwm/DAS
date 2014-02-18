@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
-#pylint: disable-msg=C0326
+#pylint: disable=C0326
 
 """
 DAS aggregators provides basic aggregation functions such as

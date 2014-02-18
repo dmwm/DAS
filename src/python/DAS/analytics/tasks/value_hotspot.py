@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
-#pylint: disable-msg=C0301,W0702
+#pylint: disable=C0301,W0702
 """
 ValueHotspot implementation
 """

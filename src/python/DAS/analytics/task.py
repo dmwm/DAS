@@ -1,5 +1,5 @@
 #-*- coding: ISO-8859-1 -*-
-#pylint: disable-msg=C0301,W0703,R0913
+#pylint: disable=C0301,W0703,R0913
 
 """
 Task class for analytics.

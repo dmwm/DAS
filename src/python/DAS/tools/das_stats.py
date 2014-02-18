@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+#-*- coding: utf-8 -*-
 
 """
 DAS statistics tool based on results of DAS logdb, see

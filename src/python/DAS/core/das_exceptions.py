@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #-*- coding: utf-8 -*-
-#pylint: disable-msg=
+#pylint: disable=
 """
 File       : das_exceptions.py
 Author     : Valentin Kuznetsov <vkuznet@gmail.com>

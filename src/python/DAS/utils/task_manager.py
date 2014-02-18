@@ -1,5 +1,5 @@
 #!/usr/bin/python
-#pylint: disable-msg=W0141
+#pylint: disable=W0141
 """
 Task manager
 
