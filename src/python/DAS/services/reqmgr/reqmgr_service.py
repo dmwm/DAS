@@ -19,6 +19,28 @@ import DAS.utils.jsonwrapper as json
 
 CKEY, CERT = get_key_cert()
 
+def get_ids(url, params, dataset, verbose=False):
+    "Query either ReqMgr or WMStats and retrieve request ids"
+    headers = {'Accept': 'application/json;text/json'}
+    expire = 600 # dummy number, we don't need it here
+    ids = []
+    source, expire = \
+        getdata(url, params, headers, expire, ckey=CKEY, cert=CERT,
+                verbose=verbose)
+    for row in json_parser(source, None):
+        for rec in row.get('rows', []):
+            doc = rec['doc']
+            if  'ProcConfigCacheID' in doc:
+                ids.append(doc['ProcConfigCacheID'])
+            elif 'ConfigCacheID' in doc:
+                ids.append(doc['ConfigCacheID'])
+            elif 'SkimConfigCacheID' in doc:
+                ids.append(doc['SkimConfigCacheID'])
+            else:
+                if  'id' in rec and 'key' in rec and rec['key'] == dataset:
+                    ids.append(rec['id'])
+    return ids
+
 def findReqMgrIds(dataset, base='https://cmsweb.cern.ch', verbose=False):
     """
     Find ReqMgrIds for a given dataset. This is quite complex procedure in CMS.
@@ -29,29 +51,19 @@ def findReqMgrIds(dataset, base='https://cmsweb.cern.ch', verbose=False):
     https://github.com/dmwm/DAS/issues/4045
     https://hypernews.cern.ch/HyperNews/CMS/get/dmDevelopment/1501/1/1/1/1.html
     """
-    params = {'key': '"%s"' % dataset, 'include_docs':'true'}
-    headers = {'Accept': 'application/json;text/json'}
-    expire = 600 # dummy number, we don't need it here
+    params = {'key': '"%s"' % dataset, 'include_docs':'true', 'stale': 'update_after'}
     ids = []
     for view in ['byoutputdataset', 'byinputdataset']:
         url = "%s/couchdb/reqmgr_workload_cache/_design/ReqMgr/_view/%s" \
             % (base, view)
-        source, expire = \
-            getdata(url, params, headers, expire, ckey=CKEY, cert=CERT,
-                    verbose=verbose)
-        for row in json_parser(source, None):
-            for rec in row.get('rows', []):
-                doc = rec['doc']
-                if  'ProcConfigCacheID' in doc:
-                    ids.append(doc['ProcConfigCacheID'])
-                elif 'ConfigCacheID' in doc:
-                    ids.append(doc['ConfigCacheID'])
-                elif 'SkimConfigCacheID' in doc:
-                    ids.append(doc['SkimConfigCacheID'])
-                else:
-                    if  'id' in rec and 'key' in rec and rec['key'] == dataset:
-                        ids.append(rec['id'])
-    return ids
+        ids += get_ids(url, params, dataset, verbose)
+        source = 'ReqMgr'
+    if  not ids: # we will query WMStats
+        url = '%s/couchdb/wmstats/_design/WMStats/_view/requestByOutputDataset' \
+            % base
+        ids = get_ids(url, params, dataset, verbose)
+        source = 'WMStats'
+    return ids, source
 
 def rurl(base, ids):
     "Construct reqmgr config url"
@@ -65,7 +77,7 @@ def configs(url, args, verbose=False):
     if  not dataset:
         return
     base = 'https://%s' % url.split('/')[2]
-    ids  = findReqMgrIds(dataset, base, verbose)
+    ids, source = findReqMgrIds(dataset, base, verbose)
     # for hash ids find configs via ReqMgr REST API
     urls = [rurl(base, i) for i in ids if len(i) == 32]
     # for non-hash ids probe to find configs in showWorkload
@@ -90,22 +102,8 @@ def configs(url, args, verbose=False):
                                     config_urls.append(rurl(base, vvv))
         if  config_urls:
             urls += config_urls
-#    req_urls = ['%s/reqmgr/view/showWorkload?requestName=%s' \
-#            % (base, i) for i in ids if len(i) != 32]
-#    if  req_urls:
-#        gen  = urlfetch_getdata(req_urls, CKEY, CERT, headers)
-#        config_urls = []
-#        for row in gen:
-#            if  'error' not in row:
-#                for line in row['data'].split('\n'):
-#                    if  line.rfind("/configFile") != -1:
-#                        cfg = line.split('=')[-1].strip()
-#                        cfg = cfg.replace('<br/>', '').replace("'",'')
-#                        config_urls.append(cfg)
-#        if  config_urls:
-#            urls += config_urls
     urls = list(set(urls))
-    config = {'dataset':dataset, 'name':'ReqMgr', 'urls': urls, 'ids': ids}
+    config = {'dataset':dataset, 'name': source, 'urls': urls, 'ids': ids}
     yield {'config': config}
 
 class ReqMgrService(DASAbstractService):
