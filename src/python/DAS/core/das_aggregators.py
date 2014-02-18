@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
+#pylint: disable-msg=C0326
 
 """
 DAS aggregators provides basic aggregation functions such as
@@ -34,7 +35,7 @@ class ResultObject(object):
         self.rec_count += 1
     def count(self, obj):
         """Count function for this object"""
-        _value, _id = obj
+        _, _ = obj
         if  self.result == 'Not available':
             self.result = 0
         self.result += 1
@@ -158,7 +159,7 @@ def cochain(ckey, data_name, sink_name):
         code  += "selector('%s'," % key
         count_bracket += 1
     code += sink_name
-    for _idx in xrange(0, count_bracket):
+    for _ in xrange(0, count_bracket):
         code += ")"
     return code
 
@@ -205,7 +206,7 @@ def das_median(key, rows):
         data = {'value': robj.result[len(robj.result)/2]}
     else:
         val  = (robj.result[len(robj.result)/2-1] + \
-                robj.result[len(robj.result)/2] )/2
+                robj.result[len(robj.result)/2])/2
         data = {'value': val}
     return data
 
