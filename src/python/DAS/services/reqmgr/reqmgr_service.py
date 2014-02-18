@@ -30,26 +30,27 @@ def findReqMgrIds(dataset, base='https://cmsweb.cern.ch', verbose=False):
     https://hypernews.cern.ch/HyperNews/CMS/get/dmDevelopment/1501/1/1/1/1.html
     """
     params = {'key': '"%s"' % dataset, 'include_docs':'true'}
-    url = "%s/couchdb/reqmgr_workload_cache/_design/ReqMgr/_view/byoutputdataset" \
-        % base
     headers = {'Accept': 'application/json;text/json'}
     expire = 600 # dummy number, we don't need it here
-    source, expire = \
-        getdata(url, params, headers, expire, ckey=CKEY, cert=CERT,
-                verbose=verbose)
     ids = []
-    for row in json_parser(source, None):
-        for rec in row.get('rows', []):
-            doc = rec['doc']
-            if  'ProcConfigCacheID' in doc:
-                ids.append(doc['ProcConfigCacheID'])
-            elif 'ConfigCacheID' in doc:
-                ids.append(doc['ConfigCacheID'])
-            elif 'SkimConfigCacheID' in doc:
-                ids.append(doc['SkimConfigCacheID'])
-            else:
-                if  'id' in rec and 'key' in rec and rec['key'] == dataset:
-                    ids.append(rec['id'])
+    for view in ['byoutputdataset', 'byinputdataset']:
+        url = "%s/couchdb/reqmgr_workload_cache/_design/ReqMgr/_view/%s" \
+            % (base, view)
+        source, expire = \
+            getdata(url, params, headers, expire, ckey=CKEY, cert=CERT,
+                    verbose=verbose)
+        for row in json_parser(source, None):
+            for rec in row.get('rows', []):
+                doc = rec['doc']
+                if  'ProcConfigCacheID' in doc:
+                    ids.append(doc['ProcConfigCacheID'])
+                elif 'ConfigCacheID' in doc:
+                    ids.append(doc['ConfigCacheID'])
+                elif 'SkimConfigCacheID' in doc:
+                    ids.append(doc['SkimConfigCacheID'])
+                else:
+                    if  'id' in rec and 'key' in rec and rec['key'] == dataset:
+                        ids.append(rec['id'])
     return ids
 
 def rurl(base, ids):
@@ -104,7 +105,7 @@ def configs(url, args, verbose=False):
 #        if  config_urls:
 #            urls += config_urls
     urls = list(set(urls))
-    config = {'dataset':dataset, 'name':'ReqMgr', 'urls': urls}
+    config = {'dataset':dataset, 'name':'ReqMgr', 'urls': urls, 'ids': ids}
     yield {'config': config}
 
 class ReqMgrService(DASAbstractService):
