@@ -23,7 +23,7 @@ class KeyHotspot(HotspotBase):
     def generate_task(self, item, count, epoch_start, epoch_end):
         "Generate task"
         only_before = epoch_end + self.interval
-        itemname = item.replace(r'.','-')
+        itemname = item.replace(r'.', '-')
         yield {'classname': 'ValueHotspot',
                 'name': '%s-valuehotspot-%s' % (self.identifier, itemname),
                 'only_before': only_before,
@@ -40,7 +40,7 @@ class KeyHotspot(HotspotBase):
 
         for query in queries:
 
-            count = len(filter(lambda t: t>=start and t<=finish,
+            count = len(filter(lambda t: t >= start and t <= finish,
                                query['times']))
             for spec in query['mongoquery']['spec']:
                 items[spec['key']] += count
