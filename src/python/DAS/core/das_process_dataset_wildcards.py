@@ -165,6 +165,10 @@ def process_dataset_wildcards(pattern, dbs_inst):
 
     (giving [], instead of: [u'/RelValPyquen_ZeemumuJets_pt10_2760GeV/*/*'])
 
+    >>> process_dataset_wildcards('/ZMM/*', dbs_inst)
+    [u'/ZMM/Summer11-DESIGN42_V11_428_SLHC1-v1/GEN-SIM']
+
+
 
     TODO: Other tests, e.g.
     */4C_TuneZ2_7TeV-alpgen-pythia6/Summer11-PU_S4_START42_V11-v1/AODSIM*
