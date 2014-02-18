@@ -7,7 +7,8 @@ import time
 import collections
 
 gen_identifier = \
-lambda task: "valuehotspot-%s" % (task['kwargs'].get('key','').replace('.','-'))
+lambda task: "valuehotspot-%s" \
+% (task['kwargs'].get('key', '').replace('.', '-'))
 
 class HotspotReport(Report):
     """
@@ -15,7 +16,7 @@ class HotspotReport(Report):
     the resulting selection of keys being pre-fetched.
     """
     report_title = "Hotspot"
-    report_info  = "Show some plots and information relating "
+    report_info = "Show some plots and information relating "
     report_info += "to the hotspot-type analyzers, if any"
     report_group = "Tasks"
     max_series_length = 100
