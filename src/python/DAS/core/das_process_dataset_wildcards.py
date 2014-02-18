@@ -11,6 +11,7 @@ Description: The class handles the wildcard search for dataset,
 """
 import re
 import string
+from collections import defaultdict
 
 from DAS.web.dbs_daemon import initialize_global_dbs_mngr, find_datasets
 from DAS.utils.regex import DATASET_FORBIDDEN_SYMBOLS
@@ -70,8 +71,8 @@ def extract_wildcard_patterns(dbs_inst, pattern, ignorecase=False):
     pat_re = re.compile(pat_re, re.IGNORECASE if ignorecase else 0)
 
     # now match the positions of slash
-    counts = {}
-    interpretations = {}
+    counts = defaultdict(int)
+    interpretations = defaultdict(list)
     for item in dataset_matches:
         match = pat_re.match(item)
 
@@ -88,14 +89,10 @@ def extract_wildcard_patterns(dbs_inst, pattern, ignorecase=False):
                                         or (group.count('/') == 2 and '*/*/*')\
                                         or (group.count('/') == 1 and '*/*')\
                                         or '*'
-
-        replacements = tuple([f_replace_group(group)  for group in groups])
-        counts[replacements] = counts.get(replacements, 0) + 1
-
+        replacements = tuple(f_replace_group(group) for group in groups)
+        counts[replacements] += 1
         # add this into list of possible options
-        updated = interpretations.get(replacements, [])
-        updated.append(groups)
-        interpretations[replacements] = updated
+        interpretations[replacements].append(groups)
 
     return counts, interpretations
 
@@ -143,7 +140,6 @@ def process_dataset_wildcards(pattern, dbs_inst, ignorecase=False):
     Tests:
     >>> dbs_inst='prod/global'
 
-    this dataset seem not available anymore...
     # TODO: case sensitive wildcard suggestions, e.g.
     # *Zmm*CMSSW*RECO* --> /RelValZMM*/CMSSW*/*RECO
     >>> process_dataset_wildcards('*Zmm*CMSSW*RECO*', dbs_inst)
@@ -227,8 +223,7 @@ def process_dataset_wildcards(pattern, dbs_inst, ignorecase=False):
             print 'result', result
         results.append(result)
 
-    results.sort()
-    return results
+    return sorted(results)
 
 
 def test():
