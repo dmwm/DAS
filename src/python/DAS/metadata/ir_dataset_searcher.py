@@ -16,6 +16,7 @@ _DEBUG = True
 INDEX_DIR = os.environ.get('DAS_DATASETS_IR_INDEX', '/tmp/das_datasets')
 INDEX_NAME = 'idx_dataset'
 
+__all__ = ['DatasetIRIndex']
 
 def flatten(iter_iter):
     return list(itertools.chain.from_iterable(iter_iter))
@@ -46,6 +47,14 @@ def DatasetTokenizer(lowercase=False):
 
 class DatasetIRIndex(object):
     _ix = None
+    _instance = None
+
+    def __new__(cls, **kwargs):
+        if not cls._instance or kwargs.get('force_reload'):
+            # TODO: check if index needs to be created: cls.create_index()
+            cls._instance = object.__new__(cls)
+            cls._instance.__init__()
+        return cls._instance
 
     def __init__(self):
         self._ix = self.__load_index()
@@ -64,16 +73,17 @@ class DatasetIRIndex(object):
                 q = And([Term('dbs_instance', dbs_inst), Or(q)])
                 # TODO: include dbs_inst in results!!
             hits = s.search(q, terms=True, optimize=True, limit=limit)
-            results = [{'score': hit.score,
+            results = ({'score': hit.score,
                         'inst': hit['dbs_instance'],
                         'terms': hit.matched_terms(),
                         'dataset': hit['name']}
-                       for hit in hits]
+                       for hit in hits)
             if _DEBUG:
                 print 'Q:'
+                results = list(results)
                 pprint.pprint(q)
                 pprint.pprint(results)
-            return
+            return results
 
     @classmethod
     def __load_index(cls):
@@ -125,6 +135,9 @@ if __name__ == '__main__':
     doctest.testmod()
 
     # TODO: this is rather slow!
-    DatasetIRIndex.create_index()
+    #DatasetIRIndex.create_index()
     ir = DatasetIRIndex()
     ir.query('RAW1 ZMM', dbs_inst=False)
+    ir.query('zmm reco v17 14tev pow', dbs_inst=False)
+    # very slow
+    # ir.query('zmm reco raw slhctk v17 v1 ll 14tev z pow', dbs_inst=False)

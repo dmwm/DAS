@@ -49,16 +49,14 @@ CLEANUP_SUBS = [
 CLEANUP_SUBS = list((re.compile(regexp), repl)
                     for regexp, repl in CLEANUP_SUBS)
 
+# word in brackets or a word
+WORD_BR = \
+    r''' ( "[^"]+" | '[^']+' | %(WORD)s ) ''' % locals()
+
 TOKENIZER_PATTERNS = \
     r'''
-    "[^"]+" %(KWS_OPERATORS)s %(WORD)s | # word in brackets plus operators
-    "[^"]+"  |  # word in brackets
-
-    '[^']+' %(KWS_OPERATORS)s %(WORD)s | # word in brackets plus operators
-    '[^']+'  |  # word in brackets
-
-    %(WORD)s %(KWS_OPERATORS)s %(WORD)s | # word op word
-    %(WORD)s | # word
+    %(WORD_BR)s %(KWS_OPERATORS)s %(WORD_BR)s | # word in brackets plus operators
+    %(WORD_BR)s  |  # word in brackets
     \S+" # any other non-whitespace sequence
     ''' % locals()
 TOKENIZER_PATTERNS = convert_regexp_to_nongrouping(TOKENIZER_PATTERNS)
@@ -176,6 +174,21 @@ def get_operator_and_param(keyword):
     return None
 
 
+def token_parsed(token):
+    """
+    return a parsed token as a tuple: field, op, value
+    op (operator) and value may be empty ''.
+
+    >>> token_parsed('dataset=zmm reco xyz')
+    ('dataset', '=', 'zmm reco xyz')
+    """
+    params = get_operator_and_param(token) or {}
+    field = get_keyword_without_operator(token)
+    op = params.get('op', '')
+    value = params.get('param', '')
+    return field, op, value
+
+
 def tokenize(query):
     """
     tokenizes the query retaining the phrases in brackets together
@@ -207,6 +220,9 @@ def tokenize(query):
 
     >>> tokenize('user=vidmasze@cern.ch')
     ['user=vidmasze@cern.ch']
+
+    >>> tokenize('dataset="a b c"')
+    ['dataset=a b c']
 
     """
     query = cleanup_query(query)

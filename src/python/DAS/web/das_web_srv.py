@@ -1065,14 +1065,44 @@ class DASWebService(DASWebManager):
             dbsmgr = self._get_dbsmgr(dbsinst)
             # we shall autocomplete the last token so queries like
             # file dataset=/ZMM/.. are autocompleted
-            prefix = ''
-            if ' ' in query:
-                prefix = '  '.join(query.split()[:-1]) + ' '
-                print 'prefix=', prefix
-                query = query.split()[-1]
-            if  query.find('dataset=') != -1:
-                query = query.replace('dataset=', '')
-            for row in dbsmgr.find(query):
+            from DAS.keywordsearch.tokenizer import tokenize, token_parsed
+            from DAS.metadata.ir_dataset_searcher import DatasetIRIndex
+
+            # if the query has the last bracket unclosed, close it
+            if query.count('"') + query.count("'") % 2 == 1:
+                last_bracket = query[max(query.rfind('"'), query.rfind("'"))]
+                print 'last_bracket:', last_bracket
+                query += last_bracket
+            tokens = tokenize(unicode(query))  # return tokens like: dataset="a b c"
+            print 'query:', query
+            print 'tokens:', tokens
+            field, _, value = token_parsed(tokens[-1])
+            print "field, _, value:", field, _, value
+            dataset_pat = field  # last keyword is taken as dataset
+
+            # join the tokens back
+            prefix = ' '.join(
+                # quote again the values that contain spaces
+                field + op + ('"{0}"'.format(val) if ' ' in val else val)
+                for (field, op, val) in map(token_parsed, tokens[:-1])) + ' '
+            # TODO: could we use partial parsing, e.g. dataset="abc def
+
+            if field == 'dataset' and value:
+                dataset_pat = value
+            print "dataset_pat:", dataset_pat
+
+            if ' ' in dataset_pat:
+                # run IR based search
+                return [{'css': 'ac-info',
+                         'value': prefix + 'dataset=%s' % m['dataset'],
+                         'info': 'dataset'
+                         # TODO: add score and highlight matching terms?
+                        }
+                        for m in DatasetIRIndex().query(dataset_pat, dbsinst, limit=10)]
+
+
+            # otherwise, run query MongoDB for dataset patterns
+            for row in dbsmgr.find(dataset_pat):
                 result.append({'css': 'ac-info',
                                'value': prefix + 'dataset=%s' % row,
                                'info': 'dataset'})
