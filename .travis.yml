@@ -16,16 +16,21 @@ install:
   - git clone https://github.com/vidma/das_nltk_data.git  $HOME/nltk_data/
   #- python -m nltk.downloader -e words stopwords wordnet
 
-    # a hack to use default MongoDB port, which is available in travis
+  # a hack to use default MongoDB port, which is available in travis
   - sed -i -e 's/8230/27017/g'  etc/das.cfg
   - sed -i -e 's/8230/27017/g'  bin/das_db_import
   - rm test/dbs3_t.py   # temp disable dbs3_t as it prevents imports
 
-    # install
+  # install
   - python setup.py install
   - source ./init_env.sh
   - das_create_json_maps src/python/DAS/services/maps
   - das_update_database src/python/DAS/services/maps/das_maps_dbs_prod.js # initialize database
+  
+  # init datasets cache (used in unit tests)
+  - MONGO_PORT=27017
+  - mongo --port "${MONGO_PORT}" "dbs" --eval "db.dropDatabase();"
+  - mongoimport --port "${MONGO_PORT}" --db "dbs" --collection "prod/global" --file test/datasets.js
 
 # command to run tests
 script: 
