@@ -226,7 +226,8 @@ class DBSDaemon(object):
         stream.close()
 
 
-def find_datasets(pattern, dbs_instance, dbname='dbs', idx=0, limit=10):
+def find_datasets(pattern, dbs_instance, dbname='dbs', idx=0, limit=10,
+                  ignorecase=True):
     """
     Find datasets for a given pattern. The idx/limit parameters
     control number of retrieved records (aka pagination). The
@@ -237,7 +238,8 @@ def find_datasets(pattern, dbs_instance, dbname='dbs', idx=0, limit=10):
     if pattern.find('*') != -1:
         pattern = pattern.replace('*', '.*')
     try:
-        pat = re.compile('%s' % pattern, re.I)
+        re_flags = re.I if ignorecase else 0
+        pat = re.compile('%s' % pattern, re_flags)
     except re.error:
         return
 
