@@ -130,11 +130,13 @@ class DASMapping(object):
         """
         # check if we can reuse an existing instance
         if cls.__cached_inst and cls.__cached_params == config:
-            print "DASMapping::__new__: returning a cached instance"
+            if  config['verbose']:
+                print "DASMapping::__new__: returning a cached instance"
             return cls.__cached_inst
 
         # otherwise create and initialize a new instance
-        print "DASMapping::__new__: creating a new instance"
+        if  config['verbose']:
+            print "DASMapping::__new__: creating a new instance"
         self = object.__new__(cls)
 
         self.verbose  = config['verbose']
