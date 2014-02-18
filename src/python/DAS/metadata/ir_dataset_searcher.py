@@ -62,15 +62,17 @@ class DatasetIRIndex(object):
         # but BM25F seems best, though not perfect...
         self.weighting = whoosh.scoring.BM25F()
 
-    def query(self, query, dbs_inst, limit=20):
+    def query(self, query, dbs_inst, limit=20, boolean=True):
         tokens = query.split(' ')
         with self._ix.searcher(weighting=self.weighting) as s:
-            query_terms = flatten([Term('name_tok_low', kw.lower(), boost=1.0),
-                                   Term('name_tok', kw, boost=0.3)]
-                                  for kw in tokens)
-            q = Or(query_terms)
+            query_terms = [
+                Or([Term('name_tok_low', kw.lower(), boost=1.0),
+                   Term('name_tok', kw, boost=0.3)])
+                for kw in tokens]
+            q = And(query_terms) if boolean else Or(query_terms)
+            pprint.pprint(q)
             if dbs_inst:
-                q = And([Term('dbs_instance', dbs_inst), Or(q)])
+                q = And([Term('dbs_instance', dbs_inst), q])
                 # TODO: include dbs_inst in results!!
             hits = s.search(q, terms=True, optimize=True, limit=limit)
             results = ({'score': hit.score,
