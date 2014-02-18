@@ -46,7 +46,7 @@ def substitute_multiple(target, replacements, to_replace ='*',):
     return result
 
 
-def extract_wildcard_patterns(dbs_inst, pattern):
+def extract_wildcard_patterns(dbs_inst, pattern, ignorecase=False):
     """
     Given a wildcard query and a list of datasets, we interested in
     how many slashes are matched by each of wildcard (because the slashes has to
@@ -62,11 +62,12 @@ def extract_wildcard_patterns(dbs_inst, pattern):
     """
     # get matching datasets from out cache (through dbs manager instance)
     dbs_mngr_query = pattern
-    dataset_matches = find_datasets(dbs_mngr_query, dbs_inst, limit=-1)
+    dataset_matches = find_datasets(dbs_mngr_query, dbs_inst, limit=-1,
+                                    ignorecase=ignorecase)
 
     # we will use these regexps  to extract different dataset patterns
     pat_re = '^' + pattern.replace('*', '(.*)') + '$'
-    pat_re = re.compile(pat_re, re.IGNORECASE)
+    pat_re = re.compile(pat_re, re.IGNORECASE if ignorecase else 0)
 
     # now match the positions of slash
     counts = {}
@@ -122,7 +123,7 @@ def simplify_wildcard_matches(group, index, the_matches):
     return group
 
 
-def process_dataset_wildcards(pattern, dbs_inst):
+def process_dataset_wildcards(pattern, dbs_inst, ignorecase=False):
     """
     The current algorithm is simple
     1) Fetch all the matching data-sets (regexp from MongoDB)
@@ -143,13 +144,19 @@ def process_dataset_wildcards(pattern, dbs_inst):
     >>> dbs_inst='prod/global'
 
     this dataset seem not available anymore...
-    # TODO: case sensitive wildcard suggestions, shall return
-    # /RelValZMM*/CMSSW*/*RECO
+    # TODO: case sensitive wildcard suggestions, e.g.
+    # *Zmm*CMSSW*RECO* --> /RelValZMM*/CMSSW*/*RECO
     >>> process_dataset_wildcards('*Zmm*CMSSW*RECO*', dbs_inst)
-    [u'/RelValZmm*/CMSSW*/*RECO']
+    []
+
+    >>> process_dataset_wildcards('*ZMM*CMSSW*RECO*', dbs_inst)
+    [u'/RelValZMM*/CMSSW*/*RECO']
 
     >>> process_dataset_wildcards('*Zmm*', dbs_inst)
-    ['/*/*Zmm*/*', '/*Zmm*/*/*']
+    ['/*/*Zmm*/*']
+
+    #>>> process_dataset_wildcards('*Zmm*', dbs_inst, ignorecase=True)
+    #['/*/*Zmm*/*', '/*ZMM*/*/*']
 
     >>> process_dataset_wildcards('*herwig*/AODSIM', dbs_inst)
     ['/*herwig*/*/AODSIM']
@@ -221,7 +228,7 @@ def process_dataset_wildcards(pattern, dbs_inst):
 
 
 def test():
-    "Local test function"
+    """ Local test function """
     # TODO: init  DAS:   Reading DAS configuration from ...
     print 'setUp: getting dbs manager to access current datasets ' \
           '(and fetching them if needed)'
