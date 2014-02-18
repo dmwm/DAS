@@ -427,6 +427,8 @@ class DASWebService(DASWebManager):
             Template has two versions: html and text for CLI.
 
             The template is passed with msg, base, guide, and **kwargs. """
+            # TODO: this shall be done by inheriting a parent template
+            # TODO: no header/footer?
             guide = self.templatepage('dbsql_vs_dasql',
                                       operators=', '.join(das_operators()))
             # render keyword search loader, if needed
@@ -946,7 +948,7 @@ class DASWebService(DASWebManager):
         status, error, reason = self.dasmgr.get_status(dasquery)
         kwargs.update({'status':status, 'error':error, 'reason':reason})
         pid = dasquery.qhash
-        if  status == None: # process new request
+        if  status is None: # process new request
             kwargs['dasquery'] = dasquery.storage_query
             addr = cherrypy.request.headers.get('Remote-Addr')
             _evt, pid = self.taskmgr.spawn(self.dasmgr.call, dasquery,
@@ -1061,11 +1063,18 @@ class DASWebService(DASWebManager):
         dbsinst = kwargs.get('dbs_instance', self.dbs_global)
         if  self.dataset_daemon and len(dataset):
             dbsmgr = self._get_dbsmgr(dbsinst)
+            # we shall autocomplete the last token so queries like
+            # file dataset=/ZMM/.. are autocompleted
+            prefix = ''
+            if ' ' in query:
+                prefix = '  '.join(query.split()[:-1]) + ' '
+                print 'prefix=', prefix
+                query = query.split()[-1]
             if  query.find('dataset=') != -1:
                 query = query.replace('dataset=', '')
             for row in dbsmgr.find(query):
                 result.append({'css': 'ac-info',
-                               'value': 'dataset=%s' % row,
+                               'value': prefix + 'dataset=%s' % row,
                                'info': 'dataset'})
         return result
 
