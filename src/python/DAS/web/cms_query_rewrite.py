@@ -93,12 +93,18 @@ class CMSQueryRewrite(object):
             'grep': list(set(filters_first) | set([pk, ])),
         }
         q1 = DASQuery(q1_mongo)
-        q2 = q.mongo_query.copy()
+
+        q2_mongo = q.mongo_query.copy()
         # make DASQuery pass dataset wildcard check
         pk_to_replace = '/a/b/c' if pk == 'dataset.name' else '<PK>'
-        q2['spec'] = {pk: pk_to_replace}
-        q2['filters'] = {'grep': list(filters_nested)}
-        q2 = DASQuery(q2)
+        q2_mongo['spec'] = {pk: pk_to_replace}
+        q2_mongo['filters'] = {'grep': list(filters_nested)}
+
+        # if the queries are the same, the rewrite is unsuccessful
+        if set(q1_mongo['spec'].keys()) == set(q2_mongo['spec'].keys()):
+            return
+
+        q2 = DASQuery(q2_mongo)
 
         msg = self.render_template('cms_query_rewrite',
                                    q1_str=self.convert2dasql(q1),
@@ -162,8 +168,10 @@ class CMSQueryRewrite(object):
             # if all fields that are still missing,
             #  are available in query='entity PK=pk'
             if query_rewritable and q_fields_missing:
-                print 'Rewrite OK'
-                return self._do_query_rewrite(dasquery, fields_available, pk)
+                result = self._do_query_rewrite(dasquery, fields_available, pk)
+                if result:
+                    print 'Rewrite OK'
+                    return result
 
         return False
 
