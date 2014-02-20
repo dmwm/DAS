@@ -97,6 +97,8 @@ class TemplatedPage(Page):
             search_list.append(kwargs)
         templatefile = "%s/%s.tmpl" % (self.templatedir, ifile)
         if os.path.exists(templatefile):
+            # make it easy using '#include'
+            search_list.append({'tmpldir': self.templatedir})
             template = Template(file=templatefile, searchList=search_list)
             return template.respond()
         else:

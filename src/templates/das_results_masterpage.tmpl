@@ -1,0 +1,17 @@
+## page is already rendered html result
+## tmpl dir is a global param passed by rendertemplate
+
+#if $hints_enabled:
+<table style="width:100%">
+    <tr>
+        <td valign="top">
+            $page
+        </td>
+        <td valign="top" align="right">
+            #include $tmpldir + "/hints_via_ajax.tmpl"
+        </td>
+    </tr>
+</table>
+#else
+        $page
+#end if

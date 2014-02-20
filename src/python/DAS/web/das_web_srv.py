@@ -79,11 +79,6 @@ class DASWebService(DASWebManager):
     DAS web service interface.
     """
 
-    HINTS_TMPL  = '<table style="width:100%">' \
-                  '<tr><td valign="top">{page:s}</td>' \
-                  '<td valign="top" align="right">' \
-                  '  {hints:s}</td></tr></table>'
-
     def __init__(self, dasconfig):
         DASWebManager.__init__(self, dasconfig)
         config = dasconfig['web_server']
@@ -884,10 +879,9 @@ class DASWebService(DASWebManager):
                 func = getattr(self, view + "view")
                 page = func(head, data)
 
+                # insert hints loader, if enabled
                 if view in html_views:
-                    page = self.HINTS_TMPL.format(
-                                page=page,
-                                hints=self.render_hints_loader(kwargs))
+                    page = self.add_hints_plugin(page, kwargs)
         except HTTPError as _err:
             raise
         except Exception as exc:
@@ -896,14 +890,19 @@ class DASWebService(DASWebManager):
             page = self.templatepage('das_error', msg=msg)
         return page
 
-    def render_hints_loader(self, kwargs):
+    def add_hints_plugin(self, page, kwargs):
         """ make the hints to be loaded via ajax """
-        print kwargs
-        return self.templatepage(
-            'hints_via_ajax',
-            uinput=kwargs['input'],
-            inst=kwargs.get('instance', self.dbs_global),
-            kws_host='')
+        #TODO: name this render_results_masterpage?
+        hints_enabled = self.dasconfig['web_plugins']['show_hints']
+        #if not hints_enabled:
+        #    return page
+        inst = kwargs.get('instance', self.dbs_global)
+        return self.templatepage('das_results_masterpage',
+                                 page=page,
+                                 uinput=kwargs['input'],
+                                 inst=inst,
+                                 kws_host='',
+                                 hints_enabled=hints_enabled)
 
     @expose
     def download(self, lfn):
