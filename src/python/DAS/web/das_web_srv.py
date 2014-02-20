@@ -461,7 +461,8 @@ class DASWebService(DASWebManager):
                                 suggest=err.options.values)
         except WildcardMatchingException as err:
             das_parser_error(uinput, str(type(err)) + ' ' + str(err))
-            return 1, error_msg(str(err))
+            return 1, self.add_hints_plugin(error_msg(str(err)),
+                {'instance': inst, 'input': uinput})
         except Exception as err:
             das_parser_error(uinput, str(type(err)) + ' ' + str(err))
 
@@ -750,7 +751,6 @@ class DASWebService(DASWebManager):
         page = "<h3>DAS server is busy, please try later</h3>"
         form = self.form(uinput)
         return self.page(form + page)
-
 
     def _is_web_request(self, view):
         """
@@ -1108,8 +1108,8 @@ class DASWebService(DASWebManager):
     def hints(self, **kwargs):
         query = kwargs.get('query', '').strip()
         dbsinst = kwargs.get('instance', self.dbs_global)
-        hints = [hint_dataset_in_other_insts,
-                 hint_dataset_case_insensitive]
+        hints = [hint_dataset_case_insensitive,
+                 hint_dataset_in_other_insts,]
         results = (hint(query, dbsinst)
                    for hint in hints)
         results = (r for r in results

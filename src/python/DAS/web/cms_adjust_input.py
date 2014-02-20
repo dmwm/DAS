@@ -31,11 +31,20 @@ def match_dataset_all_inst(kwd, cur_inst):
     return sorted(matches, key=lambda item: item['score'], reverse=True)
 
 
+def match_dataset(kwd, cur_inst):
+    """ check for dataset match in current DBS instances """
+    if len(kwd) < 3:
+        return None
+    score, data = match_value_dataset(kwd, cur_inst)
+    if score:
+        return data.get('adjusted_keyword', kwd)
+
+
 def format_dataset_match(match, dbs_inst):
     """ return an adjusted dataset query """
-    new_query = 'dataset={0}'.format(match['match'])
+    new_query = 'dataset={0:s}'.format(match['match'])
     #if match['inst'] != dbs_inst:
-    new_query += ' instance={0}'.format(match['inst'])
+    new_query += ' instance={0:s}'.format(match['inst'])
     return new_query
 
 
@@ -82,8 +91,15 @@ def identify_apparent_query_patterns(uinput, inst=None):
         if DATASET_PATTERN_RELAXED.match(uinput):
             return 'dataset={0}'.format(uinput)
 
-    # on no matches, try matching datasets on either dbs instance
-    # TODO: currrent DBS instance!
+    # on no pattern matches, try matching datasets on either dbs instance
+
+    # if input matches some datasets in current dbs instance,
+    # return straight away
+    dataset_match = match_dataset(kwd=uinput, cur_inst=inst)
+    if dataset_match:
+        return 'dataset={0:s}'.format(dataset_match)
+
+    # TODO: the code below might need to be reorganized as we have hints...
     dbs_inst = inst
     inst_matches = match_dataset_all_inst(kwd=uinput, cur_inst=dbs_inst)
 

@@ -32,9 +32,6 @@ def hint_dataset_in_other_insts(query, cur_inst):
     """ find datasets in other instances """
     dataset_pat = get_dataset_token(query)
     matches = match_dataset_all_inst(dataset_pat, cur_inst)
-    print matches
-    # TODO: shall we include some actual matches
-    # TODO: exclude current instance?
     results = [{'inst': m['inst'],
                 'match': m['inst'],
                 'query': repl_dataset_val(query, m['match']) +
@@ -48,8 +45,8 @@ def hint_dataset_in_other_insts(query, cur_inst):
 
 
 def hint_dataset_case_insensitive(query, cur_inst):
-    """ case insensitive dataset suggestions """
-    # TODO: what if we have a pattern with *?
+    """ case insensitive dataset suggestions
+     shown only if current query return no results """
     dataset_pat = get_dataset_token(query)
     good_result = lambda m: m != dataset_pat
     if '*' in dataset_pat:
