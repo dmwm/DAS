@@ -2,7 +2,7 @@
 #pylint: disable=C0111,C0103
 #pylint disabled: C0111(missing-docstring), C0103(invalid-name)
 # File taken from: https://github.com/halst/schema
-__version__ = '0.2.0'
+__version__ = '0.2.1'
 
 
 class SchemaError(Exception):
@@ -54,7 +54,7 @@ class Or(And):
             except SchemaError as _x:
                 x = _x
         raise SchemaError(['%r did not validate %r' % (self, data)] + x.autos,
-                         [self._error] + x.errors)
+                          [self._error] + x.errors)
 
 
 class Use(object):
@@ -78,18 +78,12 @@ class Use(object):
 
 
 def priority(s):
-    """Return priority for a give object.
-
-    :rtype: int
-    """
+    """Return priority for a give object."""
     if type(s) in (list, tuple, set, frozenset):
         return 6
     if type(s) is dict:
         return 5
-    # We exclude Optional from the test, otherwise it will make a
-    # catch-all rule like "str" take precedence over any optional field,
-    # which would be inintuitive.
-    if hasattr(s, 'validate')  and not type(s) is Optional:
+    if hasattr(s, 'validate'):
         return 4
     if type(s) is type:
         return 3
@@ -116,11 +110,11 @@ class Schema(object):
             return type(s)(Or(*s, error=e).validate(d) for d in data)
         if type(s) is dict:
             data = Schema(dict, error=e).validate(data)
-            new = type(data)()
+            new = type(data)()  # new - is a dict of the validated values
             x = None
             coverage = set()  # non-optional schema keys that were matched
+            # for each key and value find a schema entry matching them, if any
             sorted_skeys = list(sorted(s, key=priority))
-
             for key, value in data.items():
                 valid = False
                 skey = None
@@ -144,16 +138,17 @@ class Schema(object):
                     new[nkey] = nvalue
                 elif skey is not None:
                     if x is not None:
-                        raise SchemaError(['key %r is required' % key] +
+                        raise SchemaError(['invalid value for key %r' % key] +
                                           x.autos, [e] + x.errors)
-                    else:
-                        raise SchemaError('key %r is required' % skey, e)
             coverage = set(k for k in coverage if type(k) is not Optional)
             required = set(k for k in s if type(k) is not Optional)
             if coverage != required:
                 raise SchemaError('missed keys %r' % (required - coverage), e)
             if len(new) != len(data):
-                raise SchemaError('wrong keys %r in %r' % (new, data), e)
+                wrong_keys = set(data.keys()) - set(new.keys())
+                s_wrong_keys = ', '.join('%r' % k for k in sorted(wrong_keys))
+                raise SchemaError('wrong keys %s in %r' % (s_wrong_keys, data),
+                                  e)
             return new
         if hasattr(s, 'validate'):
             try:
@@ -162,7 +157,7 @@ class Schema(object):
                 raise SchemaError([None] + x.autos, [e] + x.errors)
             except BaseException as x:
                 raise SchemaError('%r.validate(%r) raised %r' % (s, data, x),
-                                 self._error)
+                                  self._error)
         if type(s) is type:
             if isinstance(data, s):
                 return data
