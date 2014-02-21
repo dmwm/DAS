@@ -26,6 +26,7 @@ try:
     # keyword search
     from DAS.web.das_kwd_search import KeywordSearchHandler
 except Exception as _exc:
+    KeywordSearchHandler = None
     print_exc(_exc)
 
 #TODO: do we preserve all of these inputs once contacting KWS?
@@ -65,7 +66,8 @@ class KWSWebService(DASWebManager):
         try:
             self.dbs_instances = self.dasmgr.mapping.dbs_instances()
             self.dbs_global = self.dasmgr.mapping.dbs_global_instance()
-            self.kws = KeywordSearchHandler(self.dasmgr)
+            if  KeywordSearchHandler:
+                self.kws = KeywordSearchHandler(self.dasmgr)
         except ConnectionFailure:
             tstamp = dastimestamp('')
             mythr = threading.current_thread()
@@ -85,7 +87,8 @@ class KWSWebService(DASWebManager):
 
             self.dbs_instances = self.dasmgr.mapping.dbs_instances()
             self.dbs_global = self.dasmgr.mapping.dbs_global_instance()
-            self.kws = KeywordSearchHandler(self.dasmgr)
+            if  KeywordSearchHandler:
+                self.kws = KeywordSearchHandler(self.dasmgr)
         except ConnectionFailure:
             tstamp = dastimestamp('')
             mythr = threading.current_thread()
