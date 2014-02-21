@@ -14,6 +14,8 @@ import re
 import time
 import cherrypy
 import threading
+import pprint
+
 
 from datetime import date
 from urlparse import urlparse, parse_qsl
@@ -52,6 +54,8 @@ from DAS.web.request_manager import RequestManager
 from DAS.web.dbs_daemon import DBSDaemon
 from DAS.web.cms_representation import CMSRepresentation
 from DAS.web.cms_adjust_input import identify_apparent_query_patterns
+from DAS.web.cms_query_hints import hint_dataset_in_other_insts, \
+    hint_dataset_case_insensitive
 from DAS.utils.global_scope import SERVICES
 from DAS.core.das_exceptions import WildcardMultipleMatchesException
 import DAS.utils.jsonwrapper as json
@@ -76,10 +80,12 @@ class DASWebService(DASWebManager):
     """
     DAS web service interface.
     """
+
     def __init__(self, dasconfig):
         DASWebManager.__init__(self, dasconfig)
         config = dasconfig['web_server']
         self.pid_pat     = re.compile(r'^[a-z0-9]{32}')
+        # TODO: self.base shall be automatically included in all tmpls
         self.base        = config['url_base']
         self.interval    = config.get('status_update', 2500)
         self.engine      = config.get('engine', None)
@@ -457,7 +463,8 @@ class DASWebService(DASWebManager):
                                 suggest=err.options.values)
         except WildcardMatchingException as err:
             das_parser_error(uinput, str(type(err)) + ' ' + str(err))
-            return 1, error_msg(str(err))
+            return 1, self.add_hints_plugin(error_msg(str(err)),
+                {'instance': inst, 'input': uinput})
         except Exception as err:
             das_parser_error(uinput, str(type(err)) + ' ' + str(err))
 
@@ -747,7 +754,6 @@ class DASWebService(DASWebManager):
         form = self.form(uinput)
         return self.page(form + page)
 
-
     def _is_web_request(self, view):
         """
         returns whether the current view mode is not web
@@ -856,6 +862,7 @@ class DASWebService(DASWebManager):
 
     def get_page_content(self, kwargs, complete_msg=True):
         """Retrieve page content for provided set of parameters"""
+        html_views = ['list', 'table']
         page = ''
         try:
             view = kwargs.get('view', 'list')
@@ -873,6 +880,10 @@ class DASWebService(DASWebManager):
 
                 func = getattr(self, view + "view")
                 page = func(head, data)
+
+                # insert hints loader, if enabled
+                if view in html_views:
+                    page = self.add_hints_plugin(page, kwargs)
         except HTTPError as _err:
             raise
         except Exception as exc:
@@ -880,6 +891,20 @@ class DASWebService(DASWebManager):
             msg  = gen_error_msg(kwargs)
             page = self.templatepage('das_error', msg=msg)
         return page
+
+    def add_hints_plugin(self, page, kwargs):
+        """ make the hints to be loaded via ajax """
+        #TODO: name this render_results_masterpage?
+        hints_enabled = self.dasconfig['web_plugins']['show_hints']
+        #if not hints_enabled:
+        #    return page
+        inst = kwargs.get('instance', self.dbs_global)
+        return self.templatepage('das_results_masterpage',
+                                 page=page,
+                                 uinput=kwargs['input'],
+                                 inst=inst,
+                                 kws_host='',
+                                 hints_enabled=hints_enabled)
 
     @expose
     def download(self, lfn):
@@ -1078,3 +1103,25 @@ class DASWebService(DASWebManager):
                                'info': 'dataset'})
         return result
 
+    #@exposedasjson
+    @expose
+    @enable_cross_origin
+    @checkargs(['query', 'instance'])
+    def hints(self, **kwargs):
+        """ ajax callback to return the hints """
+        query = kwargs.get('query', '').strip()
+        dbsinst = kwargs.get('instance', self.dbs_global)
+        hint_functions = [hint_dataset_case_insensitive,
+                          hint_dataset_in_other_insts, ]
+        hints = (hint(query, dbsinst)
+                   for hint in hint_functions)
+        hints = (r for r in hints
+                   if r and r.get('results'))
+
+        # print out the results if debugging
+        if self.dasconfig.get('verbose'):
+            hints = list(hints)
+            pprint.pprint(hints)
+
+        # TODO: base could be a global param passed by templatepage
+        return self.templatepage('hints', hints=hints, base=self.base)

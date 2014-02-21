@@ -149,6 +149,13 @@ DASOption('web_server', 'services', 'list', []),
 # option to check DAS clients
 DASOption('web_server', 'check_clients', 'bool', False),
 
+# --- DAS web server plugins ---
+# The hints plugin warns user about particular cases of queries that may
+# be tricky: case-insensitive matches & datasets in other dbs instances
+DASOption('web_plugins', 'show_hints', 'bool', False),
+# TODO: dbs deamon to this section?
+# TODO: adjust input to here?
+
 
 # cacherequests section of DAS config
 DASOption('cacherequests', 'Admin', 'int', 5000),
