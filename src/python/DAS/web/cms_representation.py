@@ -246,6 +246,7 @@ def adjust_values(func, gen, links, pkey):
                     val = val['value']
             to_show.append((key, val))
     if  to_show:
+        to_show = list(set(to_show))
         page += '<br />'
         tdict = {}
         for key, val in to_show:
