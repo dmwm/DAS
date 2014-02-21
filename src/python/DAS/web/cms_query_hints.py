@@ -29,9 +29,15 @@ def repl_dataset_val(query, repl):
 
 # TODO: what if we have keyword search?
 def hint_dataset_in_other_insts(query, cur_inst):
-    """ find datasets in other instances """
+    """ find datasets in other DBS instances
+     (shown only if no matches in current instance)"""
     dataset_pat = get_dataset_token(query)
     matches = match_dataset_all_inst(dataset_pat, cur_inst)
+
+    # for now, display hints ONLY on no matches in the current instance
+    if any(m['inst'] == cur_inst for m in matches):
+        return
+
     results = [{'inst': m['inst'],
                 'match': m['inst'],
                 'query': repl_dataset_val(query, m['match']) +
