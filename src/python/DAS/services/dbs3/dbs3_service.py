@@ -502,7 +502,7 @@ class DBS3Service(DASAbstractService):
         if  val:
             if  isinstance(val, dict): # we got a run range
                 if  '$in' in val:
-                    kwds['run_num'] = runrange(val['$in'][0], val['$in'][-1])
+                    kwds['run_num'] = val['$in']
                 if  '$lte' in val:
                     kwds['run_num'] = runrange(val['$gte'], val['$lte'], True)
             else:
