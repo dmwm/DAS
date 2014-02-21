@@ -97,10 +97,15 @@ class TemplatedPage(Page):
             search_list.append(kwargs)
         templatefile = "%s/%s.tmpl" % (self.templatedir, ifile)
         if os.path.exists(templatefile):
-            # make it easy using '#include'
-            search_list.append({'tmpldir': self.templatedir})
-            template = Template(file=templatefile, searchList=search_list)
-            return template.respond()
+            # little workaround to fix '#include', chdir to template dir
+            curdir = os.curdir
+            os.chdir(self.templatedir)
+            try:
+                template = Template(file=templatefile, searchList=search_list)
+                return template.respond()
+            finally:
+                os.chdir(curdir)
+
         else:
             self.warning("%s not found at %s" % (ifile, self.templatedir))
             return "Template %s not known" % ifile
