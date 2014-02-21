@@ -1114,13 +1114,15 @@ class DASWebService(DASWebManager):
         hint_functions = [hint_dataset_case_insensitive,
                           hint_dataset_in_other_insts, ]
         hints = (hint(query, dbsinst)
-                   for hint in hint_functions)
-        hints = (r for r in hints
-                   if r and r.get('results'))
+                 for hint in hint_functions)
+
+        # select only non-empty hints
+        # p.s. need a list to be able to check if we have any results
+        hints = [r for r in hints
+                 if r and r.get('results')]
 
         # print out the results if debugging
         if self.dasconfig.get('verbose'):
-            hints = list(hints)
             pprint.pprint(hints)
 
         # TODO: base could be a global param passed by templatepage
