@@ -1108,25 +1108,20 @@ class DASWebService(DASWebManager):
     @enable_cross_origin
     @checkargs(['query', 'instance'])
     def hints(self, **kwargs):
+        """ ajax callback to return the hints """
         query = kwargs.get('query', '').strip()
         dbsinst = kwargs.get('instance', self.dbs_global)
-        hints = [hint_dataset_case_insensitive,
-                 hint_dataset_in_other_insts,]
-        results = (hint(query, dbsinst)
-                   for hint in hints)
-        results = (r for r in results
+        hint_functions = [hint_dataset_case_insensitive,
+                          hint_dataset_in_other_insts, ]
+        hints = (hint(query, dbsinst)
+                   for hint in hint_functions)
+        hints = (r for r in hints
                    if r and r.get('results'))
 
         # print out the results if debugging
         if self.dasconfig.get('verbose'):
-            results = list(results)
-            pprint.pprint(results)
+            hints = list(hints)
+            pprint.pprint(hints)
 
-        # TODO: the below could also be cleanup with '#include' in cheetah
-        results_rendered = ''.join(
-            self.templatepage('hint', hint=hint, base=self.base)
-            for hint in results)
-        if not results_rendered:
-            return ''
-        return '<div id="cms-hints-sidebar">' \
-               '{0:s}</div>'.format(results_rendered)
+        # TODO: base could be a global param passed by templatepage
+        return self.templatepage('hints', hints=hints, base=self.base)
