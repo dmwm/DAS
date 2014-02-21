@@ -14,6 +14,8 @@ import re
 import time
 import cherrypy
 import threading
+import pprint
+
 
 from datetime import date
 from urlparse import urlparse, parse_qsl
@@ -1114,10 +1116,13 @@ class DASWebService(DASWebManager):
                    for hint in hints)
         results = (r for r in results
                    if r and r.get('results'))
-        if False:
+
+        # print out the results if debugging
+        if self.dasconfig.get('verbose'):
             results = list(results)
-            import pprint
-            print pprint.pprint(results)
+            pprint.pprint(results)
+
+        # TODO: the below could also be cleanup with '#include' in cheetah
         results_rendered = ''.join(
             self.templatepage('hint', hint=hint, base=self.base)
             for hint in results)
