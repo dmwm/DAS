@@ -1,7 +1,7 @@
 # DBS3 API mapping to DAS
 system : dbs3
 format : JSON
-instances: ["prod/global", "prod/phys01", "prod/phys02", "prod/phys03",
+instances: ["prod/global", "prod/phys01", "prod/phys02", "prod/phys03", "prod/caf",
             "int/global", "int/phys01", "int/phys02", "int/phys03",
             "dev/global", "dev/phys01", "dev/phys02", "dev/phys03"]
 ---
