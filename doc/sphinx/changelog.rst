@@ -7,6 +7,10 @@ This release series is targeted to DAS production stability and quality.
 
 - 2.5.X
 
+  - Fixed 4166, 4165, 4164, 4162, 4160, 4158, 4156, 4155, 4153, 4148, 4142
+  - Re-factor ReqMgr config queries to fetch configs from ReqMgr and WMStats
+  - Add dataset suggestion hints when no results are found in default DBS
+  - Fixed query disappearance under high load
   - Set DAS_SERVER in DAS/__init__.py module which will be used in HTTP
     User-Agent header. The DAS_SERVER uses version which will be updated upon
     deployment to specific release name. Therefore the User-Agent string will
