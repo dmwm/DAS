@@ -1,10 +1,7 @@
 #from json import dumps as jsonize
-#assert isinstance($uinput, basestring)
-#assert isinstance($inst, basestring)
-#assert isinstance($kws_host, basestring)
+#from DAS.utils.url_utils import url_extend_params_as_dict
 
-#set $js_uinput = $jsonize($uinput)
-#set $js_inst = $jsonize($inst)
+#assert isinstance($kws_host, basestring)
 #set $js_kws_host = $jsonize($kws_host)
 
 <div id="cms-hints-container">
@@ -13,20 +10,20 @@
     <br /><br />
 </div>
 
+## this will pass all the default params including user's input
+#set hints_params_json = jsonize(url_extend_params_as_dict())
+
 <script type="text/javascript">
 var KWS_HOST = $js_kws_host; //e.g. "https://localhost"
 new Ajax.Request(KWS_HOST + "/das/hints", {
     method: "get",
-    parameters: {
-        query: $js_uinput,
-        instance: $js_inst
-    },
+    parameters: $hints_params_json,
   onSuccess: function(transport) {
       \$("cms-hints-container").update(transport.responseText);
     initialize_kws_results.defer();
   },
   onFailure: function(err) {
-        \$("cms-hints-container").update("");
+      \$("cms-hints-container").update("");
   }
 });
 </script>

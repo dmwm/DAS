@@ -459,12 +459,13 @@ class DASWebService(DASWebManager):
             dasquery = DASQuery(uinput, instance=inst)
         except WildcardMultipleMatchesException as err:
             das_parser_error(uinput, str(err).replace('\n', ''))
+            # TODO: hints could be shown here also, but it makes no sense, as
+            # they are shown only when no matches are found
             return 1, error_msg(str(err), tmpl='das_wildcard_err',
                                 suggest=err.options.values)
         except WildcardMatchingException as err:
             das_parser_error(uinput, str(type(err)) + ' ' + str(err))
-            return 1, self.add_hints_plugin(error_msg(str(err)),
-                {'instance': inst, 'input': uinput})
+            return 1, self.add_hints_plugin(error_msg(str(err)))
         except Exception as err:
             das_parser_error(uinput, str(type(err)) + ' ' + str(err))
 
@@ -883,7 +884,7 @@ class DASWebService(DASWebManager):
 
                 # insert hints loader, if enabled
                 if view in html_views:
-                    page = self.add_hints_plugin(page, kwargs)
+                    page = self.add_hints_plugin(page)
         except HTTPError as _err:
             raise
         except Exception as exc:
@@ -892,17 +893,12 @@ class DASWebService(DASWebManager):
             page = self.templatepage('das_error', msg=msg)
         return page
 
-    def add_hints_plugin(self, page, kwargs):
+    def add_hints_plugin(self, page):
         """ make the hints to be loaded via ajax """
         #TODO: name this render_results_masterpage?
         hints_enabled = self.dasconfig['web_plugins']['show_hints']
-        #if not hints_enabled:
-        #    return page
-        inst = kwargs.get('instance', self.dbs_global)
         return self.templatepage('das_results_masterpage',
                                  page=page,
-                                 uinput=kwargs['input'],
-                                 inst=inst,
                                  kws_host='',
                                  hints_enabled=hints_enabled)
 
@@ -1106,10 +1102,10 @@ class DASWebService(DASWebManager):
     #@exposedasjson
     @expose
     @enable_cross_origin
-    @checkargs(['query', 'instance'])
+    @checkargs(DAS_WEB_INPUTS)
     def hints(self, **kwargs):
         """ ajax callback to return the hints """
-        query = kwargs.get('query', '').strip()
+        query = kwargs.get('input', '').strip()
         dbsinst = kwargs.get('instance', self.dbs_global)
         hint_functions = [hint_dataset_case_insensitive,
                           hint_dataset_in_other_insts, ]
