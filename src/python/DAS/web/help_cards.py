@@ -24,7 +24,7 @@ def help_cards(base):
 DAS queries are formed by
 <b>key=value</b> pairs, for example
 <ul>
-<li>dataset=*RelVal*</li>
+<li>dataset=/ZMM*/*/*</li>
 <li>release=CMSSW_2_0_*</li>
 <li>run=148126</li>
 </ul>
@@ -45,15 +45,15 @@ For more details please read DAS
 DAS supports <b>grep</b>, <b>sort</b> and <b>unique</b> filters. You can use
 <b>grep</b> filter to select part of the DAS record. For example,
 <pre>
-dataset=*RelVal* | grep dataset.nevents
+dataset=/ZMM/Summer11-DESIGN42_V11_428_SLHC1-v1/GEN-SIM | grep dataset.nevents
 </pre>
-To sort your results use sort filter
+To sort your results use sort filter (add '-', e.g. sort dataset.nfiles- to sort in reverse direction)
 <pre>
-dataset=*RelVal* | sort dataset.nevents
+dataset=/ZMM*/*/* | sort dataset.nfiles
 </pre>
 Multiple filters can be applied together, for instance
 <pre>
-dataset=*RelVal* | unique | grep dataset.name, dataset.nevents
+dataset=/ZMM*/*/* | unique | grep dataset.name
 </pre>
     """
     card += hide
@@ -70,7 +70,7 @@ The usage of wild-card
 is allowed for string patterns. For example, you can select record
 attribute and apply a wild-card condition at the same time:
 <pre>
-dataset=*RelVal* | grep dataset.name, dataset.name=*RECO
+dataset=/ZMM*/*/* | grep dataset.name, dataset.name=*14TeV*
 </pre>
     """
     card += hide
