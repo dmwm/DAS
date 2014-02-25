@@ -14,9 +14,9 @@ release=CMSSW_2_0_8
 group=Top
 site dataset=/BJetPlusX/Run2012C-PromptReco-v1/AOD
 lumi  run=176304
-monitor date last 24h
+monitor date last 60h
 jobsummary date last 24h
-primary_dataset=/*Cosmics*/*/*
+primary_dataset=Cosmics
 run between [160915,160917]
 summary dataset=/HICorePhysics/HIRun2010-ZMM-v2/RAW-RECO  run=150619
 user user=vidmasze@cern.ch
