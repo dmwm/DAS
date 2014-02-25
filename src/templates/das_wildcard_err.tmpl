@@ -1,8 +1,9 @@
 #from DAS.web.utils import quote
-#set base = $quote($base)
+#from DAS.utils.url_utils import url_extend_params
 #set msg = $quote($msg)
 #assert isinstance($base, str)
 #assert (isinstance($msg, str) or isinstance($msg, unicode))
+
 <!-- das_wildcard_err.tmpl -->
 <div> <!-- main div -->
     <div class="das-ambigous">
@@ -15,8 +16,10 @@ $msg
 Suggested queries:
 <ul>
 #for query in $suggest
-#set query=$quote($query)
-<li><a href="$base/request?input=$query">$query</a></li>
+  #set query=$quote($query)
+  ## url_extend_params returns a link with urlencoded params
+  #set link=url_extend_params(url=$base + '/request', input=query)
+  <li><a href="$link">$query</a></li>
 #end for
 </ul>
 #end if

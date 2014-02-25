@@ -1,4 +1,6 @@
 #from DAS.web.utils import quote
+#from DAS.utils.url_utils import url_extend_params
+
 #set title=$quote($hint.title)
 
 <div class="hint-block">
@@ -9,8 +11,9 @@
     #end if
     <ul class="result">
     #for result in $hint.results
-        #set query=$quote($result.query)
-        <li><a href="$base/request?input=$query">$result.match</a>
+        #set query = $quote($result.query)
+        #set link = url_extend_params(url=$base +'/request', input=$query)
+        <li><a href="$link">$result.match</a>
         #if 'examples' in result and $result.examples
             <ul class="examples">
             #for example in $result.examples

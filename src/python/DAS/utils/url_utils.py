@@ -14,6 +14,8 @@ import urllib2
 import httplib
 from   types import InstanceType
 
+import cherrypy
+
 # DAS modules
 from   DAS import DAS_SERVER
 from   DAS.utils.das_timer import das_timer
@@ -23,6 +25,7 @@ from   DAS.utils.pycurl_manager import RequestHandler
 from   DAS.utils.pycurl_manager import REQUEST_HANDLER
 from   DAS.utils.regex import int_number_pattern
 import DAS.utils.jsonwrapper as json
+
 
 def disable_urllib2Proxy():
     """
@@ -92,7 +95,8 @@ def getdata_pycurl(url, params, headers=None, expire=3600, post=None,
         try:
             reason = extract_http_error(httperror.read())
             data.update({'reason': reason, 'request': msg})
-            msg += '\n' + err
+            # TODO: err variable did not exit in this function!
+            msg += '\n' + reason
         except Exception as exp:
             data.update({'httperror': None})
             msg += '\n' + str(exp)
@@ -324,3 +328,26 @@ def url_args(url, convert_types=False):
         else:
             args[key] = value
     return args
+
+
+def url_extend_params_as_dict(**overrides):
+    """
+    returns a dict of (url) query params extended with params in overrides
+    (preserving the default values for instance, page size, etc)
+    """
+    to_preserve = ['view', 'instance', 'input', 'limit']
+    params = dict((param, v)
+                  for param, v in cherrypy.request.params.items()
+                  if param in to_preserve)
+    # override
+    for param, value in overrides.items():
+        params[param] = value
+    return params
+
+
+def url_extend_params(url, **overrides):
+    """
+    returns a link to given url taking into account existing parameters
+    already present in cherry.request (e.g. instance, page size, etc) """
+    params = url_extend_params_as_dict(**overrides)
+    return url + '?' + urllib.urlencode(params)
