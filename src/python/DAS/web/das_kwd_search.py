@@ -12,6 +12,7 @@ import math
 
 from DAS.keywordsearch.search import KeywordSearch
 from DAS.utils.das_config import das_readconfig
+from DAS.utils.url_utils import url_extend_params
 
 avg = lambda l: len(l) and float(sum(l))/len(l)
 
@@ -34,15 +35,9 @@ class KeywordSearchHandler(object):
         returns a link to given query taking into account other parameters
         already present in cherry.request (e.g. instance, page size, etc)
         """
-        params = cherrypy.request.params.copy()
-        params['input'] = query
-
-        # will see in logs which suggestion was selected by user for kw_query
-        if kw_query:
-            params['kwquery'] = kw_query
-
-        das_url = '/das/request?' + urllib.urlencode(params)
-        return das_url
+        return url_extend_params(url='/das/request',
+                                 input=query,
+                                 kwquery=kw_query)
 
     def _prepare_score_bar(self, q):
         """
