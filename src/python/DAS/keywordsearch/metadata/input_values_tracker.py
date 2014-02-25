@@ -271,8 +271,8 @@ def test(tracker):
     tracker.update()
     idx = 0
     limit = 10
-    print 'matching {} in {}:'.format(tracker.cfg['test'],
-                                      tracker.cfg['input'])
+    print 'matching {0:s} in {1:s}:'.format(tracker.cfg['test'],
+                                            tracker.cfg['input'])
     for row in tracker.find(tracker.cfg['test'], idx, limit):
         print row
 
