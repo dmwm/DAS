@@ -448,10 +448,12 @@ class DASMapping(object):
             if  self.dbs_inst_names:
                 return self.dbs_inst_names
         insts = []
+        dbs_namespace = self.dbs_global_instance(system).split('/')[0]
         for srv in systems:
             if  srv == system:
                 apis  = self.list_apis(srv)
                 insts = self.api_info(srv, apis[0])['instances']
+                insts = [d for d in insts if d.startswith(dbs_namespace)]
                 self.dbs_inst_names = insts
                 return insts
         return insts
