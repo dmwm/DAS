@@ -3,6 +3,41 @@
 <!-- das_services.tmpl -->
 #import urllib
 <div class="page">
+<b>DBS instances</b><br />
+DAS supports the following DBS instances:
+<table class="daskeys">
+#set counter=0
+#for dbs in $dbses
+#if $dbs==$dbs_global
+#set msg="<b>default DBS instance</b>"
+#elif $dbs.startswith('prod')
+#set msg="<em>production DBS instance</em>"
+#elif $dbs.startswith('int')
+#set msg="<em>integration DBS instance</em>"
+#elif $dbs.startswith('dev')
+#set msg="<em>development DBS instance</em>"
+#else
+#set msg=""
+#end if
+#if $counter%2
+#set style="odd"
+#else
+#set style=""
+#end if
+#set $counter+=1
+<tr class="$quote($style)">
+<td>$quote($dbs)</td><td>&nbsp;&nbsp;&nbsp;&nbsp;$msg</td>
+</tr>
+#end for
+</table>
+On web UI you can choose your favorite one via drop-down menu.
+For DAS CLI you can use them together with your DAS query using
+<b>instance</b> DAS keyword, for example:
+<pre>
+dataset dataset=/ZMM*/*/* instance=prod/global
+dataset dataset=/ZMM*/*/* instance=prod/phys03
+</pre>
+
 <b>DAS mapping</b><br />
 DAS provides a mapping between query keys, e.g. block, site and 
 their representation in DAS records. Use this table to identify

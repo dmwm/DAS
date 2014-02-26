@@ -116,6 +116,7 @@ class DASWebService(DASWebManager):
         self.colors      = {}   # defined at run-time via self.init()
         self.dbs_url     = None # defined at run-time via self.init()
         self.dbs_global  = None # defined at run-time via self.init()
+        self.dbs_instances = [] # defined at run-time via self.init()
         self.kws         = None # defined at run-time via self.init()
         self.q_rewriter  = None # defined at run-time via self.init()
         self.dataset_daemon = config.get('dbs_daemon', False)
@@ -337,6 +338,7 @@ class DASWebService(DASWebManager):
             dasdict[srv] = vdict
         mapreduce = [r for r in self.dasmgr.rawcache.get_map_reduce()]
         page = self.templatepage('das_services', dasdict=dasdict,
+                        dbses=self.dbs_instances, dbs_global=self.dbs_global,
                         daskeys=list(daskeys), mapreduce=mapreduce)
         return self.page(page, response_div=False)
 
