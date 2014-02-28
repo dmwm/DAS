@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Creates a default config file
 
 # find out where DAS is installed on a system
 dasroot=`python -c "import DAS; print '/'.join(DAS.__file__.split('/')[:-1])"`

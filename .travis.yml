@@ -18,7 +18,7 @@ install:
 
   # a hack to use default MongoDB port, which is available in travis
   - sed -i -e 's/8230/27017/g'  etc/das.cfg
-  - sed -i -e 's/8230/27017/g'  bin/das_db_import
+  #- sed -i -e 's/8230/27017/g'  bin/das_db_import
   - rm test/dbs3_t.py   # temp disable dbs3_t as it prevents imports
 
   # install

@@ -254,8 +254,8 @@ def find_datasets(pattern, dbs_instance, dbname='dbs', idx=0, limit=10,
 
 def test(dbs_url):
     "Test function"
-    uri = 'mongodb://localhost:8230'
-    config = {'preserve_on_restart':True}
+    uri = das_readconfig()['mongodb']['dburi'][0]
+    config = {'preserve_on_restart': True}
     mgr = DBSDaemon(dbs_url, uri, config)
     mgr.update()
     idx = 0
