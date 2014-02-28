@@ -7,6 +7,7 @@ DAS web interface to test various CMS data services
 __author__ = "Valentin Kuznetsov"
 
 # system modules
+import json
 import logging
 import cherrypy
 from cherrypy import expose, tree, engine, HTTPError
@@ -99,6 +100,18 @@ class DASTestDataService(DASWebManager):
         return data
 
     @expose
+    def dbs3(self, **_kwargs):
+        """
+        Test DBS data-service
+        """
+        try:
+            cherrypy.response.headers['Content-Type'] = "application/json"
+            data = [{'primary_dataset':{'name':'abc'}}]
+        except:
+            data = []
+        return json.dumps(data)
+
+    @expose
     def phedex(self, **kwargs):
         """
         Test PhEDEx data-service
@@ -158,7 +171,7 @@ def main():
     # start TestDataService
     config = dict(logfile='', loglevel=1)
     server = Root(config)
-    server.start(blocking=true)
+    server.start(blocking=True)
 #
 # main
 #
