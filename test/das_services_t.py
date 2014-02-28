@@ -10,6 +10,7 @@ from cherrypy import engine, tree
 from pymongo.connection import Connection
 import unittest
 
+from DAS.utils.das_db import db_connection
 from DAS.core.das_core import DASCore
 from DAS.core.das_query import DASQuery
 from DAS.utils.ddict import DotDict
@@ -57,26 +58,25 @@ class testCMSFakeDataServices(unittest.TestCase):
         config['keylearningdb'] = {'collname': collname, 'dbname': 'keylearning'}
         config['parserdb'] = {'collname': collname, 'dbname': 'parser', 
                                 'enable': True, 'sizecap': 10000}
-        config['services'] = ['dbs', 'phedex', 'sitedb', 'google_maps', 'ip']
+        config['services'] = ['dbs3', 'phedex', 'sitedb', 'google_maps', 'ip']
         # Do not perform DAS map test, since we overwrite system and urls.
         # This is done to use standard DAS maps, but use local URLs, which
         # cause DAS hash map to be be wrong during a test
         config['map_test'] = False
 
+        # Add fake mapping records
+        self.clear_collections()
+        self.add_service('ip', 'ip.yml')
+        self.add_service('google_maps', 'google_maps.yml')
+        self.add_service('dbs3', 'dbs3.yml')
+        self.add_service('phedex', 'phedex.yml')
+        self.add_service('sitedb', 'sitedb.yml')
+
         # setup DAS mapper
         self.mgr = DASMapping(config)
 
         # create fresh DB
-        self.clear_collections()
-        self.mgr.delete_db_collection()
         self.mgr.init()
-
-        # Add fake mapping records
-        self.add_service('ip', 'ip.yml')
-        self.add_service('google_maps', 'google_maps.yml')
-        self.add_service('dbs', 'dbs.yml')
-        self.add_service('phedex', 'phedex.yml')
-        self.add_service('sitedb', 'sitedb.yml')
 
         # mongo parser
         self.mongoparser = ql_manager(config)
@@ -95,15 +95,18 @@ class testCMSFakeDataServices(unittest.TestCase):
         which match corresponding name in DASTestDataService and
         associated with this system YML map file.
         """
-        fname  = os.path.join(DASPATH, 'services/maps/%s' % ymlfile)
-        url    = self.base + '/%s' % system
+        conn  = db_connection(self.dburi)
+        dbc   = conn['mapping']
+        col   = dbc[self.collname]
+        fname = os.path.join(DASPATH, 'services/maps/%s' % ymlfile)
+        url   = self.base + '/%s' % system
         for record in read_service_map(fname):
             record['url'] = url
             record['system'] = system
-            self.mgr.add(record)
+            col.insert(record)
         for record in read_service_map(fname, 'notations'):
             record['system'] = system
-            self.mgr.add(record)
+            col.insert(record)
 
     def clear_collections(self):
         """clean-up test collections"""
@@ -121,8 +124,8 @@ class testCMSFakeDataServices(unittest.TestCase):
     def tearDown(self):
         """Invoke after each test"""
         self.server.stop()
-#        self.mgr.delete_db_collection()
-#        self.clear_collections()
+        self.mgr.delete_db_collection()
+        self.clear_collections()
 
     def testDBSService(self):
         """test DASCore with test DBS service"""
