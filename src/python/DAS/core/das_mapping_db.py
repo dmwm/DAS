@@ -146,7 +146,7 @@ class DASMapping(object):
         self.dbname   = config['mappingdb']['dbname']
         self.colname  = config['mappingdb']['collname']
         self.map_test = config.get('map_test', True)
-        self.main_dbs = config['das'].get('main_dbs', 'dbs')
+        self.main_dbs = config['das'].get('main_dbs', 'dbs3')
         self.dbsinsts = config['das'].get('dbs_instances', [])
 
         msg = "%s@%s" % (self.dburi, self.dbname)
@@ -448,12 +448,17 @@ class DASMapping(object):
             if  self.dbs_inst_names:
                 return self.dbs_inst_names
         insts = []
-        dbs_namespace = self.dbs_global_instance(system).split('/')[0]
+        dbs_global_inst = self.dbs_global_instance(system)
+        if  system == 'dbs3' and dbs_global_inst:
+            dbs_namespace = dbs_global_inst.split('/')[0]
+        else:
+            dbs_namespace = None
         for srv in systems:
             if  srv == system:
                 apis  = self.list_apis(srv)
                 insts = self.api_info(srv, apis[0])['instances']
-                insts = [d for d in insts if d.startswith(dbs_namespace)]
+                if  dbs_namespace:
+                    insts = [d for d in insts if d.startswith(dbs_namespace)]
                 self.dbs_inst_names = insts
                 return insts
         return insts
