@@ -1,8 +1,8 @@
 Release notes
-=================
+=============
 
-Release 2.X.Y series
---------------------
+.. rubric:: Release 2.X.Y series
+--------------------------------
 This release series is targeted to DAS production stability and quality.
 
 - 2.5.X
@@ -162,11 +162,9 @@ This release series is targeted to DAS production stability and quality.
   - Add runsummaries API
 
 
-Older releases
---------------------
 
 .. rubric:: Release 1.X.Y series
---------------------
+--------------------------------
 - 1.12.X
 
   - Fix wildcards to provide more informative messages in text mode
