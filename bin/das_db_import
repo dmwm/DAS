@@ -15,7 +15,7 @@ METADATA_DIR=${3:-"$DASROOT/kws_data/db_dumps"}
 JSON_VALIDATOR_DIR="$DASROOT/tools/schema_validators"
 KEYLEARNING_FILE="$METADATA_DIR/update_keylearning_db.js"
 INPUTVAL_FILES="$METADATA_DIR/update_inputvals*.js"
-
+. das_read_config # exports DAS_MONGO_PORT, DAS_MONGO_HOST
 
 # figure out which md5sum utility exists
 MD5CMD=$(for cmd in md5 md5sum; do type $cmd >/dev/null 2>&1 && echo $cmd && break; done);
@@ -45,14 +45,14 @@ update_db()
     # still we have to check if clean script exists, in case of multiple collections...
     if [ -f ${STAGEDIR}/clean_${obj}.js ]; then
         echo "Clean ${obj}"
-        mongo --port 8230 ${STAGEDIR}/clean_${obj}.js
+        mongo --host "$DAS_MONGO_HOST" --port "$DAS_MONGO_PORT" ${STAGEDIR}/clean_${obj}.js
     fi
 
     for entry in ${updates[@]}
     do
         db=$(echo ${entry} | cut -f1 -d_) coll=$(echo ${entry} | cut -f2- -d_)
         echo "Updating db: ${db} col: ${coll}"
-        mongoimport --port 8230 --db ${db} --collection ${coll} --file ${STAGEDIR}/update_${entry}.js
+        mongoimport --host "$DAS_MONGO_HOST" --port "$DAS_MONGO_PORT" --db ${db} --collection ${coll} --file ${STAGEDIR}/update_${entry}.js
     done
     # TODO: what if some file is missing?!
     echo "$stamp" > ${STAGEDIR}/${obj}-schema-stamp
