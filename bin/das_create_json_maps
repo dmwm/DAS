@@ -1,5 +1,13 @@
 #!/bin/bash
 
+if [ $# -eq 0 ] || [ "$1" == "-h" ] || [ "$1" == "-help" ] || [ "$1" == "--help" ]; then
+    echo "Usage: das_create_json_maps <DAS YML path>"
+    echo "E.g. :"
+    echo "       das_create_json_maps"
+    echo "       das_create_json_maps src/python/DAS/services/maps"
+    exit
+fi
+
 # find out where DAS is installed on a system
 dasroot=`python -c "import DAS; print '/'.join(DAS.__file__.split('/')[:-1])"`
 if [ -z "$dasroot" ]; then
