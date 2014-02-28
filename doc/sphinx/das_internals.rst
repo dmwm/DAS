@@ -12,6 +12,7 @@ This section describes DAS internal modules and datastructures (including record
    analytics.rst
    das_cache.rst
    das_merge.rst
+   kws_plugin.rst
    das_logging.rst
    das_analytics.rst
    code.rst

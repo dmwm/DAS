@@ -3,6 +3,34 @@ Dependencies
 DAS is written in python and relies on standard python modules.
 The design back-end is `MongoDB <http://www.mongodb.org>`_,
 which provides *schema-less* storage and a generic query language.
+
+
+DAS depends on the following software:
+
+- MongoDB and pymongo module
+- libcurl library
+- YUI library (Yahoo UI, version 2)
+- python modules:
+
+  - yajl (Yet Another JSON library) or cjson (C-JSON module)
+  - CherryPy
+  - Cheetah
+  - PLY
+  - PyYAML
+  - pycurl
+
+To install MongoDB visit [Mongodb]_ (make its bin directory
+available in your path).
+To install libcurl library visit [CURL]_.
+To install YUI library, visit Yahoo developer web site [YUI]_ and install
+*version 2* of their yui library.
+
+To install python dependencies it is easier to use standard python installer
+*pip* (see above).
+
+
+.. rubric:: Dependencies in the CMS Environment
+
 Below you can see current set of dependencies for DAS within the CMS
 environment:
 
