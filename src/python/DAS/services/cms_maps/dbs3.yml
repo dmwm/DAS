@@ -61,6 +61,18 @@ das_map : [
      "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+#[0-9a-zA-Z-]"},
 ]
 ---
+urn: dataset4parent_release
+url : "https://cmsweb.cern.ch/dbs/prod/global/DBSReader/datasets/"
+expire : 86400
+params : {"parent_dataset":"required", "release_version":"required", "detail":"True"}
+lookup : dataset
+das_map : [
+    {"das_key": "dataset", "rec_key":"dataset.name", "api_arg":"dataset"},
+    {"das_key": "parent", "rec_key":"parent.name", "api_arg":"parent_dataset",
+     "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+"},
+    {"das_key": "release", "rec_key":"release.name", "api_arg":"release_version"},
+]
+---
 urn: datasets
 url : "https://cmsweb.cern.ch/dbs/prod/global/DBSReader/datasets/"
 expire : 900

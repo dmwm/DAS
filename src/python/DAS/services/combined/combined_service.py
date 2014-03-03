@@ -110,8 +110,8 @@ def phedex_files(phedex_url, kwds):
         for row in files:
             yield row['name']
 
-def dbs_dataset4site_release(dbs_url, release):
-    "Get dataset for given site and release"
+def dbs_dataset4release_parent(dbs_url, release, parent=None):
+    "Get dataset for given release and optional parent dataset"
     expire = 600 # set some expire since we're not going to use it
     if  which_dbs(dbs_url) == 'dbs':
         # in DBS3 I'll use datasets API and pass release over there
@@ -136,6 +136,8 @@ def dbs_dataset4site_release(dbs_url, release):
         dbs_url += '/datasets'
         dbs_args = \
         {'release_version': release, 'dataset_access_type':'VALID'}
+        if  parent:
+            dbs_args.update({'parent_dataset': parent})
         headers = {'Accept': 'application/json;text/json'}
         source, expire = \
             getdata(dbs_url, dbs_args, headers, expire, ckey=CKEY, cert=CERT,
@@ -268,10 +270,13 @@ class CombinedService(DASAbstractService):
         phedex_url = self.map[api]['services']['phedex']
         # make phedex_api from url, but use xml version for processing
         phedex_api = phedex_url.replace('/json/', '/xml/') + '/blockReplicas'
-        if  api == 'dataset4site_release':
+        if  api == 'dataset4site_release' or \
+            api == 'dataset4site_release_parent':
             # DBS part
             datasets = set()
-            for row in dbs_dataset4site_release(dbs_url, args['release']):
+            release = args['release']
+            parent = args.get('parent', None)
+            for row in dbs_dataset4release_parent(dbs_url, release, parent):
                 datasets.add(row)
             # Phedex part
             if  args['site'].find('.') != -1: # it is SE
