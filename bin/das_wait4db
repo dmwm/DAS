@@ -1,0 +1,41 @@
+#!/bin/bash
+
+# use global variable to assign MongoDB status
+mongo_status="no"
+
+# helper function to check MongoDB status
+function check4db() {
+    mongo=`mongostat --noheaders -n 1 --port 8230 2>&1`
+    mongo_ok=`echo $mongo | grep connected`
+    if  [ -n "$mongo_ok" ]; then
+        mongo_status="ok"
+        return
+    fi
+    mongo_status="no"
+    return
+}
+
+# helper function to wait for MongoDB appearance
+# it will incrementally increase waiting time with 20 iterations (~3minute)
+function wait4db() {
+    local counter=0
+    # check if mongodb is running
+    while [  $counter -lt 20 ]; do
+        check4db
+        if [ "$mongo_status" == "ok" ]; then
+            return
+        fi
+        let counter=counter+1 
+        echo "MongoDB is not running, check in $counter sec"
+        sleep $counter
+    done
+    check4db
+    if [ "$mongo_status" == "no" ]; then
+        echo "MongoDB is not running, unable to start DAS server"
+        exit 1
+    fi
+}
+
+# wait for MongoDB to start and proceed
+# if MongoDB is not available wait4db will exit, see function body for details
+wait4db
