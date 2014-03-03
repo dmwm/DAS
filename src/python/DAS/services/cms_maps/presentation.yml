@@ -122,6 +122,7 @@ block : [
                 {"name":"Dataset", "query":"dataset block=%s"},
                 {"name":"Files", "query":"file block=%s"},
                 {"name":"Runs", "query":"run block=%s"},
+                {"name":"Parents", "query":"parent block=%s"},
                 {"name":"Sites", "query":"site block=%s"},
                 ],
          "description":"is a name used by DBS and Phedex systems to refer \
