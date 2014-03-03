@@ -5,6 +5,11 @@ Release notes
 --------------------------------
 This release series is targeted to DAS production stability and quality.
 
+- 2.6.X
+
+  - Add bin/das_wait4db to simplify DAS/MongoDB separation
+  - Add support for dataset parent=X release=Y site=Z query
+
 - 2.5.X
 
   - Fixed 4166, 4165, 4164, 4162, 4160, 4158, 4156, 4155, 4153, 4148, 4142
