@@ -2,16 +2,8 @@
 ## tmpl dir is a global param passed by rendertemplate
 
 #if $hints_enabled:
-<table style="width:100%">
-    <tr>
-        <td valign="top">
-            $page
-        </td>
-        <td valign="top" align="right">
-            #include $templatedir + "/hints_via_ajax.tmpl"
-        </td>
-    </tr>
-</table>
+$page
+#include $templatedir + "/hints_via_ajax.tmpl"
 #else
-        $page
+$page
 #end if
