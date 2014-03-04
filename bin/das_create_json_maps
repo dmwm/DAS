@@ -2,9 +2,7 @@
 
 if [ $# -eq 0 ] || [ "$1" == "-h" ] || [ "$1" == "-help" ] || [ "$1" == "--help" ]; then
     echo "Usage: das_create_json_maps <DAS YML path>"
-    echo "E.g. :"
-    echo "       das_create_json_maps"
-    echo "       das_create_json_maps src/python/DAS/services/maps"
+    echo "e.g. : das_create_json_maps src/python/DAS/services/maps"
     exit
 fi
 
