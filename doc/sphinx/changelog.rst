@@ -7,6 +7,8 @@ This release series is targeted to DAS production stability and quality.
 
 - 2.6.X
 
+  - Simplify hints templates
+  - Remove db_monitor thread due to DAS/MongoDB separation
   - Re-factor bin/das_server script to support DAS/MongoDB separation
   - Add support for child dataset=X release=Y site=Z query
   - Add support for dataset parent=X release=Y site=Z query
