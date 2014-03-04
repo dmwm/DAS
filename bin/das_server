@@ -1,20 +1,69 @@
 #!/bin/sh
 
-# find out where DAS is installed on a system
-dasroot=`python -c "import DAS; print '/'.join(DAS.__file__.split('/')[:-1])"`
-
-
-usage="Usage: das_server {start|stop|status|restart|stdout}"
-if [ $# != 1 ]; then
+function usage(){
     echo $usage
+    echo "Usage: das_server {start|stdout|stop|status|restart}"
+    echo "       start  : load DAS maps and start DAS service"
+    echo "       stdout : start DAS service without loading DAS maps"
+    echo "       stop   : stop DAS service"
+    echo "       status : report status of DAS service"
+    echo "       restart: restart DAS service"
+}
+if [ $# != 1 ]; then
+    usage
     exit 1
 fi
 
-# run actual script
-cmd="python $dasroot/web/das_server.py"
+# use global variable to assign MongoDB status
+mongo_status="no"
 
+# helper function to check MongoDB status
+function check4db() {
+    mongo=`mongostat --noheaders -n 1 --port 8230 2>&1`
+    mongo_ok=`echo $mongo | grep connected`
+    if  [ -n "$mongo_ok" ]; then
+        mongo_status="ok"
+        return
+    fi
+    mongo_status="no"
+    return
+}
+
+# helper function to wait for MongoDB appearance
+# it will incrementally increase waiting time with 20 iterations (~3minute)
+function wait4db() {
+    local counter=0
+    # check if mongodb is running
+    while [  $counter -lt 20 ]; do
+        check4db
+        if [ "$mongo_status" == "ok" ]; then
+            return
+        fi
+        let counter=counter+1
+        echo "MongoDB is not running, check in $counter sec"
+        sleep $counter
+    done
+    check4db
+    if [ "$mongo_status" == "no" ]; then
+        echo "MongoDB is not running, unable to start DAS server"
+        exit 1
+    fi
+}
+
+# wait for MongoDB to start and proceed
+# if MongoDB is not available wait4db will exit, see function body for details
+wait4db
+
+# find out where DAS is installed on a system
+dasroot=`python -c "import DAS; print '/'.join(DAS.__file__.split('/')[:-1])"`
+
+# DAS start-up command
+das_start="python -u $dasroot/web/das_server.py"
+
+# variable to retrieve status of last command
 RETVAL=$?
 
+# DAS pid
 pid=`ps auxwww | grep das_server.py | grep -v grep | awk 'BEGIN{ORS=" "} {print $2}'`
 
 function das_server_status()
@@ -27,53 +76,72 @@ function das_server_status()
     fi
     echo "DAS server runs with $nth threads"
     if [ ! -z "${pid}" ]; then
-        echo $"DAS web server is running, pid=${pid}"
+        echo "DAS web server is running, pid=${pid}"
         ps -f -wwww -p ${pid}
     else
-        echo $"DAS web server is not running"
+        echo "DAS web server is not running"
     fi
+}
+function stop_das(){
+    echo "Stop DAS service..."
+    if [ -n "${pid}" ]; then
+        kill -9 ${pid}
+    fi
+}
+function start_das(){
+    echo "Start DAS service..."
+    $das_start
+}
+function load_maps_start_das(){
+    if [ -z `env | grep DAS_MAP_FILE` ]; then
+        echo "Envinronment DAS_MAP_FILE is not set"
+        exit 1
+    fi
+    if [ -z `env | grep DAS_KWS_MAPS` ]; then
+        echo "Envinronment DAS_KWS_MAPS is not set"
+        exit 1
+    fi
+    if [ ! -f $DAS_MAP_FILE ]; then
+        echo "DAS map file DAS_MAP_FILE=$DAS_MAP_FILE does not exists"
+        exit 1
+    fi
+    if [ ! -d $DAS_KWS_MAPS ]; then
+        echo "DAS KWS map directory DAS_KWS_MAPS=$DAS_KWS_MAPS does not exists"
+        exit 1
+    fi
+    echo "Update DAS maps..."
+    das_update_database $DAS_MAP_FILE $DAS_KWS_MAPS
+    echo "Start DAS service..."
+    $das_start
 }
 
 case "$1" in
- stdout)
-        echo $"Checking for existing DAS web server..."
-        if [ ! -z "${pid}" ]; then
-          kill -9 ${pid}
-        fi
-        echo $"Restart DAS web server..."
-        ${cmd}
-        ;;
  restart)
-        echo $"Checking for existing DAS web server..."
-        if [ ! -z "${pid}" ]; then
-          kill -9 ${pid}
-        fi
-        echo $"Restart DAS web server..."
-        nohup ${cmd} 2>&1 1>& /dev/null < /dev/null &
-        sleep 3
-        das_server_status
-        ;;
+    stop_das
+    wait4db
+    start_das
+    ;;
+ stdout)
+    stop_das
+    wait4db
+    start_das
+    ;;
  start)
-        if [ ! -z "${pid}" ]; then
-          kill -9 ${pid}
-        fi
-        echo $"Start DAS web server..."
-        nohup ${cmd} 2>&1 1>& /dev/null < /dev/null &
-        sleep 3
-        das_server_status
-        ;;
+    stop_das
+    wait4db
+    load_maps_start_das
+    ;;
  status)
-        das_server_status
-        ;;
+    das_server_status
+    ;;
  stop)
-        if [ ! -z "${pid}" ]; then
-          kill -9 ${pid}
-        fi
-        ;;
+    echo "Stop DAS service..."
+    stop_das
+    ;;
  *)
-        echo $usage
-        exit 1
-        ;;
+    usage
+    exit 1
+    ;;
 esac
 
 exit $RETVAL
