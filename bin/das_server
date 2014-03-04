@@ -50,10 +50,6 @@ wait4db() {
     fi
 }
 
-# wait for MongoDB to start and proceed
-# if MongoDB is not available wait4db will exit, see function body for details
-wait4db
-
 # find out where DAS is installed on a system
 dasroot=`python -c "import DAS; print '/'.join(DAS.__file__.split('/')[:-1])"`
 
@@ -63,11 +59,10 @@ das_start="python -u $dasroot/web/das_server.py"
 # variable to retrieve status of last command
 RETVAL=$?
 
-# DAS pid
-pid=`ps auxwww | grep das_server.py | grep -v grep | awk 'BEGIN{ORS=" "} {print $2}'`
-
 das_server_status()
 {
+    local pid=`ps auxwww | grep das_server.py | grep -v grep | awk 'BEGIN{ORS=" "} {print $2}'`
+
     if  [ -z $pid ]; then
         echo "DAS is not running"
         return
@@ -87,6 +82,7 @@ das_server_status()
 }
 stop_das(){
     echo "Stop DAS service..."
+    local pid=`ps auxwww | grep das_server.py | grep -v grep | awk 'BEGIN{ORS=" "} {print $2}'`
     if [ -n "${pid}" ]; then
         kill -9 ${pid}
     fi
