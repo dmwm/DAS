@@ -522,12 +522,12 @@ http://www.sebastiansulinski.co.uk/tutorials/show_item/49/two_column_layout_usin
 /* the hints sidebar */
 #cms-hints-sidebar {
     margin-left: 20px;
-    border: 1px solid #ddd;
-    border-radius: 3px;
+/*    border: 1px solid #ddd;*/
+/*    border-radius: 3px;*/
     padding: 5px;
     font-size: 0.9em;
-    background: #eee;
-    width: 300px;
+/*    background: #eee;*/
+    width: 100%;
     text-align: left;
 }
 #cms-hints-sidebar .hint-block {
