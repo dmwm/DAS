@@ -271,7 +271,8 @@ class CombinedService(DASAbstractService):
         # make phedex_api from url, but use xml version for processing
         phedex_api = phedex_url.replace('/json/', '/xml/') + '/blockReplicas'
         if  api == 'dataset4site_release' or \
-            api == 'dataset4site_release_parent':
+            api == 'dataset4site_release_parent' or \
+            api == 'child4site_release_dataset':
             # DBS part
             datasets = set()
             release = args['release']
@@ -306,7 +307,10 @@ class CombinedService(DASAbstractService):
                     found[found_dataset] = {'bytes': bbytes, 'files': files}
             for name, val in found.iteritems():
                 record = dict(name=name, size=val['bytes'], files=val['files'])
-                yield {'dataset':record}
+                if  api == 'child4site_release_dataset':
+                    yield {'child': record}
+                else:
+                    yield {'dataset':record}
             del datasets
             del found
         if  api == 'site4dataset':
