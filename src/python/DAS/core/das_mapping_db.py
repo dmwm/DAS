@@ -38,7 +38,6 @@ from pymongo.errors import ConnectionFailure
 # DAS modules
 from DAS.utils.utils import dastimestamp, print_exc, md5hash
 from DAS.utils.utils import gen2list, parse_dbs_url, get_dbs_instance
-from DAS.utils.utils import Event
 from DAS.utils.das_db import db_connection, is_db_alive, create_indexes
 from DAS.utils.das_db import find_one
 from DAS.utils.logger import PrintManager
@@ -72,46 +71,6 @@ def verification_token(iterator):
         all_hashes.update(hash_)
     return all_hashes.hexdigest()
 
-
-def db_monitor(uri, func, sleep, reload_map, reload_time,
-               check_maps, reload_time_bad_maps):
-    """
-    Check status of MongoDB connection and reload DAS maps once in a while.
-    """
-    time0 = time.time()
-    valid_maps = False
-    try:
-        valid_maps = check_maps()
-    except Exception as err:
-        print_exc(err)
-    while True:
-        conn = db_connection(uri)
-        if not conn or not is_db_alive(uri):
-            try:
-                conn = db_connection(uri, verbose=False)
-                func()
-                if  conn:
-                    print "### db_monitor re-established connection %s" % conn
-                    valid_maps = check_maps()
-                else:
-                    print "### db_monitor, lost connection"
-            except Exception as err:
-                print_exc(err)
-        if  conn:
-            # reload invalid more quickly
-            reload_intervl = reload_time if valid_maps else reload_time_bad_maps
-            if  time.time()-time0 > reload_intervl:
-                map_state = 'INVALID' if not valid_maps else ''
-                msg = "reload %s DAS maps %s" % (map_state, reload_map)
-                print dastimestamp(), msg
-                try:
-                    reload_map()
-                    valid_maps = check_maps()
-                except Exception as err:
-                    print_exc(err)
-                time0 = time.time()
-
-        time.sleep(sleep)
 
 class DASMapping(object):
     """
@@ -153,16 +112,6 @@ class DASMapping(object):
         self.logger.info(msg)
         
         self.init()
-        self.on_reload = Event()
-
-        # Monitoring thread which performs auto-reconnection to MongoDB
-        thname = 'mappingdb_monitor'
-        sleep  = 5
-        reload_time = config['mappingdb'].get('reload_time', 86400)
-        reload_time_bad_maps = \
-            config['mappingdb'].get('reload_time_bad_maps', 120)
-        start_new_thread(thname, db_monitor, (self.dburi, self.init, sleep,
-            self.load_maps, reload_time, self.check_maps, reload_time_bad_maps))
 
         self.daskeyscache = {}         # to be filled at run time
         self.systems = []              # to be filled at run time
@@ -204,9 +153,6 @@ class DASMapping(object):
         self.dbs_url()
         self.dbs_inst_names = None # re-initialize DAS dbs instances
         self.dbs_instances()
-
-        if notify:
-            self.on_reload()
 
     def init_dasmapscache(self, records=[]):
         "Read DAS maps and initialize DAS API maps"
