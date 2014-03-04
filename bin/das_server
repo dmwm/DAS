@@ -1,6 +1,6 @@
 #!/bin/sh
 
-function usage(){
+usage(){
     echo $usage
     echo "Usage: das_server {start|stdout|stop|status|restart}"
     echo "       start  : load DAS maps and start DAS service"
@@ -18,7 +18,7 @@ fi
 mongo_status="no"
 
 # helper function to check MongoDB status
-function check4db() {
+check4db() {
     mongo=`mongostat --noheaders -n 1 --port 8230 2>&1`
     mongo_ok=`echo $mongo | grep connected`
     if  [ -n "$mongo_ok" ]; then
@@ -31,7 +31,7 @@ function check4db() {
 
 # helper function to wait for MongoDB appearance
 # it will incrementally increase waiting time with 20 iterations (~3minute)
-function wait4db() {
+wait4db() {
     local counter=0
     # check if mongodb is running
     while [  $counter -lt 20 ]; do
@@ -66,9 +66,12 @@ RETVAL=$?
 # DAS pid
 pid=`ps auxwww | grep das_server.py | grep -v grep | awk 'BEGIN{ORS=" "} {print $2}'`
 
-function das_server_status()
+das_server_status()
 {
-    pid=`ps auxwww | grep das_server.py | grep -v grep | awk 'BEGIN{ORS=" "} {print $2}'`
+    if  [ -z $pid ]; then
+        echo "DAS is not running"
+        return
+    fi
     if  [ `uname` == "Darwin" ]; then
         nth=`ps -M -p $pid | grep -v USER | wc -l | awk '{print $1}'`
     else
@@ -76,23 +79,23 @@ function das_server_status()
     fi
     echo "DAS server runs with $nth threads"
     if [ ! -z "${pid}" ]; then
-        echo "DAS web server is running, pid=${pid}"
+        echo "DAS service is running, pid=${pid}"
         ps -f -wwww -p ${pid}
     else
-        echo "DAS web server is not running"
+        echo "DAS service is not running"
     fi
 }
-function stop_das(){
+stop_das(){
     echo "Stop DAS service..."
     if [ -n "${pid}" ]; then
         kill -9 ${pid}
     fi
 }
-function start_das(){
+start_das(){
     echo "Start DAS service..."
     $das_start
 }
-function load_maps_start_das(){
+load_maps_start_das(){
     if [ -z `env | grep DAS_MAP_FILE` ]; then
         echo "Envinronment DAS_MAP_FILE is not set"
         exit 1
@@ -135,7 +138,6 @@ case "$1" in
     das_server_status
     ;;
  stop)
-    echo "Stop DAS service..."
     stop_das
     ;;
  *)
