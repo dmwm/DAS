@@ -7,7 +7,8 @@ This release series is targeted to DAS production stability and quality.
 
 - 2.6.X
 
-  - Add bin/das_wait4db to simplify DAS/MongoDB separation
+  - Re-factor bin/das_server script to support DAS/MongoDB separation
+  - Add support for child dataset=X release=Y site=Z query
   - Add support for dataset parent=X release=Y site=Z query
 
 - 2.5.X
