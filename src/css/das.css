@@ -535,4 +535,5 @@ http://www.sebastiansulinski.co.uk/tutorials/show_item/49/two_column_layout_usin
 }
 .hint-block ul li {
     font-size: 0.9em;
+    list-style-type: none;
 }
