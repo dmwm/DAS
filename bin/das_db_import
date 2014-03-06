@@ -135,7 +135,7 @@ prepare_metadata_db_update(){
     # keylearning
     (echo 'keylearning = db.getSisterDB("keylearning");'
      echo 'keylearning.dropDatabase();') > $STAGEDIR/clean_keylearning.js
-    if [ "$KEYLEARNING_FILE" != "$STAGEDIR" ]; then
+    if [ "$KEYLEARNING_FILE" != "$STAGEDIR/update_keylearning_db.js" ]; then
         cp  $KEYLEARNING_FILE $STAGEDIR
     fi
 
