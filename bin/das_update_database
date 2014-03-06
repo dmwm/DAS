@@ -26,7 +26,7 @@ fi
 echo "using map file: $MAPFILE"
 
 # stage maps for importing and run import, first test location of metadata dir
-if  [ -z "METADATA_DIR" ]; then
+if  [ -n "METADATA_DIR" ]; then
     das_db_import "${WHEN_IMPORT}" "$MAPFILE" $METADATA_DIR
 elif  [ -d $PWD/src/kws_data/db_dumps ]; then
     das_db_import "${WHEN_IMPORT}" "$MAPFILE" $PWD/src/kws_data/db_dumps
