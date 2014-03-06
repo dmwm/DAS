@@ -14,7 +14,17 @@ DASMAPS_FILE=${2:-"$DASROOT/services/cms_maps/das_maps.js"}
 METADATA_DIR=${3:-"$DASROOT/kws_data/db_dumps"}
 JSON_VALIDATOR_DIR="$DASROOT/tools/schema_validators"
 KEYLEARNING_FILE="$METADATA_DIR/update_keylearning_db.js"
-INPUTVAL_FILES="$METADATA_DIR/update_inputvals*.js"
+INPUTVAL_DIR=$METADATA_DIR
+INPUTVAL_FILES="$INPUTVAL_DIR/update_inputvals*.js"
+
+echo "##### Load DAS & KWS maps #####"
+echo "DASMAPS_FILE      : $DASMAPS_FILE"
+echo "METADATA_DIR      : $METADATA_DIR"
+echo "JSON_VALIDATOR_DIR: $JSON_VALIDATOR_DIR"
+echo "KEYLEARNING_FILE  : $KEYLEARNING_FILE"
+echo "INPUTVAL_DIR      : $INPUTVAL_DIR"
+echo "#####"
+
 . das_read_config # exports DAS_MONGO_PORT, DAS_MONGO_HOST
 
 # figure out which md5sum utility exists
@@ -65,22 +75,22 @@ update_db()
 # UPDATE FILE VALIDATION
 # ----------------------
 validate_dasmaps(){
-    local dasmaps="${DASMAPS_FILE}"
+    local dasmaps="$DASMAPS_FILE"
     echo "Validating DASMaps: $dasmaps"
     set -e
-    python "${JSON_VALIDATOR_DIR}/validate_dasmaps.py" $dasmaps
+    python "$JSON_VALIDATOR_DIR/validate_dasmaps.py" $dasmaps
     set +e
 }
 
 validate_metadata(){
     echo "Validating metadata (keylearning, inputvals)"
     set -e
-    python "${JSON_VALIDATOR_DIR}/validate_keylearning.py" "${KEYLEARNING_FILE}"
+    python "$JSON_VALIDATOR_DIR/validate_keylearning.py" "$KEYLEARNING_FILE"
 
-    for file in ${INPUTVAL_FILES}
+    for file in $INPUTVAL_FILES
     do
         echo "validating: $file"
-        python "${JSON_VALIDATOR_DIR}/validate_inputvals.py" "$file"
+        python "$JSON_VALIDATOR_DIR/validate_inputvals.py" "$file"
     done
     set +e
 }
@@ -98,7 +108,9 @@ prepare_das_db_update(){
      echo 'parser.db.drop();'
      echo 'das = db.getSisterDB("das");'
      echo 'das.dropDatabase();') > $STAGEDIR/clean_mapping.js
-    cp $DASMAPS_FILE $STAGEDIR/update_mapping_db.js
+    if [ "DASMAPS_FILE" != "$STAGEDIR/update_mapping_db.js" ]; then
+        cp $DASMAPS_FILE $STAGEDIR/update_mapping_db.js
+    fi
 }
 
 force_dasmap_update(){
@@ -123,12 +135,16 @@ prepare_metadata_db_update(){
     # keylearning
     (echo 'keylearning = db.getSisterDB("keylearning");'
      echo 'keylearning.dropDatabase();') > $STAGEDIR/clean_keylearning.js
-    cp  "${KEYLEARNING_FILE}" $STAGEDIR/
+    if [ "$KEYLEARNING_FILE" != "$STAGEDIR" ]; then
+        cp  $KEYLEARNING_FILE $STAGEDIR
+    fi
 
     # inputvals
     (echo 'inputvals = db.getSisterDB("inputvals");'
      echo 'inputvals.dropDatabase();') > $STAGEDIR/clean_inputvals.js
-    cp ${INPUTVAL_FILES} $STAGEDIR/
+    if [ "$INPUTVAL_DIR" != "$STAGEDIR" ]; then
+        cp $INPUTVAL_FILES $STAGEDIR
+    fi
     set +e
 }
 
