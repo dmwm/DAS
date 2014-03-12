@@ -1,0 +1,29 @@
+#!/bin/bash
+# Author: V. Kuznetsov
+# initial idea: V. Zemleris
+# description: this script validates DAS maps
+
+usage="Usage: das_js_validate <dasmapfile.js> <kws_metadata_dir>"
+if [ $# -ne 2 ] || [ "$1" == "-h" ] || [ "$1" == "-help" ] || [ "$1" == "--help" ]; then
+    echo $usage
+    exit 1
+fi
+set -e
+
+DASROOT=`python -c "import DAS; print '/'.join(DAS.__file__.split('/')[:-1])"`
+DASMAPS_FILE=${1:-"$DASROOT/services/cms_maps/das_maps.js"}
+METADATA_DIR=${2:-"$DASROOT/kws_data/db_dumps"}
+JSON_VALIDATOR_DIR=$DASROOT/tools/schema_validators
+
+echo "Validating DASMaps: $dasmaps"
+python $JSON_VALIDATOR_DIR/validate_dasmaps.py $DASMAPS_FILE
+
+echo "Validating metadata (keylearning, inputvals)"
+python $JSON_VALIDATOR_DIR/validate_keylearning.py $METADATA_DIR/update_keylearning_db.js
+
+INPUTVAL_FILES="$METADATA_DIR/update_inputvals*.js"
+for file in $INPUTVAL_FILES
+do
+    echo "validating: $file"
+    python $JSON_VALIDATOR_DIR/validate_inputvals.py $file
+done
