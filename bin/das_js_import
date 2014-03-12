@@ -1,0 +1,95 @@
+#!/bin/bash
+# Author: V. Kuznetsov, V. Zemleris
+# Description: this script import DAS JS files into MongoDB
+
+usage="Usage: das_js_import <dasmap.js> <kws_data/db_dumps dir>"
+if [ $# -ne 2 ] || [ "$1" == "-h" ] || [ "$1" == "-help" ] || [ "$1" == "--help" ]; then
+    echo $usage
+    exit 1
+fi
+
+set -e
+
+STAGEDIR=${STAGEDIR:-"/tmp/das_tmp_stage"}
+DASROOT=`python -c "import DAS; print '/'.join(DAS.__file__.split('/')[:-1])"`
+DASMAPS_FILE=${1:-"$DASROOT/services/cms_maps/das_maps.js"}
+METADATA_DIR=${2:-"$DASROOT/kws_data/db_dumps"}
+INPUTVAL_FILES="$METADATA_DIR/update_inputvals*.js"
+
+# figure out MongoDB host/port used in DAS via das configuration
+export DAS_MONGO_HOST=`python $DASROOT/tools/config_reader.py --mongo_host`
+export DAS_MONGO_PORT=`python $DASROOT/tools/config_reader.py --mongo_port`
+
+echo "##### DAS & KWS maps parameters #####"
+echo "DASMAPS_FILE      : $DASMAPS_FILE"
+echo "METADATA_DIR      : $METADATA_DIR"
+echo "MONGODB_HOST      : $DAS_MONGO_HOST"
+echo "MONGODB_PORT      : $DAS_MONGO_PORT"
+
+# figure out which md5sum utility exists
+MD5CMD=$(for cmd in md5 md5sum; do type $cmd >/dev/null 2>&1 && echo $cmd && break; done);
+
+# Helper: Update and clean a MongoDB database(s) and its collections
+# Parameters:
+# 1: object_name
+# 2-n: list of strings specifying db_collection  to be updated
+#
+# If the update scripts have changes this will happen:
+# * call clean_${object_name}.js
+# * import update_{db_col,..}.js files into mongodb
+update_db()
+{
+  local obj="$1"
+  local updates=${@:2}  # all subsequent params are the updates
+
+  # calculate stamp over (possibly multiple) collection updates
+  echo "update_db($1)"
+  stamp=$(cd $STAGEDIR && printf "%s\n" $updates | xargs -I{} $MD5CMD "update_{}.js")
+  oldstamp=$(cat ${STAGEDIR}/${obj}-schema-stamp 2>/dev/null)
+  #echo "stamp: $stamp  oldstamp: $oldstamp"
+  if [ ! -f ${STAGEDIR}/${obj}-schema-stamp ] || [ X"$oldstamp" != X"$stamp" ]; then
+    set -e
+    # this seem to exit with 0 even if DB being cleaned do not exist
+    # still we have to check if clean script exists, in case of multiple collections...
+    if [ -f ${STAGEDIR}/clean_${obj}.js ]; then
+        echo "Clean ${obj}"
+        mongo --host "$DAS_MONGO_HOST" --port "$DAS_MONGO_PORT" ${STAGEDIR}/clean_${obj}.js
+    fi
+
+    for entry in ${updates[@]}
+    do
+        db=$(echo ${entry} | cut -f1 -d_) coll=$(echo ${entry} | cut -f2- -d_)
+        echo "Updating db: ${db} col: ${coll}"
+        mongoimport --host "$DAS_MONGO_HOST" --port "$DAS_MONGO_PORT" --db ${db} --collection ${coll} --file ${STAGEDIR}/update_${entry}.js
+    done
+    echo "$stamp" > ${STAGEDIR}/${obj}-schema-stamp
+    set +e
+  else
+    echo "- no changes needed."
+  fi
+}
+
+# PREPARE THE UPDATES
+# -------------------
+
+# prepares main DAS data (DASMaps) for being imported to DB
+prepare_das_db_update(){
+    mkdir -p $STAGEDIR
+    rm -f $STAGEDIR/*mapping*-schema-stamp
+    rm -f $STAGEDIR/*keylearning*-schema-stamp
+    rm -f $STAGEDIR/*inputvals*-schema-stamp
+    if [ "DASMAPS_FILE" != "$STAGEDIR/update_mapping_db.js" ]; then
+        cp -f $DASMAPS_FILE $STAGEDIR/update_mapping_db.js
+    fi
+}
+
+# run the updates now
+run_db_update(){
+    update_db "mapping" "mapping_db"
+    update_db "keylearning" "keylearning_db"
+    update_db "inputvals" inputvals_{datatype,group,release,site,status,tier}_name
+}
+
+# Actions
+prepare_das_db_update
+run_db_update
