@@ -1,0 +1,26 @@
+#!/bin/bash
+# Author: V. Kuznetsov
+# Description: this script validates and imports DAS maps into MongoDB
+
+if [ $# -ne 2 ] || [ "$1" == "-h" ] || [ "$1" == "-help" ] || [ "$1" == "--help" ]; then
+    echo "Usage: das_js_upload <dasmapfile.js> <kws_metadata_dir>"
+    exit 1
+fi
+
+set -e
+
+MAPFILE=${1}
+METADATA_DIR=${2:-""}
+
+# check that we're able to locate das map file
+if [ ! -f "${MAPFILE}" ]; then
+    echo "Unable to locate DAS map file: $MAPFILE"
+    echo "Use das_create_json_maps command to create one"
+    exit 1
+fi
+
+# validate maps
+das_js_validate $MAPFILE $METADATA_DIR
+
+# import maps to MongoDB
+das_js_import $MAPFILE $METADATA_DIR
