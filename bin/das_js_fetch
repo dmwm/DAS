@@ -1,0 +1,44 @@
+#!/bin/bash
+# Author: V. Kuznetsov
+# Description: this script downloads all DAS maps from github location
+
+usage="Usage: das_js_upload <DASMaps URL> <stage dir>"
+if [ $# -ge 1 ]; then
+    echo $usage
+    exit 1
+fi
+if [ "$1" == "-h" ] || [ "$1" == "-help" ] || [ "$1" == "--help" ]; then
+    echo $usage
+    exit 1
+fi
+
+set -e
+
+DASMAPS_URL=${1:-"https://raw.github.com/dmwm/DASMaps/master/js"}
+TMPSTAGEDIR=${2:-"/tmp/DASMaps"}
+
+# fetch DAS maps into TMPSTAGEDIR
+cdir=$PWD
+mkdir -p $TMPSTAGEDIR
+cd $TMPSTAGEDIR
+cmd="curl -s -O"
+$cmd $DASMAPS_URL/clean_keylearning.js
+$cmd $DASMAPS_URL/clean_mapping.js
+$cmd $DASMAPS_URL/das_maps_dbs_dev.js
+$cmd $DASMAPS_URL/das_maps_dbs_int.js
+$cmd $DASMAPS_URL/das_maps_dbs_prod.js
+$cmd $DASMAPS_URL/das_testbed_maps_dbs_dev.js
+$cmd $DASMAPS_URL/das_testbed_maps_dbs_int.js
+$cmd $DASMAPS_URL/das_testbed_maps_dbs_prod.js
+mkdir -p kws
+cd kws
+$cmd $DASMAPS_URL/kws/update_inputvals_datatype_name.js
+$cmd $DASMAPS_URL/kws/update_inputvals_group_name.js
+$cmd $DASMAPS_URL/kws/update_inputvals_primary_dataset_name.js
+$cmd $DASMAPS_URL/kws/update_inputvals_release_name.js
+$cmd $DASMAPS_URL/kws/update_inputvals_site_name.js
+$cmd $DASMAPS_URL/kws/update_inputvals_status_name.js
+$cmd $DASMAPS_URL/kws/update_inputvals_tier_name.js
+$cmd $DASMAPS_URL/kws/update_keylearning_db.js
+cd $PWD
+echo "Fetched DASMaps into: $TMPSTAGEDIR"
