@@ -1,21 +1,32 @@
 #!/bin/bash
 # Author: V. Kuznetsov, V. Zemleris
 # Description: this script import DAS JS files into MongoDB
+# User may setup STAGEDIR, the location where DAS maps will be staged
+# by default the update_mapping_db.js file will be used as main DAS map
+# otherwise das_maps_dbs_prod.js will be copied to STAGEDIR as
+# update_mapping_db.js file
 
-usage="Usage: das_js_import <dasmap.js> <kws_data/db_dumps dir>"
-if [ $# -ne 2 ] || [ "$1" == "-h" ] || [ "$1" == "-help" ] || [ "$1" == "--help" ]; then
+usage="Usage: das_js_import <DASMaps directory>"
+if [ $# -ne 1 ]; then
+    echo $usage
+    exit 1
+fi
+if [ "$1" == "-h" ] || [ "$1" == "-help" ] || [ "$1" == "--help" ]; then
     echo $usage
     exit 1
 fi
 
 set -e
 
+if [ -z $DAS_CONFIG ]; then
+    echo "DAS_CONFIG environment is not set"
+    exit 1
+fi
 STAGEDIR=${STAGEDIR:-"/tmp/das_tmp_stage"}
 DASROOT=`python -c "import DAS; print '/'.join(DAS.__file__.split('/')[:-1])"`
-DASMAPS_FILE=${1:-"$DASROOT/services/cms_maps/das_maps.js"}
-DASMAPS_DIR=`dirname $DASMAPS_FILE`
-METADATA_DIR=${2:-"$DASROOT/kws_data/db_dumps"}
-INPUTVAL_FILES="$METADATA_DIR/update_inputvals*.js"
+DASMAPS_DIR=$1
+DASMAPS_FILE=$DASMAPS_DIR/update_mapping_db.js
+METADATA_DIR=$DASMAPS_DIR/kws
 
 # figure out MongoDB host/port used in DAS via das configuration
 export DAS_MONGO_HOST=`python $DASROOT/tools/config_reader.py --mongo_host`
@@ -23,8 +34,7 @@ export DAS_MONGO_PORT=`python $DASROOT/tools/config_reader.py --mongo_port`
 
 echo "##### DAS & KWS maps parameters #####"
 echo "STAGEDIR          : $STAGEDIR"
-echo "DASMAPS_FILE      : $DASMAPS_FILE"
-echo "METADATA_DIR      : $METADATA_DIR"
+echo "DASMAPS_DIR       : $DASMAPS_DIR"
 echo "MONGODB_HOST      : $DAS_MONGO_HOST"
 echo "MONGODB_PORT      : $DAS_MONGO_PORT"
 
@@ -84,7 +94,11 @@ prepare_das_db_update(){
     rm -f $STAGEDIR/*mapping*-schema-stamp
     rm -f $STAGEDIR/*keylearning*-schema-stamp
     rm -f $STAGEDIR/*inputvals*-schema-stamp
-    cp -f $DASMAPS_FILE $STAGEDIR/update_mapping_db.js
+    if [ -f $DASMAPS_FILE ]; then
+        cp -f $DASMAPS_FILE $STAGEDIR
+    else
+        cp -f $DASMAPS_DIR/das_maps_dbs_prod.js $STAGEDIR/update_mapping_db.js
+    fi
     cp -f $METADATA_DIR/update_keylearning_db.js $STAGEDIR
     cp -f $METADATA_DIR/update_inputvals*.js $STAGEDIR
     cp -f $DASMAPS_DIR/clean*.js $STAGEDIR
