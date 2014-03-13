@@ -2,8 +2,8 @@
 # Author: V. Kuznetsov
 # Description: this script downloads all DAS maps from github location
 
-usage="Usage: das_js_upload <DASMaps URL> <stage dir>"
-if [ $# -ge 1 ]; then
+usage="Usage: das_js_fetch <DASMaps URL> <stage dir>"
+if [ $# -ge 2 ]; then
     echo $usage
     exit 1
 fi
