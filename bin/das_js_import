@@ -13,6 +13,7 @@ set -e
 STAGEDIR=${STAGEDIR:-"/tmp/das_tmp_stage"}
 DASROOT=`python -c "import DAS; print '/'.join(DAS.__file__.split('/')[:-1])"`
 DASMAPS_FILE=${1:-"$DASROOT/services/cms_maps/das_maps.js"}
+DASMAPS_DIR=`dirname $DASMAPS_FILE`
 METADATA_DIR=${2:-"$DASROOT/kws_data/db_dumps"}
 INPUTVAL_FILES="$METADATA_DIR/update_inputvals*.js"
 
@@ -21,6 +22,7 @@ export DAS_MONGO_HOST=`python $DASROOT/tools/config_reader.py --mongo_host`
 export DAS_MONGO_PORT=`python $DASROOT/tools/config_reader.py --mongo_port`
 
 echo "##### DAS & KWS maps parameters #####"
+echo "STAGEDIR          : $STAGEDIR"
 echo "DASMAPS_FILE      : $DASMAPS_FILE"
 echo "METADATA_DIR      : $METADATA_DIR"
 echo "MONGODB_HOST      : $DAS_MONGO_HOST"
@@ -43,9 +45,13 @@ update_db()
   local updates=${@:2}  # all subsequent params are the updates
 
   # calculate stamp over (possibly multiple) collection updates
-  echo "update_db($1)"
   stamp=$(cd $STAGEDIR && printf "%s\n" $updates | xargs -I{} $MD5CMD "update_{}.js")
-  oldstamp=$(cat ${STAGEDIR}/${obj}-schema-stamp 2>/dev/null)
+  if [ -f ${STAGEDIR}/${obj}-schema-stamp ]; then
+      oldstamp=$(cat ${STAGEDIR}/${obj}-schema-stamp 2>/dev/null)
+  else
+      oldstamp="0"
+  fi
+
   #echo "stamp: $stamp  oldstamp: $oldstamp"
   if [ ! -f ${STAGEDIR}/${obj}-schema-stamp ] || [ X"$oldstamp" != X"$stamp" ]; then
     set -e
@@ -78,9 +84,10 @@ prepare_das_db_update(){
     rm -f $STAGEDIR/*mapping*-schema-stamp
     rm -f $STAGEDIR/*keylearning*-schema-stamp
     rm -f $STAGEDIR/*inputvals*-schema-stamp
-    if [ "DASMAPS_FILE" != "$STAGEDIR/update_mapping_db.js" ]; then
-        cp -f $DASMAPS_FILE $STAGEDIR/update_mapping_db.js
-    fi
+    cp -f $DASMAPS_FILE $STAGEDIR/update_mapping_db.js
+    cp -f $METADATA_DIR/update_keylearning_db.js $STAGEDIR
+    cp -f $METADATA_DIR/update_inputvals*.js $STAGEDIR
+    cp -f $DASMAPS_DIR/clean*.js $STAGEDIR
 }
 
 # run the updates now
