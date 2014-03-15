@@ -18,8 +18,7 @@ DASROOT=`python -c "import DAS; print '/'.join(DAS.__file__.split('/')[:-1])"`
 DASMAPS_DIR=$1
 JSON_VALIDATOR_DIR=$DASROOT/tools/schema_validators
 
-#for inst in prod dev int
-for inst in prod
+for inst in prod dev int
 do
 echo "validating: $DASMAPS_DIR/das_maps_dbs_$inst.js"
 python $JSON_VALIDATOR_DIR/validate_dasmaps.py $DASMAPS_DIR/das_maps_dbs_$inst.js
