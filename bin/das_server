@@ -92,24 +92,16 @@ start_das(){
     $das_start
 }
 load_maps_start_das(){
-    if [ -z `env | grep DAS_MAP_FILE` ]; then
-        echo "Envinronment DAS_MAP_FILE is not set"
+    if [ -z `env | grep DASMAPS_DIR` ]; then
+        echo "Envinronment DASMAPS_DIR is not set"
         exit 1
     fi
-    if [ -z `env | grep DAS_KWS_MAPS` ]; then
-        echo "Envinronment DAS_KWS_MAPS is not set"
+    if [ ! -d $DASMAPS_DIR ]; then
+        echo "DAS map directory DASMAPS_DIR=$DASMAPS_DIR does not exists"
         exit 1
     fi
-    if [ ! -f $DAS_MAP_FILE ]; then
-        echo "DAS map file DAS_MAP_FILE=$DAS_MAP_FILE does not exists"
-        exit 1
-    fi
-    if [ ! -d $DAS_KWS_MAPS ]; then
-        echo "DAS KWS map directory DAS_KWS_MAPS=$DAS_KWS_MAPS does not exists"
-        exit 1
-    fi
-    echo "Update DAS maps..."
-    das_update_database $DAS_MAP_FILE $DAS_KWS_MAPS
+    echo "Update DAS maps from $DASMAPS_DIR"
+    das_js_import $DASMAPS_DIR
     echo "Start DAS service..."
     $das_start
 }
