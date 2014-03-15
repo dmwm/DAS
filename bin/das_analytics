@@ -1,6 +1,0 @@
-#!/bin/sh
-
-# find out where DAS is installed on a system
-dasroot=`python -c "import DAS; print '/'.join(DAS.__file__.split('/')[:-1])"`
-# run actual script
-python $dasroot/analytics/controller.py ${1+"$@"}
