@@ -41,16 +41,25 @@ echo "DAS YML: $das_map_dir"
 # build DAS JSON maps out of DAS YML files
 build_das_maps()
 {
+    export PYTHONPATH=$PYTHONPATH:$PWD/src/python
     cmd="python $maps_reader"
     dir=$das_map_dir
     tdir=/tmp/dasmaps
-    rm -rf $tdir
-    mkdir -p $tdir
-    cp $dir/*.yml $tdir
-    for inst in "prod" "int" "dev"
+    for inst in prod int dev
     do
 
+        # get fresh copy of maps, since we'll substitute dbs instances
+        rm -rf $tdir
+        mkdir -p $tdir
+        cp $dir/*.yml $tdir
+
         if [ "$1" == "production" ]; then
+            for amap in `ls $tdir/*.yml`
+            do
+                sed -i -e "s,dbs/prod,dbs/$inst,g" $amap
+                # clean-up back-up files
+                rm -f ${amap}-e
+            done
             map_file="$dir/das_maps.js"
         else
             # testbed maps, replace with testbed urls
@@ -58,11 +67,12 @@ build_das_maps()
             do
                 sed -i -e "s/cmsweb.cern.ch/cmsweb-testbed.cern.ch/g" $amap
                 sed -i -e "s,dbs/prod,dbs/$inst,g" $amap
+                # clean-up back-up files
+                rm -f ${amap}-e
             done
             map_file="$dir/das_testbed_maps.js"
         fi
         rm -f $map_file
-        export PYTHONPATH=$PYTHONPATH:$PWD/src/python
         for amap in `ls $tdir/*.yml`
         do
             $cmd --uri-map=$amap | grep -v "###" >> $map_file
@@ -73,12 +83,9 @@ build_das_maps()
         fname=${map_file%%.*}
         mfile=${fname}_dbs_$inst.js
         cp $map_file $mfile
-        sed -i -e "s,dbs/prod,dbs/$inst,g" $mfile
         # add verification token (md5) to every map
         $cmd --get-verification-token-for=$mfile | grep -v "###" >> $mfile
         echo "Created: $mfile"
-        # clean-up back-up files
-        rm -f ${mfile}-e
     done
     rm -f $map_file
     rm -rf $tdir
