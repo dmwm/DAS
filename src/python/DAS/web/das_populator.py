@@ -27,12 +27,12 @@ def das_populator_helper(dasmgr, query, expire):
         # To allow re-use of queries feeded by DAS populator
         # we need to ensure that instance is present in DAS query,
         # since web interface does it by default.
-        dasquery = dasmgr.adjust_query(query, add_to_analytics=None)
+        dasquery = dasmgr.adjust_query(query)
         if  'instance' not in dasquery:
             raise Exception('Supplied query does not have DBS instance')
         newts = expire_timestamp(expire)
         # process DAS query
-        dasmgr.call(dasquery, add_to_analytics=None)
+        dasmgr.call(dasquery)
         # update DAS expire timestamp
         dasmgr.rawcache.update_das_expire(dasquery, newts)
         print "\n### DAS populator", query, dasquery, expire, newts

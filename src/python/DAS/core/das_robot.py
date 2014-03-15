@@ -187,5 +187,5 @@ class Robot(object):
             sys.exit(1)
 
         while True:
-            self.dascore.call(self.query, add_to_analytics=False)
+            self.dascore.call(self.query)
             time.sleep(self.sleep)

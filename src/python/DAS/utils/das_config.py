@@ -45,16 +45,6 @@ DASOption('keylearningdb', 'dbname', 'string', 'keylearning'),
 DASOption('keylearningdb', 'collname', 'string', 'db'),
 
 #
-# Analytics DB options
-#
-# default db name
-DASOption('analyticsdb', 'dbname', 'string', 'analytics'),
-# default collection name
-DASOption('analyticsdb', 'collname', 'string', 'db'),
-# controls how long records in analytics live, default 2 months
-DASOption('analyticsdb', 'history', 'int', 60*24*60*60),
-
-#
 # ParserDB optins
 #
 # default db name

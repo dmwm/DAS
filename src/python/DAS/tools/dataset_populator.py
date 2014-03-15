@@ -98,7 +98,6 @@ class Maintainer(object):
             - loop over onhold set and invoke expired queries
             - sleep and repeat.
         """
-        add_to_analytics = False
         onhold = {}
         while True:
             jobs = []
@@ -108,8 +107,7 @@ class Maintainer(object):
             for query, expire in onhold.items():
                 if  expire < time.time():
                     print "update %s at %s" % (query, time.time())
-                    jobs.append(self.taskmgr.spawn(\
-                            self.dascore.call, query, add_to_analytics))
+                    jobs.append(self.taskmgr.spawn(self.dascore.call, query))
                     del onhold[query]
             self.taskmgr.joinall(jobs)
             time.sleep(self.sleep)
@@ -130,10 +128,8 @@ class Populator(object):
     def run(self, queries):
         "Run taskmanger with given queries"
         jobs = []
-        add_to_analytics = False
         for query in queries:
-            jobs.append(self.taskmgr.spawn(\
-                    self.dascore.call, DASQuery(query), add_to_analytics))
+            jobs.append(self.taskmgr.spawn(self.dascore.call, DASQuery(query)))
         self.taskmgr.joinall(jobs)
 
 def daemon(config):

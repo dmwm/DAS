@@ -12,7 +12,6 @@ import time
 
 from DAS.utils.das_config import das_readconfig
 from DAS.core.das_mapping_db import DASMapping
-from DAS.core.das_analytics_db import DASAnalytics
 from DAS.core.das_ql import das_special_keys, das_operators
 from DAS.core.das_ply import DASPLY, ply2mongo
 from DAS.utils.utils import print_exc, genkey, dastimestamp
@@ -90,7 +89,6 @@ class QLManager(object):
         if  not self.dasmapping.check_maps():
             msg = "No DAS maps found in MappingDB"
             raise Exception(msg)
-        self.analytics   = DASAnalytics(config)
         self.dasservices = config['services']
         self.daskeysmap  = self.dasmapping.daskeys()
         self.operators   = list(das_operators())
@@ -110,15 +108,10 @@ class QLManager(object):
     def parse(self, query):
         """
         Parse input query and return query in MongoDB form.
-        Optionally parsed query can be written into analytics DB.
         """
         mongo_query = self.mongo_query(query)
         self.convert2skeys(mongo_query)
         return mongo_query
-
-    def add_to_analytics(self, query, mongo_query):
-        "Add DAS query to analytics DB"
-        self.analytics.add_query(query, mongo_query)
 
     def get_ply_query(self, query):
         """

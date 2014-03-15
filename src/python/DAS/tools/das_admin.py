@@ -120,7 +120,7 @@ class DASOptionParser:
              help="specify MongoDB port")
         self.parser.add_option("--db", action="store", dest="db",
              default="das.cache", type="string",
-             help="specify db to use, supported: das.cache, mapping.db, analytics.db")
+             help="specify db to use, supported: das.cache, mapping.db")
         self.parser.add_option("--system", action="store", dest="system",
              default="", type="string",
              help="provide information about specific DAS system, e.g. dbs")
@@ -182,10 +182,6 @@ class DASMongoDB(object):
         dbname = 'parser'
         dbcoll = 'db'
         self.clean(dbname, dbcoll)
-        # analytics
-#        dbname = 'analytics'
-#        dbcoll = 'db'
-#        self.clean(dbname, dbcoll)
 
     def clean(self, dbname, dbcoll):
         """
@@ -294,15 +290,6 @@ class DASMongoDB(object):
 #        print "eval res", res
 
         if  not isystem:
-            nrecords   = self.conn.analytics.db.count()
-            print self.line
-            print "DB report, analytics,", timestamp 
-            print "total number of records:", nrecords
-            # get info about indexes
-            print "Existing indexes:"
-            for row in self.conn.analytics.system.indexes.find({}):
-                print row
-
             nrecords   = self.conn.mapping.db.count()
             print self.line
             print "DB report, mapping,", timestamp 

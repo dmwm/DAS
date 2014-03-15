@@ -355,11 +355,6 @@ class DASQuery(object):
     
     ### Class method ###
 
-    def add_to_analytics(self):
-        "Add DAS query to analytics DB"
-        if  self.mongoparser:
-            self.mongoparser.add_to_analytics(self.query, self.mongo_query)
-
     def params(self):
         "Extract params (keys, conditions and services) from mongo query"
         if  self._params:

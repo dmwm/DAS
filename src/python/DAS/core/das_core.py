@@ -23,7 +23,6 @@ import itertools
 from DAS.core.das_ql import das_operators, das_special_keys
 from DAS.core.das_query import DASQuery
 from DAS.core.das_mapping_db import DASMapping
-from DAS.core.das_analytics_db import DASAnalytics
 from DAS.core.das_keylearning import DASKeyLearning
 from DAS.core.das_mongocache import DASMongocache
 from DAS.utils.query_utils import compare_specs, decode_mongo_query
@@ -102,7 +101,7 @@ class DASCore(object):
         if  debug or self.verbose:
             self.multitask = False # in verbose mode do not use multitask
             dasconfig['das']['multitask'] = False
-        if  not multitask: # explicitly call DASCore ctor, e.g. in analytics
+        if  not multitask: # explicitly call DASCore ctor
             self.multitask = False
             dasconfig['das']['multitask'] = False
         dasconfig['engine'] = engine
@@ -129,9 +128,6 @@ class DASCore(object):
         dasmapping = DASMapping(dasconfig)
         dasconfig['dasmapping'] = dasmapping
         self.mapping = dasmapping
-
-        self.analytics = DASAnalytics(dasconfig)
-        dasconfig['dasanalytics'] = self.analytics
 
         self.keylearning = DASKeyLearning(dasconfig)
         dasconfig['keylearning'] = self.keylearning
@@ -217,7 +213,6 @@ class DASCore(object):
         self.logger.info('input query=%s' % query)
         results = []
         dasquery = DASQuery(query)
-        dasquery.add_to_analytics()
         query    = dasquery.mongo_query
         # check if we have any service which cover the query
         # otherwise decompose it into list of queries
@@ -314,7 +309,7 @@ class DASCore(object):
         das_timer('das_record', self.verbose)
         return ack_services
 
-    def call(self, query, add_to_analytics=True, **kwds):
+    def call(self, query, **kwds):
         """
         Top level DAS api which execute a given query using underlying
         data-services. It follows the following steps:
@@ -364,8 +359,6 @@ class DASCore(object):
             dasquery = DASQuery(query)
         for col in ['merge', 'cache']:
             self.rawcache.remove_expired(dasquery, col)
-        if  add_to_analytics:
-            dasquery.add_to_analytics()
         query  = dasquery.mongo_query
         spec   = query.get('spec')
         fields = query.get('fields')
@@ -447,8 +440,6 @@ class DASCore(object):
             return len([1 for _ in result])
         elif dasquery.aggregators:
             return len(dasquery.aggregators)
-        elif isinstance(fields, list) and 'queries' in fields:
-            return len([1 for _ in self.get_queries(dasquery)])
         return self.rawcache.nresults(dasquery, coll)
 
     def apilist(self, dasquery):
@@ -518,8 +509,6 @@ class DASCore(object):
                     rec = {'_id':0, 'function':func, 'key':key, 'result':empty}
                     rec.update(das)
                     res.append(rec)
-        elif isinstance(fields, list) and 'queries' in fields:
-            res = itertools.islice(self.get_queries(dasquery), idx, idx+limit)
         else:
             res = self.rawcache.get_from_cache(dasquery, idx, limit, \
                     collection=collection)
@@ -527,31 +516,3 @@ class DASCore(object):
             fix_times(row)
             yield row
         das_timer('DASCore::get_from_cache', self.verbose)
-
-    def get_queries(self, dasquery):
-        """
-        Look-up (popular) queries in DAS analytics/logging db
-        """
-        das_timer('DASCore::get_queries', self.verbose)
-        fields = dasquery.mongo_query.get('fields')
-        spec   = dasquery.mongo_query.get('spec')
-        if  'popular' in fields:
-            res = self.analytics.get_popular_queries(spec)
-        else:
-            datestamp = spec.get('date')
-            if  isinstance(datestamp, dict):
-                value = datestamp.get('$in')
-                res = \
-                self.analytics.list_queries(after=value[0], before=value[1])
-            elif isinstance(datestamp, int):
-                res = self.analytics.list_queries(after=datestamp)
-            elif not datestamp:
-                res = self.analytics.list_queries()
-            else:
-                msg = 'Unsupported date value: %s' % datestamp
-                raise Exception(msg)
-        for row in res:
-            rid = row.pop('_id')
-            yield dict(das_query=row, _id=rid)
-        das_timer('DASCore::get_queries', self.verbose)
-
