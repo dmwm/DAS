@@ -25,6 +25,24 @@ das_map : [
      "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+"},
 ]
 ---
+urn: datatiers
+url : "https://cmsweb.cern.ch/dbs/prod/global/DBSReader/datatiers"
+expire : 900
+params : {}
+lookup : tier
+das_map : [
+    {"das_key": "tier", "rec_key":"tier.name"},
+]
+---
+urn: datasetaccesstypes
+url : "https://cmsweb.cern.ch/dbs/prod/global/DBSReader/datasetaccesstypes"
+expire : 900
+params : {}
+lookup : status
+das_map : [
+    {"das_key": "status", "rec_key":"status.name"},
+]
+---
 urn: releaseversions
 url : "https://cmsweb.cern.ch/dbs/prod/global/DBSReader/releaseversions/"
 expire : 900
@@ -640,7 +658,9 @@ notations : [
     {"api_output": "physics_group_name", "rec_key": "name", "api": "physicsgroups"},
     {"api_output": "release_version", "rec_key": "name", "api": "releaseversions"},
     {"api_output": "app_name", "rec_key": "name", "api": "outputconfigs"},
+    {"api_output": "dataset_access_type", "rec_key": "name", "api": "datasetaccesstypes"},
     {"api_output": "dataset_access_type", "rec_key": "status", "api": ""},
+    {"api_output": "data_tier_name", "rec_key": "name", "api": "datatiers"},
 ]
 ---
 input_values: [
