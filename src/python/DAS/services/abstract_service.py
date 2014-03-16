@@ -521,6 +521,10 @@ class DASAbstractService(object):
                     if  apiparam in args:
                         args[apiparam] = val
                         found += 1
+            # check the case when we only have single condition key
+            # and it is the key we look-up
+            if  not found and skeys == [k.split('.')[0] for k in cond.keys()]:
+                found = 1
             # check if number of keys on cond and args are the same
             if  len(cond.keys()) != found:
                 msg = "--- reject API %s, not all condition keys are covered" \
