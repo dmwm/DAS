@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if [ $# -eq 0 ] || [ "$1" == "-h" ] || [ "$1" == "-help" ] || [ "$1" == "--help" ]; then
+if [ $# -ne 0 ] || [ "$1" == "-h" ] || [ "$1" == "-help" ] || [ "$1" == "--help" ]; then
     echo "Usage: das_create_kws_maps"
     exit
 fi
