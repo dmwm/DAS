@@ -148,13 +148,13 @@ def keylearning_js(dascore, query, kfile, verbose=False):
         keys     = list(set(keys))
         system   = result['das']['system'][0]
         urn      = result['das']['api'][0]
-        members  = [dascore.mapping.find_mapkey(system, k) for k in keys]
+        members  = process_document(system, urn, result)
         jsrow = json.dumps(dict(keys=keys, members=members, system=system, urn=urn))
         if  verbose:
             print jsrow
         stream.write(jsrow)
         stream.write('\n')
-        for member in process_document(system, urn, result):
+        for member in members:
             stems = member.split('.')
             jsrow = json.dumps(dict(member=member, stems=stems))
             stream.write(jsrow)
