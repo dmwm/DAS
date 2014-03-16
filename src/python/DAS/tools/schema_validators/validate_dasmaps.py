@@ -50,7 +50,7 @@ MAP_RECORD = And(
         'format': _str,
         'url': _str,
         'urn': _str,
-        'ts': float,
+        'ts': Or(float, int, long),
         'system': _str,
         'das_map': [{
                         'rec_key': _str,
@@ -63,7 +63,7 @@ MAP_RECORD = And(
         'expire': int,
         'lookup': _str,
         'wild_card': _str,
-        'params': {_str: Or(_str, bool, list)},
+        'params': Or({}, {_str: Or(_str, bool, list)}),
         'type': 'service',
         Optional('instances'): list,
     },
@@ -73,7 +73,7 @@ MAP_RECORD = And(
 PRESENTATION_RECORD = And(
     {
     'presentation': dict,
-    'ts': float,
+    'ts': Or(float, int, long),
     'hash': _str,
     'type': 'presentation'},
     check_hash)
@@ -84,7 +84,7 @@ NOTATION_RECORD = And(
                     'api': _str,
                     'api_output': _str}],
      'system': _str,
-     'ts': float,
+     'ts': Or(float, int, long),
      'hash': _str,
      'type': 'notation'
      # TODO: allow optional str:str, as in original validator

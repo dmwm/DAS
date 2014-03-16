@@ -5,11 +5,10 @@ Validation of inputvals json file (in mongoimport format).
 # __author__ = 'Vidmantas Zemleris'
 import sys
 from DAS.tools.schema_validators.json_validator import validate_mongodb_json
-from DAS.tools.schema_validators.schema import Schema, And
+from DAS.tools.schema_validators.schema import Schema, And, Or
 
 INPUTVALS_SCHEMA = \
-    Schema({'_id': {'$oid': And(basestring, len)},
-            'ts': float,
+    Schema({'ts': Or(float, int, long),
             'value': basestring})
 
 def main():
