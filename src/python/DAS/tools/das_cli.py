@@ -8,11 +8,13 @@ DAS command line interface
 __author__ = "Valentin Kuznetsov"
 
 import time
+import json
 from pprint import pformat
 from optparse import OptionParser
 from DAS.core.das_core import DASCore
 from DAS.core.das_query import DASQuery
 from DAS.utils.utils import dump
+from DAS.utils.ddict import DotDict
 from DAS.utils.das_timer import get_das_timer
 
 import sys
@@ -61,6 +63,9 @@ class DASOptionParser(object):
         self.parser.add_option("--no-results", action="store_true",
                                           dest="noresults",
              help="run DAS workflow but don't write results into the cache")
+        self.parser.add_option("--js-file", action="store", type="string",
+                      default="", dest="jsfile",
+             help="create KWS js file for given query")
     def getOpt(self):
         """
         Returns parse list of options
@@ -71,6 +76,20 @@ def iterate(input_results):
     """Just iterate over generator, but don't print it out"""
     for _ in input_results:
         pass
+
+def kws_js(dascore, query, idx, limit, jsfile):
+    "Write result of query into KWS js file"
+    print "Create: %s" % jsfile
+    results = dascore.result(query, idx, limit)
+    with open(jsfile, 'a') as stream:
+        for row in results:
+            pkey = row['das']['primary_key']
+            ddict = DotDict(row)
+            value = ddict[pkey]
+            jsrow = json.dumps(dict(value=value))
+            print jsrow
+            stream.write(jsrow)
+            stream.write('\n')
 
 def run(dascore, query, idx, limit, nooutput, plain):
     """
@@ -130,6 +149,8 @@ def main():
         keys.sort()
         for key in keys:
             print key
+    elif opts.jsfile:
+        kws_js(dascore, query, opts.idx, opts.limit, opts.jsfile)
     elif query:
 
         idx    = opts.idx
