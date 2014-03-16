@@ -1,0 +1,27 @@
+#!/bin/bash
+
+if [ $# -eq 0 ] || [ "$1" == "-h" ] || [ "$1" == "-help" ] || [ "$1" == "--help" ]; then
+    echo "Usage: das_create_kws_maps"
+    exit
+fi
+
+query="type=*"
+das_cli --query=$query --js-file=update_inputvals_datatype_name.js
+query="group=*"
+das_cli --query=$query --js-file=update_inputvals_group_name.js
+query="primary_dataset=*"
+das_cli --query=$query --js-file=update_inputvals_primary_dataset_name.js
+query="release=*"
+das_cli --query=$query --js-file=update_inputvals_release_name.js
+query="site=T1_*"
+das_cli --query=$query --js-file=update_inputvals_site_name.js
+query="site=T2_*"
+das_cli --query=$query --js-file=update_inputvals_site_name.js
+query="site=T3_*"
+das_cli --query=$query --js-file=update_inputvals_site_name.js
+query="status=*"
+das_cli --query=$query --js-file=update_inputvals_status_name.js
+query="tier=*"
+das_cli --query=$query --js-file=update_inputvals_tier_name.js
+query="era=*"
+das_cli --query=$query --js-file=update_inputvals_era_name.js
