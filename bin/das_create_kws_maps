@@ -5,23 +5,69 @@ if [ $# -ne 0 ] || [ "$1" == "-h" ] || [ "$1" == "-help" ] || [ "$1" == "--help"
     exit
 fi
 
+# create inputvals kws maps
 query="type=*"
-das_cli --query=$query --js-file=update_inputvals_datatype_name.js
+das_cli --query="$query" --js-file=update_inputvals_datatype_name.js
 query="group=*"
-das_cli --query=$query --js-file=update_inputvals_group_name.js
+das_cli --query="$query" --js-file=update_inputvals_group_name.js
 query="primary_dataset=*"
-das_cli --query=$query --js-file=update_inputvals_primary_dataset_name.js
+das_cli --query="$query" --js-file=update_inputvals_primary_dataset_name.js
 query="release=*"
-das_cli --query=$query --js-file=update_inputvals_release_name.js
+das_cli --query="$query" --js-file=update_inputvals_release_name.js
 query="site=T1_*"
-das_cli --query=$query --js-file=update_inputvals_site_name.js
+das_cli --query="$query" --js-file=update_inputvals_site_name.js
 query="site=T2_*"
-das_cli --query=$query --js-file=update_inputvals_site_name.js
+das_cli --query="$query" --js-file=update_inputvals_site_name.js
 query="site=T3_*"
-das_cli --query=$query --js-file=update_inputvals_site_name.js
+das_cli --query="$query" --js-file=update_inputvals_site_name.js
 query="status=*"
-das_cli --query=$query --js-file=update_inputvals_status_name.js
+das_cli --query="$query" --js-file=update_inputvals_status_name.js
 query="tier=*"
-das_cli --query=$query --js-file=update_inputvals_tier_name.js
+das_cli --query="$query" --js-file=update_inputvals_tier_name.js
 query="era=*"
-das_cli --query=$query --js-file=update_inputvals_era_name.js
+das_cli --query="$query" --js-file=update_inputvals_era_name.js
+
+# create keylearning kws map
+kfile="--keylearning-file=update_keylearning_db.js"
+query="block,run,lumi dataset=/ZMM/Summer11-DESIGN42_V11_428_SLHC1-v1/GEN-SIM"
+das_cli --query="$query" $kfile
+query="file,lumi dataset=/ZMM/Summer11-DESIGN42_V11_428_SLHC1-v1/GEN-SIM"
+das_cli --query="$query" $kfile
+query="file,run,lumi dataset=/ZMM/Summer11-DESIGN42_V11_428_SLHC1-v1/GEN-SIM"
+das_cli --query="$query" $kfile
+query="run,lumi dataset=/ZMM/Summer11-DESIGN42_V11_428_SLHC1-v1/GEN-SIM"
+das_cli --query="$query" $kfile
+query="run=160915"
+das_cli --query="$query" $kfile
+query="run between [160915,160917]"
+das_cli --query="$query" $kfile
+query="dataset dataset=/HICorePhysics/HIRun2010-ZMM-v2/RAW-RECO"
+das_cli --query="$query" $kfile
+query="summary dataset=/HICorePhysics/HIRun2010-ZMM-v2/RAW-RECO"
+das_cli --query="$query" $kfile
+query="block block=/HICorePhysics/HIRun2010-ZMM-v2/RAW-RECO#a843ec69-8e53-4c6d-81f3-52aa883d4399"
+das_cli --query="$query" $kfile
+query="block block=/DoubleMu/Run2012A-Zmmg-13Jul2012-v1/RAW-RECO#99a4c51c-d351-11e1-bb62-00221959e69e"
+das_cli --query="$query" $kfile
+query="file=/store/hidata/HIRun2010/HICorePhysics/RAW-RECO/v2/000/150/619/F4535E01-5CED-DF11-81E4-003048673F08.root"
+das_cli --query="$query" $kfile
+query="site=T1_CH_CERN"
+das_cli --query="$query" $kfile
+query="release=CMSSW_2_0_8"
+das_cli --query="$query" $kfile
+query="group=Top"
+das_cli --query="$query" $kfile
+query="site dataset=/BJetPlusX/Run2012C-PromptReco-v1/AOD"
+das_cli --query="$query" $kfile
+query="lumi run=176304"
+das_cli --query="$query" $kfile
+query="jobsummary date last 24h"
+das_cli --query="$query" $kfile
+query="primary_dataset=Cosmics"
+das_cli --query="$query" $kfile
+query="summary dataset=/HICorePhysics/HIRun2010-ZMM-v2/RAW-RECO run=150619"
+das_cli --query="$query" $kfile
+query="user user=valya"
+das_cli --query="$query" $kfile
+query="run dataset=/HICorePhysics/HIRun2010-ZMM-v2/RAW-RECO"
+das_cli --query="$query" $kfile
