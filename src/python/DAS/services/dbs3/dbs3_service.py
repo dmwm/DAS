@@ -629,6 +629,11 @@ class DBS3Service(DASAbstractService):
                 if  block:
                     row.update({"block": block})
                 yield row
+        elif api == 'releaseversions':
+            for row in gen:
+                values = row['release']['release_version']
+                for val in values:
+                    yield dict(release=dict(name=val))
         elif api == 'datasetaccesstypes':
             for row in gen:
                 values = row['status']['dataset_access_type']
