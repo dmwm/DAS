@@ -673,12 +673,10 @@ class DASMapping(object):
             return False
         ikeys = [k.split('.')[0] for k in icond.keys()]
         dkeys = []
-        params = entry.get('params', {})
         for row in entry.get('das_map', []):
             if  'api_arg' in row:
                 das_key = row['das_key']
-                if  params.get(das_key, '') != 'optional':
-                    dkeys.append(das_key)
+                dkeys.append(das_key)
             else:
                 dkeys.append(row['das_key'])
         if  set(ikeys) & set(dkeys) == set(ikeys):
