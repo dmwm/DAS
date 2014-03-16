@@ -24,13 +24,9 @@ install:
   # install
   - python setup.py install
   - source ./init_env.sh
-  - das_create_json_maps src/python/DAS/services/maps
-  - mkdir -p das_maps/kws
-  - mv src/python/DAS/services/maps/*.js das_maps
-  - das_create_kws_maps
-  - mv update_*.js das_maps/kws
-  - das_js_validate das_maps
-  - das_js_import das_maps
+  - git clone https://github.com/dmwm/DASMaps
+  - das_js_validate DASMaps/js
+  - das_js_import DASMaps/js
   
   # init datasets cache (used in unit tests)
   - MONGO_PORT=27017
