@@ -124,7 +124,7 @@ class DASMapping(object):
         self.apicache = {}             # to be filled at run time
         self.dbs_global_url = None     # to be determined at run time
         self.dbs_inst_names = None     # to be determined at run time
-        self.load_maps(notify=False)
+        self.load_maps()
 
         # cache the instance and return it
         DASMapping.__cached_inst = self
@@ -142,7 +142,7 @@ class DASMapping(object):
     # ===============
     # Management APIs
     # ===============
-    def load_maps(self, notify=True):
+    def load_maps(self):
         "Helper function to reload DAS maps"
         self.init_dasmapscache()
         self.init_notationcache()
