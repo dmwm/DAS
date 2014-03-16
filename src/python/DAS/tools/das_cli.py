@@ -65,10 +65,10 @@ class DASOptionParser(object):
              help="run DAS workflow but don't write results into the cache")
         self.parser.add_option("--js-file", action="store", type="string",
                       default="", dest="jsfile",
-             help="create KWS js file for given query")
+             help="create/update KWS js file for given query")
         self.parser.add_option("--keylearning-file", action="store", type="string",
                       default="", dest="kfile",
-             help="create KWS keylearning file for given query")
+             help="create/update KWS keylearning file for given query")
     def getOpt(self):
         """
         Returns parse list of options
