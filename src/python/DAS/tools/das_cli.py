@@ -77,7 +77,7 @@ def iterate(input_results):
     for _ in input_results:
         pass
 
-def kws_js(dascore, query, idx, limit, jsfile):
+def kws_js(dascore, query, idx, limit, jsfile, verbose=False):
     "Write result of query into KWS js file"
     print "Create: %s" % jsfile
     results = dascore.result(query, idx, limit)
@@ -89,7 +89,8 @@ def kws_js(dascore, query, idx, limit, jsfile):
             if  value == '*' or value == 'null' or not value:
                 continue
             jsrow = json.dumps(dict(value=value))
-            print jsrow
+            if  verbose:
+                print jsrow
             stream.write(jsrow)
             stream.write('\n')
 
@@ -116,7 +117,7 @@ def main():
 
     t0 = time.time()
     query = opts.query
-    if  'instance' not in query:
+    if  'instance' not in query and 'grep' not in query:
         query += ' instance=prod/global'
     debug = opts.verbose
     dascore = DASCore(debug=debug, nores=opts.noresults)
@@ -152,7 +153,7 @@ def main():
         for key in keys:
             print key
     elif opts.jsfile:
-        kws_js(dascore, query, opts.idx, opts.limit, opts.jsfile)
+        kws_js(dascore, query, opts.idx, opts.limit, opts.jsfile, debug)
     elif query:
 
         idx    = opts.idx
