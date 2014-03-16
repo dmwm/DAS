@@ -86,6 +86,8 @@ def kws_js(dascore, query, idx, limit, jsfile):
             pkey = row['das']['primary_key']
             ddict = DotDict(row)
             value = ddict[pkey]
+            if  value == '*' or value == 'null' or not value:
+                continue
             jsrow = json.dumps(dict(value=value))
             print jsrow
             stream.write(jsrow)
