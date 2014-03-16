@@ -4,6 +4,15 @@ format : JSON
 urn : rr_xmlrpc
 url : "http://runregistry.web.cern.ch/runregistry/"
 expire : 3600
+params : {"run": ""}
+lookup : run
+das_map : [
+    {"das_key":"run","rec_key":"run.run_number","api_arg":"run"},
+]
+---
+urn : rr_xmlrpc2
+url : "http://runregistry.web.cern.ch/runregistry/"
+expire : 3600
 params : {"run": "", "date": ""}
 lookup : run
 das_map : [
