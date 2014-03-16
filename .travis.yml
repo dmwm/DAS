@@ -14,7 +14,7 @@ install:
   #- pip install --use-mirrors   pylint flake8 # not used yet: coverage
 
   - git clone https://github.com/dmwm/DASMaps
-  - cp DASMaps/nltk $HOME/nltk_data
+  - cp -r DASMaps/nltk $HOME/nltk_data
   #- python -m nltk.downloader -e words stopwords wordnet
 
   # use default MongoDB port which is available in travis
