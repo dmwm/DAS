@@ -11,7 +11,7 @@ expire : 900
 params : {"era":"optional"}
 lookup : era
 das_map : [
-    {"das_key": "era", "rec_key":"era", "api_arg":"era"},
+    {"das_key": "era", "rec_key":"era.name", "api_arg":"era"},
 ]
 ---
 urn: datatypes
