@@ -66,5 +66,3 @@ DAS has a several special keywords: *system, date, instance, records*.
   *records site=T1_CH_CERN\** to do that. In that case user will get back
   all records (site, block records) associated with given condition.
 
-
-.. include:: das_queries.rst

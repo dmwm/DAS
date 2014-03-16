@@ -88,8 +88,9 @@ def result_to_dasql(result, frmt='text', shorten_html=True,
                     max_value_len=UI_MAX_DISPLAYED_VALUE_LEN):
     """
     returns proposed query as DASQL in there formats:
-    * text - standard DASQL
-    * html - colorified DASQL with long values shortened down (if shorten_html
+
+    - text, standard DASQL
+    - html, colorified DASQL with long values shortened down (if shorten_html
         is specified)
     """
     patterns = DASQL_PATTERNS[frmt]

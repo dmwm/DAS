@@ -78,4 +78,3 @@ DAS source code is freely available from [DAS]_ github repository. To install
 it on your system you need to use `git` which can be found from [GIT]_ web
 site.
 
-.. include:: dependencies.rst

@@ -1,7 +1,3 @@
-.. _das_about
-.. include:: introduction.rst
-
-.. _das_works
 How DAS works?
 ==============
 
@@ -11,7 +7,6 @@ How DAS works?
    workflow
 
 
-.. _das_how
 How to use DAS?
 ===============
 
@@ -21,5 +16,5 @@ DAS can be used from web interface, through a command line interface, or accesse
    :maxdepth: 2
    
    das_ql
+   das_queries
    das_client
-

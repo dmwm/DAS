@@ -1,3 +1,5 @@
+.. _das_config:
+
 DAS configuration file
 ======================
 

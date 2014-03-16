@@ -4,7 +4,6 @@ Code documentation
 .. toctree::
    :maxdepth: 4
 
-   code/analytics.rst
    code/core.rst
    code/services.rst
    code/web.rst
