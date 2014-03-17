@@ -40,6 +40,22 @@ class testDASMapping(unittest.TestCase):
         self.pmap = {"presentation": {"block":[{"ui": "Block name", "das": "block.name"},
             {"ui": "Block size", "das": "block.size"}]}, "type": "presentation"}
         self.coll.insert(self.pmap)
+
+        url     = 'https://cmsweb.cern.ch/dbs/prod/global/DBSReader/acquisitioneras/'
+        dformat = 'JSON'
+        system  = 'dbs3'
+        expire  = 100
+        rec = {'system':system, 'urn': 'acquisitioneras', 'format':dformat,
+            'instances': ['prod/global'],
+            'url':url, 'expire': expire, 'lookup': 'era',
+            'params' : {},
+             'das_map': [
+                 {"das_key": "era", "rec_key":"era.name", "api_arg":"era"}
+                 ],
+             'type': 'service'
+        }
+        self.coll.insert(rec)
+
         ver_token = verification_token(self.coll.find(exhaust=True))
         rec = {'verification_token':ver_token, 'type':'verification_token'}
         self.coll.insert(rec)
@@ -55,55 +71,52 @@ class testDASMapping(unittest.TestCase):
         self.mgr.delete_db()
         self.mgr.init()
 
-        apiversion = 'DBS_2_0_8'
-        url     = 'http://a.com'
+        system  = 'dbs3'
+        url     = 'https://cmsweb.cern.ch/dbs/prod/global/DBSReader'
         dformat = 'JSON'
         expire  = 100
+        instances = ["prod/global", "prod/phys01"]
 
-        api = 'listRuns'
-        params = { 'apiversion':apiversion, 'path' : 'required', 'api':api}
-        rec = {'system':'dbs', 'urn':api, 'format':dformat, 'url':url,
-            'params': params, 'expire':expire, 'lookup': 'run', 'wild_card':'*',
-            'das_map' : [dict(das_key='run', rec_key='run.run_number', api_arg='path')],
+        api = 'primarydatasets'
+        params = {"primary_ds_name":"*"}
+        rec = {'system':system, 'urn':api, 'format':dformat, 'url':url,
+            'instances': instances,
+            'params': params, 'expire':expire, 'lookup': 'primary_dataset', 'wild_card':'*',
+            'das_map' : [dict(das_key='primary_dataset',
+                              rec_key='primary_dataset.name',
+                              api_arg='primary_dataset')],
             'type': 'service'
         }
         self.mgr.add(rec)
-        smap = {api: {'url':url, 'expire':expire, 'keys': ['run'],
+        smap = {api: {'url':url, 'expire':expire, 'keys': ['primary_dataset'],
                 'format': dformat, 'wild_card':'*', 'cert':None, 'ckey': None,
-                'services': '', 'lookup': 'run',
-                'params': {'path': 'required', 'api': api,
-                           'apiversion': 'DBS_2_0_8'}
-                     }
+                'services': '', 'lookup': 'primary_dataset',
+                'params': params }
         }
 
-        rec = {'system':'dbs', 'urn': 'listBlocks', 'format':dformat,
-            'url':url, 'expire': expire, 'lookup': 'block',
-            'params' : {'apiversion': apiversion, 'api': 'listBlocks',
-                        'block_name':'*', 'storage_element_name':'*',
-                        'user_type':'NORMAL'},
+        rec = {'system':system, 'urn': 'datasetaccesstypes', 'format':dformat,
+            'instances': instances,
+            'url':url, 'expire': expire, 'lookup': 'status',
+            'params' : {'status':'*'},
              'das_map': [
-                 {'das_key':'block', 'rec_key':'block.name', 'api_arg':'block_name'},
-                 {'das_key':'site', 'rec_key':'site.se', 'api_arg':'storage_element_name',
-                  'pattern':"re.compile('([a-zA-Z0-9]+\.){2}')"},
+                 {"das_key": "status", "rec_key":"status.name", "api_arg":"status"}
                  ],
              'type': 'service'
         }
         self.mgr.add(rec)
 
 
-        system = 'dbs'
-        api = 'listBlocks'
-        daskey = 'block'
-        rec_key = 'block.name'
-        api_input = 'block_name'
+        api = 'datasetaccesstypes'
+        daskey = 'status'
+        rec_key = 'status.name'
+        api_input = 'status'
 
         res = self.mgr.list_systems()
-        self.assertEqual(['dbs'], res)
+        self.assertEqual([system], res)
 
         res = self.mgr.list_apis()
-#        self.assertEqual([api], res)
         res.sort()
-        self.assertEqual(['listBlocks', 'listRuns'], res)
+        self.assertEqual(['datasetaccesstypes', 'primarydatasets'], res)
 
         res = self.mgr.lookup_keys(system, api, daskey)
         self.assertEqual([rec_key], res)
@@ -133,15 +146,13 @@ class testDASMapping(unittest.TestCase):
 
         # API keys
         res = self.mgr.api2daskey(system, api)
-        self.assertEqual(['block', 'site'], res)
+        self.assertEqual(['status'], res)
 
         # build service map
         smap.update({api: {'url':url, 'expire':expire, 'cert':None, 'ckey': None,
-                'keys': ['block', 'site'], 'format':dformat, 'wild_card':'*',
+                'keys': ['status'], 'format':dformat, 'wild_card':'*',
                 'services': '', 'lookup': daskey,
-                'params': {'storage_element_name': '*', 'api':api,
-                           'block_name': '*', 'user_type': 'NORMAL',
-                           'apiversion': 'DBS_2_0_8'}
+                'params': {"status": "*"}
                      }
         })
         res = self.mgr.servicemap(system)

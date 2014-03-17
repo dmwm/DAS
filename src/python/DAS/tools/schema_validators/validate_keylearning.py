@@ -9,13 +9,11 @@ from DAS.tools.schema_validators.schema import Schema, And, Or
 
 
 KEYLEARNING_SCHEMA = \
-    Schema(Or({'_id': {'$oid': And(basestring, len)},
-               'keys': [basestring, ],
+    Schema(Or({'keys': [basestring, ],
                'members': [basestring, ],
                'system': basestring,
                'urn': basestring},
-              {'_id': {'$oid': And(basestring, len)},
-               'member': basestring,
+              {'member': basestring,
                'stems': [basestring, ]}))
 
 

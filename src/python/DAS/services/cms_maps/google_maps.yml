@@ -1,0 +1,25 @@
+system : google_maps
+format : JSON
+---
+urn : google_geo_maps
+url : "http://maps.google.com/maps/geo"
+expire : 30
+params : { "q" : "required", "output": "json" }
+lookup : city
+das_map : [
+    {"das_key":"city","rec_key":"city.name","api_arg":"q"},
+]
+---
+urn : google_geo_maps_zip
+url : "http://maps.google.com/maps/geo"
+expire : 30
+params : { "q" : "required", "output": "json" }
+lookup : zip
+das_map : [
+    {"das_key":"zip","rec_key":"zip.code","api_arg":"q"},
+]
+---
+notations : [
+    {"api_output":"zip.name", "rec_key":"zip.code", "api":""},
+    {"api_output":"name", "rec_key":"code", "api":"google_geo_maps_zip"},
+]

@@ -7,7 +7,7 @@ DAS operations
 Running DAS services
 --------------------
 
-DAS consists of multi-threaded DAS web and DAS analytics servers.
+DAS consists of multi-threaded DAS web and keyword search KWS servers.
 Please refer to :ref:`DAS CMS operations <cms_operations>` section for deployment instructions
 and :ref:`DAS configuration <das_config>` section for description of configuration
 parameters.
@@ -15,7 +15,7 @@ parameters.
 By CMS conventions DAS uses the following ports
 
 - 8212 for DAS web server
-- 8213 for DAS analytics server
+- 8214 for DAS KWS server
 
 In order to start each of server you need to setup your environment, see
 :ref:`setup.sh <setup.sh>` file. For that use the following steps:
@@ -122,53 +122,6 @@ The DAS core multitasking can be turned off by using
 
 parameter.
 
-DAS analytics server
---------------------
-
-The DAS analytics is complementary set of daemons who can populate DAS cache
-based on provided tasks, see :ref:`DAS analytics <das_analytics>`. Their server
-can be started as simple as 
-
-.. doctest::
-
-    python -u $DAS_PYTHONPATH/DAS/analytics/analytics_controller.py $DAS_ANALYTICS_CFG
-
-where analytics_controller.py expects a valid DAS analytics config file. Below you can
-find a simple version of analytics configuration file (in CMS configuration format):
-
-.. doctest::
-
-
-    logfile_rotating_size = 100000 
-    log_to_stdout = 0
-    log_to_file = 0 
-    web_history = 10000 
-    minimum_interval = 60 
-    log_format = "" 
-    max_retries = 1 
-    retry_delay = 60 
-    logfile = "/tmp/das_analytics.log" 
-    logfile_rotating_interval = 24 
-    no_start_offset = False 
-    web = True 
-    web_port = 8213 
-    logfile_mode = "None" 
-    workers = 4
-    log_to_stderr = 0 
-    web_base = "/analytics" 
-    logfile_rotating_count = 0
-    pid = "/tmp/analytics.pid"
-
-    # delta = finish-start (finish = start+period)
-    # period: the calls to be considered by analytics, default 1 month
-    # allowed_gap: is maximum gap in the summary record we are happy to ignore, default 1h
-    # interval: interval of the task, suggested value 14400 (4 hours) 
-
-    # here interval=14400, 4 hours
-    # while preempt argument specify at which time task should be run before results are expired.
-    Task("SiteHotspot", "ValueHotspot", 14400, key="site.name")
-    Task("DatasetHotspot", "ValueHotspot", 3600, key="dataset.name")
-
 DAS administration
 ------------------
 
@@ -180,7 +133,12 @@ They are located at $DAS_ROOT/bin.
 - das_code_quality.sh is a bash script to check DAS code quality. It is based on pylint
   tool, see [PYLINT]_.
 - das_config is a tool to create DAS configuration file;
-- das_update_database is a tool to update DAS maps, and initialize other metadata
+- das_js_fetch script fetches DAS maps from remote github repository
+- das_js_validate script validates DAS maps
+- das_js_import script imports DAS and KWS maps into MongoDB
+- das_js_update script fetches, validate and import DAS and KWS maps into
+  MongoDB
 - das_maps_yml2json is a tool that generates json DB dumps from YML dasmaps.
-- das_db_import is a helper used to import the DB dumps including dasmaps, keylearning, inputvals
 - das_mapreduce is a tool to create map/reduce function for DAS;
+- das_stress_test script provides ability to perform stress tests against DAS
+  server

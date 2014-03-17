@@ -19,14 +19,14 @@ def flatten(list_of_lists):
 
 
 def is_reserved_field(field, result_type):
-    """ returns whether the field is reserved, e.g. *.error, *.reason, qhash """
+    """returns whether the field is reserved, e.g. `*.error`, `*.reason`, `qhash`"""
     return field in DAS_RESERVED_FIELDS or \
         field.replace(result_type, '*') in DAS_RESERVED_FIELDS
 
 
 def result_contained_errors(rec):
-    """ decide whether keylearning record contain errors (i.e. as responses from
-    services contained errors) and whether the record shall be excluded """
+    """decide whether keylearning record contain errors (i.e. as responses from
+    services contained errors) and whether the record shall be excluded"""
     errors = any(1 for field in rec.get('members', [])
                  if field.endswith('.error'))
     if errors and FULL_DEBUG:
@@ -35,7 +35,7 @@ def result_contained_errors(rec):
 
 
 def get_titles_by_field(dascore):
-    """ returns a dict of titles taken from presentation cache """
+    """returns a dict of titles taken from presentation cache"""
     titles_by_field = {}
     for titles in dascore.mapping.presentationcache.itervalues():
         for entry in titles:
@@ -86,7 +86,7 @@ def get_outputs_field_list(dascore):
 
 
 def print_debug(dascore, fields_by_entity, results_by_entity):
-    """ verbose output for get_outputs_field_list """
+    """verbose output for get_outputs_field_list"""
     if FULL_DEBUG:
         print 'keylearning collection:', dascore.keylearning.col
         print 'keylearning members:'

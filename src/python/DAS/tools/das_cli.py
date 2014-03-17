@@ -8,11 +8,13 @@ DAS command line interface
 __author__ = "Valentin Kuznetsov"
 
 import time
+import json
 from pprint import pformat
 from optparse import OptionParser
 from DAS.core.das_core import DASCore
 from DAS.core.das_query import DASQuery
 from DAS.utils.utils import dump
+from DAS.utils.ddict import DotDict
 from DAS.utils.das_timer import get_das_timer
 
 import sys
@@ -61,6 +63,12 @@ class DASOptionParser(object):
         self.parser.add_option("--no-results", action="store_true",
                                           dest="noresults",
              help="run DAS workflow but don't write results into the cache")
+        self.parser.add_option("--js-file", action="store", type="string",
+                      default="", dest="jsfile",
+             help="create/update KWS js file for given query")
+        self.parser.add_option("--keylearning-file", action="store", type="string",
+                      default="", dest="kfile",
+             help="create/update KWS keylearning file for given query")
     def getOpt(self):
         """
         Returns parse list of options
@@ -71,6 +79,86 @@ def iterate(input_results):
     """Just iterate over generator, but don't print it out"""
     for _ in input_results:
         pass
+
+def kws_js(dascore, query, idx, limit, jsfile, verbose=False):
+    "Write result of a given query into KWS js file"
+    print "Create: %s" % jsfile
+    results = dascore.result(query, idx, limit)
+    tstamp = long(time.time())
+    with open(jsfile, 'a') as stream:
+        for row in results:
+            pkey = row['das']['primary_key']
+            ddict = DotDict(row)
+            value = ddict[pkey]
+            if  value == '*' or value == 'null' or not value:
+                continue
+            jsrow = json.dumps(dict(value=value, ts=tstamp))
+            if  verbose:
+                print jsrow
+            stream.write(jsrow)
+            stream.write('\n')
+
+def process_document(system, urn, doc):
+    """
+    Process a rawcache document record coming from one API of a service.
+    Find all the unique output fields and insert them into the cache.
+    """
+    members = set()
+    for key in doc.keys():
+        if key not in ('das', '_id', 'das_id', 'cache_id', 'qhash'):
+            members |= recursive_walk(doc[key], key)
+    return list(members)
+
+def recursive_walk(doc, prefix):
+    """
+    Recurse through a nested data structure, finding all
+    the unique endpoint names. Lists are iterated over but do
+    not add anything to the prefix, eg.:
+
+    a: {b: 1, c: {d: 1, e: 1}, f: [{g: 1}, {h: 1}]} ->
+    a.b, a.c.d, a.c.e, a.f.g, a.f.h
+
+    (although normally we would expect each member of a list to
+    have the same structure)
+    """
+    result = set()
+    if isinstance(doc, dict):
+        for key in doc.keys():
+            result |= recursive_walk(doc[key], prefix + '.' + key)
+    elif isinstance(doc, list):
+        for item in doc:
+            result |= recursive_walk(item, prefix)
+    else:
+        result.add(prefix)
+    return result
+
+def keylearning_js(dascore, query, kfile, verbose=False):
+    "Create keylearning js file from series of given query"
+    print "Create: %s" % kfile
+    with open(kfile, 'a') as stream:
+        dasquery = DASQuery(query)
+        result   = [r for r in dascore.result(dasquery, 0, 1)][0] # get one record only
+        if  verbose:
+            print dasquery
+            print result
+        mongo_q  = dasquery.mongo_query
+        skip     = ['das_id', 'cache_id', 'qhash', 'error', 'reason', 'das']
+        keys     = [k for k in mongo_q['fields'] if k not in skip]
+        keys    += [k.split('.')[0] for k in mongo_q['spec'].keys()]
+        keys     = list(set(keys))
+        system   = result['das']['system'][0]
+        urn      = result['das']['api'][0]
+        members  = process_document(system, urn, result)
+        jsrow = json.dumps(dict(keys=keys, members=members, system=system, urn=urn))
+        if  verbose:
+            print jsrow
+        stream.write(jsrow)
+        stream.write('\n')
+        for member in members:
+            stems = member.split('.')
+            jsrow = json.dumps(dict(member=member, stems=stems))
+            stream.write(jsrow)
+            stream.write('\n')
 
 def run(dascore, query, idx, limit, nooutput, plain):
     """
@@ -96,7 +184,7 @@ def main():
     t0 = time.time()
     query = opts.query
     if  'instance' not in query:
-        query += ' instance=prod/global'
+        query = ' instance=prod/global ' + query
     debug = opts.verbose
     dascore = DASCore(debug=debug, nores=opts.noresults)
     if  opts.hash:
@@ -130,6 +218,12 @@ def main():
         keys.sort()
         for key in keys:
             print key
+    elif opts.jsfile:
+        kws_js(dascore, query, opts.idx, opts.limit, opts.jsfile, debug)
+        sys.exit(0)
+    elif opts.kfile:
+        keylearning_js(dascore, query, opts.kfile, debug)
+        sys.exit(0)
     elif query:
 
         idx    = opts.idx

@@ -59,10 +59,13 @@ class MultiKwdAttributeMatcher(object):
         """
         params: a tokenized list of keywords (e.g. ["a b c", 'a', 'b'])
         returns: a list of fields matching a combination of nearby keywords
-        {
-            '[result_type]':
-                [ matched_field, ...]
-        }
+
+        .. doctest::
+
+            {
+                '[result_type]':
+                    [ matched_field, ...]
+            }
         """
 
         if not get_setting('SERVICE_RESULT_FIELDS'):

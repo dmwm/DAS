@@ -181,7 +181,9 @@ def tokenize(query):
     tokenizes the query retaining the phrases in brackets together
     it also tries to group "word operator word" sequences together, such as
 
-    "number of events">10 or dataset=/Zmm/*/raw-reco
+    .. doctest::
+
+        "number of events">10 or dataset=/Zmm/*/raw-reco
 
     so it could be used for further processing.
 
@@ -189,24 +191,26 @@ def tokenize(query):
 
     For example:
 
-    >>> tokenize('file dataset=/Zmm*/*/raw-reco lumi=20853 nevents>10'\
-                 '"number of events">10 /Zmm*/*/raw-reco')
-    ['file', 'dataset=/Zmm*/*/raw-reco', 'lumi=20853', 'nevents>10', \
-'number of events>10', '/Zmm*/*/raw-reco']
+    .. doctest::
 
-    >>> tokenize('file dataset=/Zmm*/*/raw-reco lumi=20853 dataset.nevents>10'\
-                 '"number of events">10 /Zmm*/*/raw-reco')
-    ['file', 'dataset=/Zmm*/*/raw-reco', 'lumi=20853', 'dataset.nevents>10', \
-'number of events>10', '/Zmm*/*/raw-reco']
+        >>> tokenize('file dataset=/Zmm*/*/raw-reco lumi=20853 nevents>10'\
+                     '"number of events">10 /Zmm*/*/raw-reco')
+        ['file', 'dataset=/Zmm*/*/raw-reco', 'lumi=20853', 'nevents>10', \
+    'number of events>10', '/Zmm*/*/raw-reco']
 
-    >>> tokenize("file dataset=/Zmm*/*/raw-reco lumi=20853 dataset.nevents>10" \
-                 "'number of events'>10 /Zmm*/*/raw-reco")
-    ['file', 'dataset=/Zmm*/*/raw-reco', 'lumi=20853', 'dataset.nevents>10', \
-'number of events>10', '/Zmm*/*/raw-reco']
+        >>> tokenize('file dataset=/Zmm*/*/raw-reco lumi=20853 dataset.nevents>10'\
+                     '"number of events">10 /Zmm*/*/raw-reco')
+        ['file', 'dataset=/Zmm*/*/raw-reco', 'lumi=20853', 'dataset.nevents>10', \
+    'number of events>10', '/Zmm*/*/raw-reco']
+
+        >>> tokenize("file dataset=/Zmm*/*/raw-reco lumi=20853 dataset.nevents>10" \
+                     "'number of events'>10 /Zmm*/*/raw-reco")
+        ['file', 'dataset=/Zmm*/*/raw-reco', 'lumi=20853', 'dataset.nevents>10', \
+    'number of events>10', '/Zmm*/*/raw-reco']
 
 
-    >>> tokenize('user=vidmasze@cern.ch')
-    ['user=vidmasze@cern.ch']
+        >>> tokenize('user=vidmasze@cern.ch')
+        ['user=vidmasze@cern.ch']
 
     """
     query = cleanup_query(query)

@@ -2,7 +2,7 @@ Release notes
 =============
 
 .. rubric:: Release 2.X.Y series
---------------------------------
+
 This release series is targeted to DAS production stability and quality.
 
 - 2.6.X
@@ -172,7 +172,7 @@ This release series is targeted to DAS production stability and quality.
 
 
 .. rubric:: Release 1.X.Y series
---------------------------------
+
 - 1.12.X
 
   - Fix wildcards to provide more informative messages in text mode
@@ -620,7 +620,6 @@ This release series is targeted to DAS production stability and quality.
     CMS representation. See ticket 1975.
 
 .. rubric:: Release 0.9.X series
---------------------
 
 - 0.9.X
 
@@ -655,7 +654,6 @@ This release series is targeted to DAS production stability and quality.
   - remove extra cherrypy logging, clean-up DAS server logs
 
 .. rubric:: Release 0.8.X series
---------------------
 
 - 0.8.X
 
@@ -678,7 +676,7 @@ This release series is targeted to DAS production stability and quality.
   - work on scalability of DAS web server, ticket #1791
 
 .. rubric:: Release 0.7.X series
---------------------
+
 This release series is targeted to DAS usability. We collected users
 requests in terms of DAS functionality and usability. All changes made
 towards making DAS easy to use for end-users.
@@ -709,7 +707,7 @@ towards making DAS easy to use for end-users.
     indexes in DAS code
 
 .. rubric:: Release 0.6.X series
---------------------
+
 This release series is targeted towards DAS production version. We switched from
 implicit to explicit data retrieval model; removed DAS cache server and re-design
 DAS web server; add multitasking support.
@@ -817,7 +815,7 @@ DAS web server; add multitasking support.
   - fix monitor plugin to handle connection errors
 
 .. rubric:: Release 0.5.X series
---------------------
+
 This release series is targeted to DAS stability. We redesigned DAS-QL
 parser to be based on PLY framework; re-write DAS analytics; add benchmarking tools;
 performed stress tests and code audit DAS servers.
@@ -1198,7 +1196,7 @@ performed stress tests and code audit DAS servers.
     src/python/parser to keep parsertab.py around
 
 .. rubric:: Release 0.4.X series
---------------------
+
 The most significant part of this release is new plug-and-play mechanism
 to add new data-services. This is done via data-service map creation. Each
 map is represented data-service URI (URL, input parameters, API, etc.).
@@ -1358,7 +1356,6 @@ map is represented data-service URI (URL, input parameters, API, etc.).
   - modifications for stand-alone mode
 
 .. rubric:: Release V03 series
-------------------
 
 Major change in this release was a separation of DAS cache into 
 independent cache and merge DB collection. The das.cache collection
@@ -1387,7 +1384,6 @@ stores *raw* API results, while das.merge keeps only merged records.
 
 
 .. rubric:: Release V02 series
-------------------
 
 This release series is based on MongoDB. After a long evaluation of
 different technologies, we made a choice in favor of MongoDB.
@@ -1397,7 +1393,6 @@ different technologies, we made a choice in favor of MongoDB.
 - switch DAS QL to free keyword based syntax
 
 .. rubric:: Release V01 series
-------------------
 
 Evalutaion series. During this release cycle we played with
 the following technologies:

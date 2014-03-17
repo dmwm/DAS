@@ -9,11 +9,6 @@ DAS aggregators
 .. automodule:: DAS.core.das_aggregators
         :members:
 
-DAS analytics module
---------------------
-.. automodule:: DAS.core.das_analytics_db
-        :members:
-
 DAS core module
 ---------------
 .. automodule:: DAS.core.das_core

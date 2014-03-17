@@ -45,16 +45,6 @@ DASOption('keylearningdb', 'dbname', 'string', 'keylearning'),
 DASOption('keylearningdb', 'collname', 'string', 'db'),
 
 #
-# Analytics DB options
-#
-# default db name
-DASOption('analyticsdb', 'dbname', 'string', 'analytics'),
-# default collection name
-DASOption('analyticsdb', 'collname', 'string', 'db'),
-# controls how long records in analytics live, default 2 months
-DASOption('analyticsdb', 'history', 'int', 60*24*60*60),
-
-#
 # ParserDB optins
 #
 # default db name
@@ -65,16 +55,6 @@ DASOption('parserdb', 'collname', 'string', 'db'),
 DASOption('parserdb', 'enable', 'bool', True),
 # size of parser db (MongoDB capped collection)
 DASOption('parserdb', 'sizecap', 'int', 1048576*5),
-
-#
-# Loggind DB options
-#
-# default db name
-DASOption('loggingdb', 'dbname', 'string', 'logging'),
-# default collection name
-DASOption('loggingdb', 'collname', 'string', 'db'),
-# size of logging db (MongoDB capped collection)
-DASOption('loggingdb', 'capped_size', 'int', 100*1024*1024),
 
 #
 # DAS DBs options

@@ -568,8 +568,10 @@ def ply2mongo(query):
         mongodict['instance'] = inst
     if  system:
         mongodict['system'] = system
+    allowed_single_keys = ['records', 'queries', 'status', 'tier', 'type', \
+            'group', 'release', 'primary_dataset', 'era']
     if  len(spec.keys()) == 1 and spec.values() == ['*'] and \
-        spec.keys()[0] not in ['records', 'queries', 'status']:
+            spec.keys()[0] not in allowed_single_keys:
         msg = 'Single DAS key with no conditions, mongodict=%s' \
             % mongodict
         raise Exception(msg)

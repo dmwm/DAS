@@ -15,10 +15,14 @@ Contents:
 .. toctree::
    :maxdepth: 2
    
+   introduction
    about_das
    installation
+   dependencies
+   das_maps
    das_setup
    das_internals
+   das_config
    changelog
    references
 
