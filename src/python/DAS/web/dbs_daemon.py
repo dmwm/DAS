@@ -112,12 +112,12 @@ class DBSDaemon(object):
                     pass
                 # remove records with old ts
                 dbc.remove({'ts':{'$lt':time0-self.expire}})
-                msg = 'inserted new'
+                msg = 'inserted'
             else: # we already have records, update their ts
                 for row in gen:
                     spec = dict(dataset=row['dataset'])
                     dbc.update(spec, udict, upsert=True)
-                msg = 'updated old'
+                msg = 'updated'
 
             if  find_one(dbc, cdict):
                 dbc.update(cdict, udict)
