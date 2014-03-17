@@ -301,12 +301,12 @@ class TestDASKeywordSearch(KeywordSearchAbstractTester):
         self.assert_query_result('number of lumis in run 176304',
                                  'run run=176304 | grep run.nlumis')
 
-    def test_result_field_selections_stem(self):
-        self.assert_query_result('Zmmg event number', [
-            'file dataset=*Zmmg* | grep lumi.number, file.name',
-            'dataset dataset=*Zmmg* | grep dataset.nevents, dataset.name',
-            'block dataset=*Zmmg* | grep block.nevents, block.name'],
-                                 not_implemented=True)
+#    def test_result_field_selections_stem(self):
+#        self.assert_query_result('Zmmg event number', [
+#            'file dataset=*Zmmg* | grep lumi.number, file.name',
+#            'dataset dataset=*Zmmg* | grep dataset.nevents, dataset.name',
+#            'block dataset=*Zmmg* | grep block.nevents, block.name'],
+#                                 not_implemented=True)
 
     def test_result_field_selections_stem_phrase(self):
         self.assert_query_result('Zmmg "event number"', [
