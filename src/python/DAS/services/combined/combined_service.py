@@ -193,10 +193,10 @@ def site4dataset(dbs_url, phedex_api, args, expire):
     try:
         totblocks, totfiles = dataset_summary(dbs_url, dataset)
     except Exception as err:
-        error  = str(err)
-        reason = "Can't find #block, #files info in DBS for dataset=%s" \
-                % dataset
-        yield {'site': {'error': error, 'reason': reason}}
+        error  = 'combined service unable to process your request'
+        reason = "Fail to parse #block, #files info, %s" % str(err)
+        yield {'site': {'name': 'N/A', 'se': 'N/A',
+                        'error': error, 'reason': reason}}
         return
     # Phedex part
     phedex_args = {'dataset':args['dataset']}
