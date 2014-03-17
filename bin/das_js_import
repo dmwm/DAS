@@ -1,9 +1,9 @@
 #!/bin/bash
 # Author: V. Kuznetsov, V. Zemleris
 # Description: this script import DAS JS files into MongoDB
-# User may setup STAGEDIR, the location where DAS maps will be staged
+# User may setup DASMAPS_DIR, the location where DAS maps will be staged
 # by default the update_mapping_db.js file will be used as main DAS map
-# otherwise das_maps_dbs_prod.js will be copied to STAGEDIR as
+# otherwise das_maps_dbs_prod.js will be copied to DASMAPS_DIR as
 # update_mapping_db.js file
 
 usage="Usage: das_js_import <DASMaps directory>"
@@ -22,7 +22,6 @@ if [ -z $DAS_CONFIG ]; then
     echo "DAS_CONFIG environment is not set"
     exit 1
 fi
-STAGEDIR=${STAGEDIR:-"/tmp/das_tmp_stage"}
 DASROOT=`python -c "import DAS; print '/'.join(DAS.__file__.split('/')[:-1])"`
 DASMAPS_DIR=$1
 DASMAPS_FILE=$DASMAPS_DIR/update_mapping_db.js
@@ -33,7 +32,6 @@ export DAS_MONGO_HOST=`python $DASROOT/tools/config_reader.py --mongo_host`
 export DAS_MONGO_PORT=`python $DASROOT/tools/config_reader.py --mongo_port`
 
 echo "##### DAS & KWS maps parameters #####"
-echo "STAGEDIR          : $STAGEDIR"
 echo "DASMAPS_DIR       : $DASMAPS_DIR"
 echo "MONGODB_HOST      : $DAS_MONGO_HOST"
 echo "MONGODB_PORT      : $DAS_MONGO_PORT"
@@ -54,31 +52,32 @@ update_db()
   local obj="$1"
   local updates=${@:2}  # all subsequent params are the updates
 
+  echo "update_db: $obj $updates"
   # calculate stamp over (possibly multiple) collection updates
-  stamp=$(cd $STAGEDIR && printf "%s\n" $updates | xargs -I{} $MD5CMD "update_{}.js")
-  if [ -f ${STAGEDIR}/${obj}-schema-stamp ]; then
-      oldstamp=$(cat ${STAGEDIR}/${obj}-schema-stamp 2>/dev/null)
+  stamp=$(cd $DASMAPS_DIR && printf "%s\n" $updates | xargs -I{} $MD5CMD "update_{}.js")
+  if [ -f ${DASMAPS_DIR}/${obj}-schema-stamp ]; then
+      oldstamp=$(cat ${DASMAPS_DIR}/${obj}-schema-stamp 2>/dev/null)
   else
       oldstamp="0"
   fi
 
   #echo "stamp: $stamp  oldstamp: $oldstamp"
-  if [ ! -f ${STAGEDIR}/${obj}-schema-stamp ] || [ X"$oldstamp" != X"$stamp" ]; then
+  if [ ! -f ${DASMAPS_DIR}/${obj}-schema-stamp ] || [ X"$oldstamp" != X"$stamp" ]; then
     set -e
     # this seem to exit with 0 even if DB being cleaned do not exist
     # still we have to check if clean script exists, in case of multiple collections...
-    if [ -f ${STAGEDIR}/clean_${obj}.js ]; then
+    if [ -f ${DASMAPS_DIR}/clean_${obj}.js ]; then
         echo "Clean ${obj}"
-        mongo --host "$DAS_MONGO_HOST" --port "$DAS_MONGO_PORT" ${STAGEDIR}/clean_${obj}.js
+        mongo --host "$DAS_MONGO_HOST" --port "$DAS_MONGO_PORT" ${DASMAPS_DIR}/clean_${obj}.js
     fi
 
     for entry in ${updates[@]}
     do
         db=$(echo ${entry} | cut -f1 -d_) coll=$(echo ${entry} | cut -f2- -d_)
         echo "Updating db: ${db} col: ${coll}"
-        mongoimport --host "$DAS_MONGO_HOST" --port "$DAS_MONGO_PORT" --db ${db} --collection ${coll} --file ${STAGEDIR}/update_${entry}.js
+        mongoimport --host "$DAS_MONGO_HOST" --port "$DAS_MONGO_PORT" --db ${db} --collection ${coll} --file ${DASMAPS_DIR}/update_${entry}.js
     done
-    echo "$stamp" > ${STAGEDIR}/${obj}-schema-stamp
+    echo "$stamp" > ${DASMAPS_DIR}/${obj}-schema-stamp
     set +e
   else
     echo "- no changes needed."
@@ -90,18 +89,15 @@ update_db()
 
 # prepares main DAS data (DASMaps) for being imported to DB
 prepare_das_db_update(){
-    mkdir -p $STAGEDIR
-    rm -f $STAGEDIR/*mapping*-schema-stamp
-    rm -f $STAGEDIR/*keylearning*-schema-stamp
-    rm -f $STAGEDIR/*inputvals*-schema-stamp
-    if [ -f $DASMAPS_FILE ]; then
-        cp -f $DASMAPS_FILE $STAGEDIR
-    else
-        cp -f $DASMAPS_DIR/das_maps_dbs_prod.js $STAGEDIR/update_mapping_db.js
+    mkdir -p $DASMAPS_DIR
+    rm -f $DASMAPS_DIR/*mapping*-schema-stamp
+    rm -f $DASMAPS_DIR/*keylearning*-schema-stamp
+    rm -f $DASMAPS_DIR/*inputvals*-schema-stamp
+    if [ ! -f $DASMAPS_FILE ]; then
+        cp -f $DASMAPS_DIR/das_maps_dbs_prod.js $DASMAPS_DIR/update_mapping_db.js
     fi
-    cp -f $METADATA_DIR/update_keylearning_db.js $STAGEDIR
-    cp -f $METADATA_DIR/update_inputvals*.js $STAGEDIR
-    cp -f $DASMAPS_DIR/clean*.js $STAGEDIR
+    cp -f $METADATA_DIR/update_keylearning_db.js $DASMAPS_DIR
+    cp -f $METADATA_DIR/update_inputvals*.js $DASMAPS_DIR
 }
 
 # run the updates now
