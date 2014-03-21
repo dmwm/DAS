@@ -8,6 +8,7 @@ This release series is targeted to DAS production stability and quality.
 - 2.6.X
 
   - Perform DAS/MongoDB separation
+  - Update DAS docs accordingly with recent changes
   - Remove analytics
   - Re-factor DASMaps management scripts, now we'll use
     das_js_fetch, das_js_validate, das_js_import, das_js_update
