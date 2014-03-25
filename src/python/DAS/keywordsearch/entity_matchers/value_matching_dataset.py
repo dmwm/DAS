@@ -9,7 +9,7 @@ Also some CMS specific functions are used:
 """
 
 from cherrypy import request
-from DAS.utils.regex import RE_3SLAHES
+from DAS.utils.regex import RE_3SLASHES
 from DAS.keywordsearch.config import DEBUG
 from DAS.web.dbs_daemon import find_datasets
 
@@ -52,7 +52,7 @@ def match_value_dataset(kwd, dbs_inst=None):
             dataset_score -= 0.3
 
     # add extra wildcard to make sure the query will work...
-    if not RE_3SLAHES.match(upd_kwd):
+    if not RE_3SLASHES.match(upd_kwd):
         upd_kwd0 = upd_kwd
         if not upd_kwd.startswith('*') and not upd_kwd.startswith('/'):
             upd_kwd = '*' + upd_kwd
