@@ -14,7 +14,7 @@ import string
 from collections import defaultdict
 
 from DAS.web.dbs_daemon import initialize_global_dbs_mngr, find_datasets
-from DAS.utils.regex import DATASET_FORBIDDEN_SYMBOLS
+from DAS.utils.regex import DATASET_FORBIDDEN_SYMBOLS, RE_3SLASHES
 # should we simplify the wildcard replacement, if all its matches are similar
 # in some way (equality, same beginning or end)
 REPLACE_IF_STRINGS_SAME = True
@@ -186,7 +186,7 @@ def process_dataset_wildcards(pattern, dbs_inst, ignorecase=False):
 
     # TODO: it is quite probable that people writing Zmm actually mean *Zmm*
 
-    if pattern.count('/') == 3:
+    if  RE_3SLASHES.match(pattern):
         return [pattern]
 
     # clean up any not allowed symbols in pattern that could mess up our regexps
