@@ -13,7 +13,7 @@ from   bson.objectid import ObjectId
 
 # DAS modules
 import DAS.utils.jsonwrapper as json
-from   DAS.utils.regex import RE_3SLAHES
+from   DAS.utils.regex import RE_3SLASHES
 from   DAS.utils.utils import genkey, deepcopy, print_exc, dastimestamp
 from   DAS.utils.query_utils import compare_specs
 from   DAS.core.das_parser import ql_manager
@@ -137,7 +137,7 @@ class DASQuery(object):
         for key, val in self._mongo_query['spec'].items():
             if  key == 'dataset.name':
                 # only match dataset.name but do not primary_dataset.name
-                if  not RE_3SLAHES.match(val):
+                if  not RE_3SLASHES.match(val):
 
                     # TODO: we currently do not support wildcard matching
                     #       from command line interface
