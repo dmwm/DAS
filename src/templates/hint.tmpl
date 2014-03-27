@@ -16,7 +16,8 @@
         <br/>
         #if 'examples' in result and $result.examples
             #for example in $result.examples
-            #set link=url_extend_params(url=$base +'/request', input=$example)
+            #set url=$base + '/request'
+            #set link=url_extend_params(url=$url, input=$example, instance=$inst)
             <li><a href="${link}">$quote($example)</a></li>
             #end for
         #end if
