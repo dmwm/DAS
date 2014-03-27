@@ -7,6 +7,7 @@ This release series is targeted to DAS production stability and quality.
 
 - 2.6.X
 
+  - Fix issue with 3 slashes and hints on web UI
   - Perform DAS/MongoDB separation
   - Update DAS docs accordingly with recent changes
   - Remove analytics
