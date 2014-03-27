@@ -958,7 +958,14 @@ class DASWebService(DASWebManager):
         time0   = time.time()
         self.adjust_input(kwargs)
         view    = kwargs.get('view', 'list')
-        inst    = kwargs.get('instance', self.dbs_global)
+        if  'instance' in uinput:
+            form     = self.form(uinput=uinput, view=view)
+            content  = 'On DAS web UI please use drop-down menu to specify DBS'
+            content += ' instance to avoid ambiguity. '
+            content += 'To proceed please clear your input query.'
+            return self.page(form + '<div class="box_red">%s</div>' % content)
+        else:
+            inst = kwargs.get('instance', self.dbs_global)
         uinput  = kwargs.get('input', '')
         form    = self.form(uinput=uinput, instance=inst, view=view)
         check, content = self.generate_dasquery(uinput, inst)
