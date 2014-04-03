@@ -90,7 +90,7 @@ def getdata_pycurl(url, params, headers=None, expire=3600, post=None,
     except urllib2.HTTPError as httperror:
         msg  = 'urllib2.HTTPError, system=%s, url=%s, args=%s, headers=%s' \
                     % (system, url, json.dumps(params), json.dumps(headers))
-        data = {'error': 'Unable to contact %s' % contact,
+        data = {'error': 'Received HTTP error from %s data-service' % contact,
                 'reason': msg, 'ts':time.time()}
         try:
             reason = extract_http_error(httperror.read())
@@ -107,7 +107,7 @@ def getdata_pycurl(url, params, headers=None, expire=3600, post=None,
         msg  = 'HTTPError, system=%s, url=%s, args=%s, headers=%s' \
                     % (system, url, json.dumps(params), json.dumps(headers))
         print dastimestamp('getdata_pycurl'), msg + '\n' + str(exp)
-        data = {'error': 'Unable to contact %s' % contact,
+        data = {'error': 'Received generic error from %s data-service' % contact,
                 'reason': msg, 'ts':time.time()}
         data = json.dumps(data)
         expire = expire_timestamp(error_expire)
@@ -171,7 +171,8 @@ def getdata_urllib(url, params, headers=None, expire=3600, post=None,
     except urllib2.HTTPError as httperror:
         msg  = 'HTTPError, url=%s, args=%s, headers=%s' \
                     % (url, params, headers)
-        data = {'error': 'Unable to contact %s' % contact, 'reason': msg}
+        data = {'error': 'Received HTTP error from %s data-service' % contact,
+                'reason': msg}
         try:
             err  = '%s %s' % (contact, extract_http_error(httperror.read()))
             data.update({'error':err})
@@ -186,7 +187,8 @@ def getdata_urllib(url, params, headers=None, expire=3600, post=None,
         msg  = 'HTTPError, url=%s, args=%s, headers=%s' \
                     % (url, params, headers)
         print msg + '\n' + str(exp)
-        data = {'error': 'Unable to contact %s' % contact, 'reason': msg}
+        data = {'error': 'Received generic error from %s data-service' % contact,
+                'reason': msg}
         data = json.dumps(data)
         expire = expire_timestamp(error_expire)
     das_timer(timer_key, verbose)
