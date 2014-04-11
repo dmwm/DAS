@@ -105,8 +105,6 @@ def get_dbs_instance(url):
         raise Exception(msg)
     if  url.find('DBSReader') != -1: # DBS3
         return '/'.join(url.split('/')[4:6])
-    elif url.find('cmsdbsprod') != -1: # DBS2
-        return url.split('/')[3]
     elif url.find('localhost') != -1: # test instance
         return None
     elif url.find('127.0.0.1') != -1: # test instance
