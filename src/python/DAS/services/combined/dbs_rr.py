@@ -35,12 +35,7 @@ def lumis4dataset(kwds):
     ckey    = kwds.get('ckey', None)
     cert    = kwds.get('cert', None)
     dataset = kwds.get('dataset', None)
-    if  dbs_url.find('servlet') != -1: # DBS2 url
-        gen = runs_dbs2(dbs_url, dataset, ckey, cert)
-    elif dbs_url.find('cmsweb') != -1 and dbs_url.find('DBSReader') != -1:
-        gen = runs_dbs3(dbs_url, dataset, ckey, cert)
-    else:
-        raise Exception('Unsupport DBS URL, url=%s' % dbs_url)
+    gen = runs_dbs(dbs_url, dataset, ckey, cert)
     rlist = [r for r in gen]
     if  not rlist:
         return
@@ -49,17 +44,7 @@ def lumis4dataset(kwds):
     for row in collect_lumis(gen):
         yield row
 
-def runs_dbs2(url, dataset, ckey, cert):
-    "Retrive list of run from DBS2 for a given dataset"
-    query    = "find run where dataset=%s" % dataset
-    params   = dict(api='executeQuery', apiversion='DBS_2_0_9', query=query)
-    data, _  = getdata(url, params, ckey=ckey, cert=cert, system='combined')
-    prim_key = 'run'
-    for row in qlxml_parser(data, prim_key):
-        run  = row['run']['run']
-        yield run
-
-def runs_dbs3(url, dataset, ckey, cert):
+def runs_dbs(url, dataset, ckey, cert):
     "Retrive list of run/lumis from DBS2 for a given dataset"
     api_url  = url + '/runs'
     params   = {'dataset': dataset}

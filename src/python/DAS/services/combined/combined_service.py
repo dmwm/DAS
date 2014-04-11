@@ -43,18 +43,9 @@ from DAS.utils.global_scope import SERVICES
 from DAS.utils.url_utils import getdata
 from DAS.utils.regex import phedex_node_pattern, se_pattern, int_number_pattern
 from DAS.utils.urlfetch_pycurl import getdata as urlfetch_getdata
-from DAS.services.dbs.dbs_service import dbs_find as dbs2_find
 from DAS.services.dbs3.dbs3_service import dbs_find as dbs3_find
 
 CKEY, CERT = get_key_cert()
-
-#
-# NOTE:
-# DBS3 will provide datasets API, once this API will support POST request
-# and multiple datasets, I need to epxlore revert logic for dataset4site
-# API. First find all blocks at given site, then strip off dataset info
-# and ask DBS to provide dataset info for found dataset.
-#
 
 def parse_data(data):
     """
@@ -73,12 +64,6 @@ def parse_data(data):
     elif isinstance(jsondata, list):
         for row in jsondata:
             yield row
-
-def which_dbs(dbs_url):
-    """Determine DBS version based on given DBS url"""
-    if  dbs_url.find('servlet') != -1:
-        return 'dbs'
-    return 'dbs3'
 
 def phedex_files(phedex_url, kwds):
     "Get file information from Phedex"
@@ -113,38 +98,19 @@ def phedex_files(phedex_url, kwds):
 def dbs_dataset4release_parent(dbs_url, release, parent=None):
     "Get dataset for given release and optional parent dataset"
     expire = 600 # set some expire since we're not going to use it
-    if  which_dbs(dbs_url) == 'dbs':
-        # in DBS3 I'll use datasets API and pass release over there
-        query = 'find dataset where release=%s' % release
-        dbs_args = {'api':'executeQuery', 'apiversion': 'DBS_2_0_9', \
-                    'query':query}
-        headers = {'Accept': 'text/xml'}
-        source, expire = \
-            getdata(dbs_url, dbs_args, headers, expire, ckey=CKEY, cert=CERT,
-                    system='dbs')
-        prim_key = 'dataset'
-        for row in qlxml_parser(source, prim_key):
-            if  'dataset' in row:
-                dataset = row['dataset']['dataset']
-                yield dataset
-            elif 'error' in row:
-                err = row.get('reason', None)
-                err = err if err else row['error']
-                yield 'DBS error: %s' % err
-    else:
-        # we call datasets?release=release to get list of datasets
-        dbs_url += '/datasets'
-        dbs_args = \
-        {'release_version': release, 'dataset_access_type':'VALID'}
-        if  parent:
-            dbs_args.update({'parent_dataset': parent})
-        headers = {'Accept': 'application/json;text/json'}
-        source, expire = \
-            getdata(dbs_url, dbs_args, headers, expire, ckey=CKEY, cert=CERT,
-                    system='dbs3')
-        for rec in json_parser(source, None):
-            for row in rec:
-                yield row['dataset']
+    # we call datasets?release=release to get list of datasets
+    dbs_url += '/datasets'
+    dbs_args = \
+    {'release_version': release, 'dataset_access_type':'VALID'}
+    if  parent:
+        dbs_args.update({'parent_dataset': parent})
+    headers = {'Accept': 'application/json;text/json'}
+    source, expire = \
+        getdata(dbs_url, dbs_args, headers, expire, ckey=CKEY, cert=CERT,
+                system='dbs3')
+    for rec in json_parser(source, None):
+        for row in rec:
+            yield row['dataset']
 
 def dataset_summary(dbs_url, dataset):
     """
@@ -152,39 +118,17 @@ def dataset_summary(dbs_url, dataset):
     number of filesi/blocks in a given dataset.
     """
     expire = 600 # set some expire since we're not going to use it
-    if  which_dbs(dbs_url) == 'dbs':
-        # DBS2 call
-        query  = 'find count(file.name), count(block.name)'
-        query += ' where dataset=%s and dataset.status=*' % dataset
-        dbs_args = {'api':'executeQuery', 'apiversion': 'DBS_2_0_9', \
-                    'query':query}
-        headers = {'Accept': 'text/xml'}
-        source, expire = \
-            getdata(dbs_url, dbs_args, headers, expire, ckey=CKEY, cert=CERT,
-                    system='dbs')
-        prim_key = 'dataset'
-        for row in qlxml_parser(source, prim_key):
-            if  'dataset' in row:
-                totfiles  = row['dataset']['count_file.name']
-                totblocks = row['dataset']['count_block.name']
-                return totblocks, totfiles
-            elif 'error' in row:
-                raise Exception(row.get('reason', row['error']))
-        # if we're here we didn't find a dataset, throw the error
-        msg = 'empty set'
-        raise Exception(msg)
-    else:
-        # we call filesummaries?dataset=dataset to get number of files/blks
-        dbs_url += '/filesummaries'
-        dbs_args = {'dataset': dataset}
-        headers = {'Accept': 'application/json;text/json'}
-        source, expire = \
-            getdata(dbs_url, dbs_args, headers, expire, ckey=CKEY, cert=CERT,
-                    system='dbs3')
-        for row in json_parser(source, None):
-            totfiles  = row[0]['num_file']
-            totblocks = row[0]['num_block']
-            return totblocks, totfiles
+    # we call filesummaries?dataset=dataset to get number of files/blks
+    dbs_url += '/filesummaries'
+    dbs_args = {'dataset': dataset}
+    headers = {'Accept': 'application/json;text/json'}
+    source, expire = \
+        getdata(dbs_url, dbs_args, headers, expire, ckey=CKEY, cert=CERT,
+                system='dbs3')
+    for row in json_parser(source, None):
+        totfiles  = row[0]['num_file']
+        totblocks = row[0]['num_block']
+        return totblocks, totfiles
 
 def site4dataset(dbs_url, phedex_api, args, expire):
     "Yield site information about given dataset"
@@ -252,8 +196,7 @@ class CombinedService(DASAbstractService):
         DASAbstractService.__init__(self, 'combined', config)
         self.map = self.dasmapping.servicemap(self.name)
         map_validator(self.map)
-        dbs = config['das'].get('main_dbs', 'dbs')
-        self.dbs = dbs
+        self.dbs = 'dbs3'
 
     def services(self):
         "Return data-services used by this class"
@@ -387,10 +330,7 @@ class CombinedService(DASAbstractService):
 
 def dbs_find(entity, url, kwds):
     "Find given DBS entity for given set of parameters"
-    if  which_dbs(url) == 'dbs':
-        gen = dbs2_find(entity, url, kwds)
-    else:
-        gen = dbs3_find(entity, url, kwds)
+    gen = dbs3_find(entity, url, kwds)
     for row in gen:
         yield row
 
