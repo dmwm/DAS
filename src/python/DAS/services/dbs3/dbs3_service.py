@@ -36,31 +36,6 @@ import DAS.utils.jsonwrapper as json
 
 CKEY, CERT = get_key_cert()
 
-def runrange(run1, run2, continuous=False):
-    "Construct DBS3 run range parameter"
-    run1 = int(run1)
-    run2 = int(run2)
-    if  run1 > run2:
-        rmin = run2
-        rmax = run1
-    elif run2 > run1:
-        rmin = run1
-        rmax = run2
-    else:
-        rmin = run1
-        rmax = run2
-    if  continuous:
-        if  rmin != rmax:
-            val = "['%s-%s']" % (rmin, rmax)
-        else:
-            val = "%s" % rmin
-    else:
-        if  rmin != rmax:
-            val = "[%s,%s]" % (rmin, rmax)
-        else:
-            val = "%s" % rmin
-    return val
-
 def process_lumis_with(ikey, gen):
     "Helper function to process lumis with given key from provided generator"
     odict = {}
@@ -119,7 +94,7 @@ def dbs_find(entity, url, kwds, verbose=0):
     elif lfn:
         params = {'logical_file_name': lfn}
     if  runs:
-        params.update({'run_num': runrange(runs[0], runs[-1], False)})
+        params.update({'run_num': runs})
     headers = {'Accept': 'application/json;text/json'}
     source, expire = \
         getdata(url, params, headers, expire, ckey=CKEY, cert=CERT,
@@ -151,7 +126,7 @@ def block_run_lumis(url, blocks, runs=None, verbose=0):
             continue
         dbs_url = '%s/filelumis/?block_name=%s' % (url, urllib.quote(blk))
         if  runs and isinstance(runs, list):
-            params.update({'run_num': runrange(runs[0], runs[-1], False)})
+            params.update({'run_num': urllib.quote(str(runs))})
         urls.append(dbs_url)
     if  not urls:
         return
@@ -187,8 +162,8 @@ def file_run_lumis(url, blocks, runs=None, verbose=0):
         if  not blk:
             continue
         dbs_url = '%s/filelumis/?block_name=%s' % (url, urllib.quote(blk))
-        if  runs and isinstance(runs, list):
-            dbs_url += "&run_num=%s" % runrange(runs[0], runs[-1], False)
+        if  runs:
+            dbs_url += "&run_num=%s" % urllib.quote(str(runs))
         urls.append(dbs_url)
     if  not urls:
         return
@@ -269,9 +244,12 @@ def get_file_run_lumis(url, api, args, verbose=0):
         if  int_number_pattern.match(str(run_value)):
             runs = [run_value]
         elif run_value[0]=='[' and run_value[-1]==']':
-            runs = json.loads(run_value)
+            if  '-' in run_value: # continuous range
+                runs = run_value.replace("'", '').replace('[', '').replace(']', '')
+            else:
+                runs = json.loads(run_value)
         else:
-            runs = []
+            runs = run_value
     args.update({'runs': runs})
     blk = args.get('block_name', None)
     if  blk: # we don't need to look-up blocks
@@ -504,7 +482,7 @@ class DBS3Service(DASAbstractService):
                 if  '$in' in val:
                     kwds['run_num'] = val['$in']
                 if  '$lte' in val:
-                    kwds['run_num'] = runrange(val['$gte'], val['$lte'], True)
+                    kwds['run_num'] = '%s-%s' % (val['$gte'], val['$lte'])
             else:
                 kwds['run_num'] = val
         if  api == 'site4dataset':
