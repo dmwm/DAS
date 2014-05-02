@@ -18,9 +18,9 @@ urn: datatypes
 url : "https://cmsweb.cern.ch/dbs/prod/global/DBSReader/datatypes/"
 expire : 900
 params : {"dataset":"optional"}
-lookup : type
+lookup : datatype
 das_map : [
-    {"das_key": "type", "rec_key":"type.name"},
+    {"das_key": "datatype", "rec_key":"datatype.name"},
     {"das_key": "dataset", "rec_key":"dataset.name", "api_arg":"dataset",
      "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+"},
 ]
@@ -97,6 +97,7 @@ expire : 900
 params : {
         "dataset":"*",
         "primary_ds_name":"optional",
+        "primary_ds_type":"optional",
         "detail":"True",
         "dataset_access_type": "VALID",
         "data_tier_name":"optional",
@@ -113,7 +114,8 @@ das_map : [
     {"das_key": "dataset", "rec_key":"dataset.name", "api_arg":"dataset"},
     {"das_key": "block", "rec_key":"block.name", "api_arg":"block_name"},
     {"das_key": "primary_dataset", "rec_key":"primary_dataset.name", "api_arg":"primary_ds_name"},
-    {"das_key": "tier", "rec_key":"tier.name", "api_arg":"data_tier_name"},
+    {"das_key": "datatype", "rec_key":"datatype.name", "api_arg":"primary_ds_type"},
+    {"das_key": "tier", "rec_key":"tier.name", "api_arg":"data_tier_name", "pattern":".*[A-Z].*"},
     {"das_key": "release", "rec_key":"release.name", "api_arg":"release_version"},
     {"das_key": "run", "rec_key":"run.run_number", "api_arg":"run_num"},
     {"das_key": "file", "rec_key":"file.name", "api_arg":"logical_file_name"},
@@ -157,7 +159,8 @@ das_map : [
     {"das_key": "summary", "rec_key": "summary"},
     {"das_key": "dataset", "rec_key":"dataset.name", "api_arg":"dataset",
      "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+"},
-    {"das_key": "run", "rec_key":"run.run_number", "api_arg":"run_num"},
+    {"das_key": "run", "rec_key":"run.run_number", "api_arg":"run_num",
+     "pattern": "^[0-9]{3,10}"},
 ]
 ---
 urn: summary4block_run
@@ -169,7 +172,8 @@ das_map : [
     {"das_key": "summary", "rec_key": "summary"},
     {"das_key":"block", "rec_key":"block.name", "api_arg": "block_name",
      "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+#[0-9a-zA-Z-]"},
-    {"das_key": "run", "rec_key":"run.run_number", "api_arg":"run_num"},
+    {"das_key": "run", "rec_key":"run.run_number", "api_arg":"run_num",
+     "pattern": "^[0-9]{3,10}"},
 ]
 ---
 urn: datasetparents
@@ -236,7 +240,8 @@ das_map : [
     {"das_key": "block", "rec_key":"block.name", "api_arg":"block_name"},
     {"das_key": "dataset", "rec_key":"dataset.name", "api_arg":"dataset",
      "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+"},
-    {"das_key": "run", "rec_key":"run.run_number", "api_arg":"run_num"},
+    {"das_key": "run", "rec_key":"run.run_number", "api_arg":"run_num",
+     "pattern": "^[0-9]{3,10}"},
     {"das_key": "file", "rec_key":"file.name", "api_arg":"logical_file_name"},
 ]
 ---
@@ -348,7 +353,8 @@ das_map : [
     {"das_key": "file", "rec_key":"file.name"},
     {"das_key": "block", "rec_key":"block.name", "api_arg":"block_name",
      "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+#[0-9a-zA-Z-]"},
-    {"das_key": "run", "rec_key":"run.run_number", "api_arg":"run_num"},
+    {"das_key": "run", "rec_key":"run.run_number", "api_arg":"run_num",
+     "pattern": "^[0-9]{3,10}"},
     {"das_key": "release", "rec_key":"release.name", "api_arg":"release_version"},
     {"das_key": "status", "rec_key":"status.name", "api_arg":"status"},
 ]
@@ -381,7 +387,8 @@ lookup : lumi
 das_map : [
     {"das_key":"lumi", "rec_key":"lumi.number"},
     {"das_key": "file", "rec_key":"file.name", "api_arg":"logical_file_name"},
-    {"das_key": "run", "rec_key":"run.run_number", "api_arg":"run_num"},
+    {"das_key": "run", "rec_key":"run.run_number", "api_arg":"run_num",
+     "pattern": "^[0-9]{3,10}"},
 ]
 ---
 urn: file4DatasetRunLumi
@@ -391,7 +398,8 @@ params : {"dataset":"required", "run_num":"required", "lumi_list":[]}
 lookup : file
 das_map : [
     {"das_key":"file", "rec_key":"file.name"},
-    {"das_key":"run", "rec_key":"run.run_number", "api_arg":"run_num"},
+    {"das_key":"run", "rec_key":"run.run_number", "api_arg":"run_num",
+     "pattern": "^[0-9]{3,10}"},
     {"das_key":"dataset", "rec_key":"dataset.name", "api_arg":"dataset",
      "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+"},
     {"das_key":"lumi", "rec_key":"lumi.number", "api_arg":"lumi_list"},
@@ -403,7 +411,8 @@ expire : 900
 params : {"run_num":"required"}
 lookup : run
 das_map : [
-    {"das_key": "run", "rec_key":"run.run_number", "api_arg":"run_num"},
+    {"das_key": "run", "rec_key":"run.run_number", "api_arg":"run_num",
+     "pattern": "^[0-9]{3,10}"},
 ]
 ---
 urn: runsummaries
@@ -413,7 +422,8 @@ params : {"run_num":"required", "dataset":"optional"}
 lookup : lumi
 das_map : [
     {"das_key": "lumi", "rec_key":"lumi.number"},
-    {"das_key": "run", "rec_key":"run.run_number", "api_arg":"run_num"},
+    {"das_key": "run", "rec_key":"run.run_number", "api_arg":"run_num",
+     "pattern": "^[0-9]{3,10}"},
     {"das_key": "dataset", "rec_key":"dataset.name", "api_arg":"dataset",
      "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+"},
 ]
@@ -564,7 +574,8 @@ params : {"block_name":"required", "run_num": "optional"}
 lookup : lumi
 das_map : [
     {"das_key":"lumi", "rec_key":"lumi.number", "api_arg":"lumi"},
-    {"das_key":"run", "rec_key":"run.run_number", "api_arg":"run_num"},
+    {"das_key":"run", "rec_key":"run.run_number", "api_arg":"run_num",
+     "pattern": "^[0-9]{3,10}"},
     {"das_key":"block", "rec_key":"block.name", "api_arg":"block_name",
      "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+#[0-9a-zA-Z-]"},
 ]
@@ -577,7 +588,8 @@ params : {"dataset":"required", "run_num": "required", "lumi": "required"}
 lookup : file
 das_map : [
     {"das_key":"file", "rec_key":"file.name"},
-    {"das_key":"run", "rec_key":"run.run_number", "api_arg":"run_num"},
+    {"das_key":"run", "rec_key":"run.run_number", "api_arg":"run_num",
+     "pattern": "^[0-9]{3,10}"},
     {"das_key":"lumi", "rec_key":"lumi.number", "api_arg":"lumi"},
     {"das_key":"dataset", "rec_key":"dataset.name", "api_arg":"dataset",
      "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+"},
@@ -591,7 +603,7 @@ params : {"tier":"required", "date": "required"}
 lookup : block
 das_map : [
     {"das_key": "block", "rec_key":"block.name"},
-    {"das_key": "tier", "rec_key":"tier.name", "api_arg":"tier"},
+    {"das_key": "tier", "rec_key":"tier.name", "api_arg":"tier", "pattern":".*[A-Z].*"},
     {"das_key": "date", "rec_key":"date", "api_arg":"date"},
 ]
 ---

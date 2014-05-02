@@ -47,8 +47,7 @@ class DASTestDataService(DASWebManager):
     DAS web service interface for various CMS data services.
     We expose methods whose name reflect CMS data service name, e.g.
     for DBS system we provide dbs method, for phedex the phedex one, etc.
-    All methods provide data in a format of reflected data-service,
-    DBS provides XML, while phedex JSON.
+    All methods provide data in a format of reflected data-service.
     """
     def __init__(self, config):
         DASWebManager.__init__(self, config)
@@ -85,19 +84,6 @@ class DASTestDataService(DASWebManager):
             page += "<li>%s</li>" % aref
         page += "</ul>"
         return page
-
-    @expose
-    def dbs(self, **_kwargs):
-        """
-        Test DBS data-service
-        """
-        try:
-            cherrypy.response.headers['Content-Type'] = "application/xml"
-            data = """<?xml version='1.0' standalone='yes'?><dbs>
-            <primary_dataset id='0' primary_name='abc'/><SUCCESS/></dbs>"""
-        except:
-            data = ""
-        return data
 
     @expose
     def dbs3(self, **_kwargs):

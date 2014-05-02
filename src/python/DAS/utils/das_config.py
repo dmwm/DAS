@@ -179,7 +179,7 @@ DASOption('das', 'emptyset_expire', 'int', 5),
 DASOption('das', 'services', 'list',
                 ['google_maps', 'ip', 'postalcode'], destination='services'),
 # Choice of main DBS
-DASOption('das', 'main_dbs', 'string', 'dbs'),
+DASOption('das', 'main_dbs', 'string', 'dbs3'),
 # Choice of DBS instances, use empty list to allow read them from DAS maps
 DASOption('das', 'dbs_instances', 'list', []),
 # number of DASCore workers

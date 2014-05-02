@@ -30,22 +30,16 @@ import DAS.utils.jsonwrapper as json
 PAT = re.compile("^T[0-3]_")
 CKEY, CERT = get_key_cert()
 
-def datasets(urls, which_dbs, verbose=0):
+def datasets(urls, verbose=0):
     """
     Retrieve list of datasets from DBS and compare each of them
     wrt list in MongoDB.
     """
-    url     = urls.get('dbs')
-    if  which_dbs == 'dbs': # DBS2 url
-        gen = datasets_dbs2(urls, verbose)
-    elif which_dbs == 'dbs3':
-        gen = datasets_dbs3(urls, verbose)
-    else:
-        raise Exception('Unsupport DBS URL, url=%s' % url)
+    gen = datasets_dbs(urls, verbose)
     for row in gen:
         yield row
 
-def datasets_dbs3(urls, verbose=0):
+def datasets_dbs(urls, verbose=0):
     """DBS3 implementation of datasets function"""
     headers = {'Accept':'application/json;text/json'}
     records = []
@@ -114,28 +108,6 @@ def phedex_info(urls, dbsdata):
                 newrec['custodial'] = custodial
                 yield newrec
 
-def datasets_dbs2(urls, verbose=0):
-    """DBS2 implementation of datasets function"""
-    headers = {'Accept':'application/xml;text/xml'}
-    records = []
-    url     = urls.get('dbs')
-    query   = \
-        'find dataset,dataset.tier,dataset.era where dataset.status like VALID*'
-    params  = {'api':'executeQuery', 'apiversion':'DBS_2_0_9', 'query':query}
-    stream, _ = getdata(url, params, headers, post=False, \
-            ckey=CKEY, cert=CERT, verbose=verbose, system='dbs')
-    records = [r for r in qlxml_parser(stream, 'dataset')]
-    stream.close()
-    dbsdata = {}
-    for row in records:
-        dataset = row['dataset']
-        if  dataset['dataset'] not in dbsdata:
-            dbsdata[dataset['dataset']] = \
-                dict(era=dataset['dataset.era'],
-                        tier=dataset['dataset.tier'], status='VALID')
-    for row in phedex_info(urls, dbsdata):
-        yield row
-
 def dataset_info(urls, datasetdict, verbose=0):
     """
     Request blockReplicas information from Phedex for a given
@@ -174,7 +146,7 @@ def collection(uri):
     coll = conn['db']['datasets']
     return coll
 
-def update_db(urls, which_dbs, uri, db_name, coll_name):
+def update_db(urls, uri, db_name, coll_name):
     """
     Update DB info with dataset info.
     """
@@ -182,7 +154,7 @@ def update_db(urls, which_dbs, uri, db_name, coll_name):
     conn = db_connection(uri)
     if  conn:
         coll = conn[db_name][coll_name]
-        for row in datasets(urls, which_dbs):
+        for row in datasets(urls):
             dataset = dict(row)
             dataset.update({'ts':tst})
             spec = dict(dataset=dataset['dataset'], site=dataset['site'])
@@ -270,7 +242,7 @@ def find_dataset_mp(coll, site):
     for row in result.find():
         yield row['value']
 
-def worker(urls, which_dbs, uri, db_name, coll_name, interval=3600):
+def worker(urls, uri, db_name, coll_name, interval=3600):
     """
     Daemon which updates DBS/Phedex DB
     """
@@ -281,7 +253,7 @@ def worker(urls, which_dbs, uri, db_name, coll_name, interval=3600):
         if  conn_interval > threshold:
             conn_interval = threshold
         try:
-            update_db(urls, which_dbs, uri, db_name, coll_name)
+            update_db(urls, uri, db_name, coll_name)
             time.sleep(interval)
         except AutoReconnect as _err:
             time.sleep(conn_interval) # handles broken connection
@@ -332,14 +304,12 @@ class DBSPhedexService(object):
             self.urls    = mapping[service_api]['services']
             self.expire  = mapping[service_api]['expire']
             services     = self.dasconfig['services']
-            which_dbs    = [d for d in services if d.find('dbs') != -1][0]
             if  not self.wthr:
                 # Worker thread which update dbs/phedex DB
                 self.wthr = start_new_thread('dbs_phedex_worker', worker, \
                      (self.urls, which_dbs, self.uri, \
                      self.dbname, self.collname, self.expire))
-            msg = "### DBSPhedexService:init started with %s service" \
-                    % which_dbs
+            msg = "### DBSPhedexService:init started"
             print msg
         except Exception as exc:
             print "### Fail DBSPhedexService:init\n", str(exc)
@@ -394,22 +364,17 @@ def test():
     """Test main function"""
     cherrypy.quickstart(DBSPhedexService({}), '/')
 
-def test_dbs(which_dbs):
+def test_dbs():
     """Test function for DBS"""
     urls = {
-        "dbs": \
-        "http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet",
         "dbs3": "https://cmsweb.cern.ch/dbs/prod/global/DBSReader",
         "phedex": "https://cmsweb.cern.ch/phedex/datasvc/json/prod",
         "conddb": "https://cms-conddb.cern.ch",
     }
-    if  which_dbs == 'dbs':
-        gen = datasets_dbs2(urls)
-    else:
-        gen = datasets_dbs3(urls)
+    gen = datasets_dbs(urls)
     for row in gen:
         print "\n### row", row
 
 if __name__ == '__main__':
 #    test()
-    test_dbs('dbs')
+    test_dbs()

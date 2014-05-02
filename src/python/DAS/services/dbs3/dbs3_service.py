@@ -450,12 +450,6 @@ class DBS3Service(DASAbstractService):
         """
         Adjust URL for a given instance
         """
-        # FIXME: temp hack to allow query DBS3 global instance
-        #        when user asks for DBS2 global one
-        if  self.dbs_choice == 'dbs' and instance.find('cms_dbs_') != -1:
-            if  instance == 'cms_dbs_prod_global':
-                return url
-            return None # no other DBS2 instnaces is allowed
         if  instance in self.instances:
             if  isinstance(url, basestring):
                 if  '/' in instance and '/' not in self.prim_instance:

@@ -26,30 +26,12 @@ def run_lumis(url, dataset, ckey, cert):
     """
     Retrieve list of run/lumis from DBS for a given dataset
     """
-    if  url.find('servlet') != -1: # DBS2 url
-        res = run_lumis_dbs2(url, dataset, ckey, cert)
-    elif url.find('cmsweb') != -1 and url.find('DBSReader') != -1:
-        res = run_lumis_dbs3(url, dataset, ckey, cert)
-    else:
-        raise Exception('Unsupport DBS URL, url=%s' % url)
+    res = run_lumis_dbs(url, dataset, ckey, cert)
     parse_run_dict(res)
     return res
 
-def run_lumis_dbs2(url, dataset, ckey, cert):
-    "Retrive list of run/lumis from DBS2 for a given dataset"
-    query    = "find run, lumi where dataset=%s" % dataset
-    params   = dict(api='executeQuery', apiversion='DBS_2_0_9', query=query)
-    data, _  = getdata(url, params, ckey=ckey, cert=cert, system='combined')
-    prim_key = 'run'
-    res = {} # output result
-    for row in qlxml_parser(data, prim_key):
-        run  = row['run']['run']
-        lumi = row['run']['lumi']
-        res.setdefault(run, []).append(lumi)
-    return res
-
-def run_lumis_dbs3(url, dataset, ckey, cert):
-    "Retrive list of run/lumis from DBS2 for a given dataset"
+def run_lumis_dbs(url, dataset, ckey, cert):
+    "Retrive list of run/lumis from DBS for a given dataset"
     res      = {} # output result
     api_url  = url + '/blocks'
     params   = {'dataset': dataset}
