@@ -5,6 +5,12 @@ Release notes
 
 This release series is targeted to DAS production stability and quality.
 
+- 2.7.X
+
+  - remove DBS2 code base
+  - fix 4186 (it requires DBS3 fix for their issue dmwm/DBS#381
+  - add pattern for data tier and data types
+
 - 2.6.X
 
   - Fix issue with 3 slashes and hints on web UI
