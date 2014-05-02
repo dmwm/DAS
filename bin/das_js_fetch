@@ -21,7 +21,7 @@ TMPSTAGEDIR=${2:-"/tmp/DASMaps"}
 cdir=$PWD
 mkdir -p $TMPSTAGEDIR
 cd $TMPSTAGEDIR
-cmd="curl -s -O"
+cmd="curl -s -L -O"
 $cmd $DASMAPS_URL/clean_keylearning.js
 $cmd $DASMAPS_URL/clean_mapping.js
 $cmd $DASMAPS_URL/clean_inputvals.js
