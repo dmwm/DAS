@@ -36,7 +36,7 @@ SKIP_UPDATES = 0
 
 class DBSDaemon(object):
     """
-    DBSDaemon fetch list of known datasets from DBS2/DBS3
+    DBSDaemon fetch list of known datasets from DBS
     and store them in separate collection to be used by
     DAS autocomplete web interface.
     """
@@ -152,56 +152,16 @@ class DBSDaemon(object):
 
     def datasets(self):
         """
-        Retrieve a list of DBS datasets (DBS2)
+        Retrieve a list of DBS datasets
         """
         time0 = time.time()
-        if  self.dbs_url.find('DBSServlet') != -1: # DBS2
-            for rec in self.datasets_dbs():
-                rec.update({'ts':time0})
-                yield rec
-        else: # DBS3
-            for rec in self.datasets_dbs3():
-                rec.update({'ts':time0})
-                yield rec
+        for rec in self.datasets_dbs():
+            rec.update({'ts':time0})
+            yield rec
 
     def datasets_dbs(self):
         """
-        Retrieve a list of DBS datasets (DBS2)
-        """
-        query = 'find dataset,dataset.status'
-        params = {'api': 'executeQuery', 'apiversion': 'DBS_2_0_9',
-                  'query':query}
-        encoded_data = urllib.urlencode(params, doseq=True)
-        url = self.dbs_url + '?' + encoded_data
-        req = urllib2.Request(url)
-        try:
-            stream = urllib2.urlopen(req)
-        except urllib2.HTTPError:
-            msg = 'Fail to contact %s' % url
-            print dastimestamp('DAS ERROR'), msg
-            raise Exception(msg)
-        except Exception as exc:
-            print_exc(exc)
-            msg = 'Fail to contact %s' % url
-            print dastimestamp('DAS ERROR'), msg
-            raise Exception(msg)
-        gen = qlxml_parser(stream, 'dataset')
-        for row in gen:
-            dataset = row['dataset']['dataset']
-            rec = {'dataset': dataset}
-            if  self.write_hash:
-                storage_query = {"fields": ["dataset"],
-                     "spec": [{"key": "dataset.name",
-                               "value": "\"%s\"" % dataset}],
-                     "instance": self.dbcoll}
-                rec.update({'qhash': genkey(storage_query)})
-            if  row['dataset']['dataset.status'] == 'VALID':
-                yield rec
-        stream.close()
-
-    def datasets_dbs3(self):
-        """
-        Retrieve a list of DBS datasets (DBS3)
+        Retrieve a list of DBS datasets
         """
         params = {'dataset_access_type':'VALID'}
         encoded_data = urllib.urlencode(params, doseq=True)
@@ -224,7 +184,6 @@ class DBSDaemon(object):
                 rec.update({'qhash': genkey(storage_query)})
             yield rec
         stream.close()
-
 
 def find_datasets(pattern, dbs_instance, dbname='dbs', idx=0, limit=10,
                   ignorecase=True):
@@ -263,24 +222,15 @@ def test(dbs_url):
     for row in mgr.find('zee*summer', idx, limit):
         print row
 
-
-def test_dbs2():
-    "Test dbs2 service"
-    url = 'http://cmsdbsprod.cern.ch/cms_dbs_prod_global/servlet/DBSServlet'
-    test(url)
-
-
 def test_find_static():
     """ Test the standalone find() """
-    for row in find_datasets('*Zmm*', dbs_instance='cms_dbs_prod_global'):
+    for row in find_datasets('*Zmm*', dbs_instance='prod/global'):
         print row
 
-
-def test_dbs3():
+def test_dbs():
     "Test dbs3 service"
-    url = 'https://cmsweb.cern.ch/dbs/prod/global/DBSReader/datasets/'
+    url = 'https://cmsweb.cern.ch/dbs/prod/global/DBSReader/'
     test(url)
-
 
 def initialize_global_dbs_mngr(update_required=False):
     """
@@ -324,5 +274,5 @@ def list_dbs_instances():
 
 
 if __name__ == '__main__':
-    test_dbs2()
+    test_dbs()
     test_find_static()

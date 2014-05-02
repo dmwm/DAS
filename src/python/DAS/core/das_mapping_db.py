@@ -364,7 +364,7 @@ class DASMapping(object):
         if  not system:
             system = self.main_dbs
         systems = self.list_systems()
-        dbses   = set(['dbs', 'dbs3'])
+        dbses   = set(['dbs3'])
         if  dbses & set(systems) != dbses:
             # use caching only when we operate with single DBS
             if  self.dbs_global_url:
@@ -388,7 +388,7 @@ class DASMapping(object):
         if  not system:
             system = self.main_dbs
         systems = self.list_systems()
-        dbses   = set(['dbs', 'dbs3'])
+        dbses   = set(['dbs3'])
         if  dbses & set(systems) != dbses:
             # use caching only when we operate with single DBS
             if  self.dbs_inst_names:
