@@ -160,7 +160,7 @@ das_map : [
     {"das_key": "dataset", "rec_key":"dataset.name", "api_arg":"dataset",
      "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+"},
     {"das_key": "run", "rec_key":"run.run_number", "api_arg":"run_num",
-     "pattern": "^[0-9]{3,10}"},
+     "pattern": ".*[0-9]{3,10}.*"},
 ]
 ---
 urn: summary4block_run
@@ -173,7 +173,7 @@ das_map : [
     {"das_key":"block", "rec_key":"block.name", "api_arg": "block_name",
      "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+#[0-9a-zA-Z-]"},
     {"das_key": "run", "rec_key":"run.run_number", "api_arg":"run_num",
-     "pattern": "^[0-9]{3,10}"},
+     "pattern": ".*[0-9]{3,10}.*"},
 ]
 ---
 urn: datasetparents
@@ -241,7 +241,7 @@ das_map : [
     {"das_key": "dataset", "rec_key":"dataset.name", "api_arg":"dataset",
      "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+"},
     {"das_key": "run", "rec_key":"run.run_number", "api_arg":"run_num",
-     "pattern": "^[0-9]{3,10}"},
+     "pattern": ".*[0-9]{3,10}.*"},
     {"das_key": "file", "rec_key":"file.name", "api_arg":"logical_file_name"},
 ]
 ---
@@ -354,7 +354,7 @@ das_map : [
     {"das_key": "block", "rec_key":"block.name", "api_arg":"block_name",
      "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+#[0-9a-zA-Z-]"},
     {"das_key": "run", "rec_key":"run.run_number", "api_arg":"run_num",
-     "pattern": "^[0-9]{3,10}"},
+     "pattern": ".*[0-9]{3,10}.*"},
     {"das_key": "release", "rec_key":"release.name", "api_arg":"release_version"},
     {"das_key": "status", "rec_key":"status.name", "api_arg":"status"},
 ]
@@ -388,7 +388,7 @@ das_map : [
     {"das_key":"lumi", "rec_key":"lumi.number"},
     {"das_key": "file", "rec_key":"file.name", "api_arg":"logical_file_name"},
     {"das_key": "run", "rec_key":"run.run_number", "api_arg":"run_num",
-     "pattern": "^[0-9]{3,10}"},
+     "pattern": ".*[0-9]{3,10}.*"},
 ]
 ---
 urn: file4DatasetRunLumi
@@ -399,7 +399,7 @@ lookup : file
 das_map : [
     {"das_key":"file", "rec_key":"file.name"},
     {"das_key":"run", "rec_key":"run.run_number", "api_arg":"run_num",
-     "pattern": "^[0-9]{3,10}"},
+     "pattern": ".*[0-9]{3,10}.*"},
     {"das_key":"dataset", "rec_key":"dataset.name", "api_arg":"dataset",
      "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+"},
     {"das_key":"lumi", "rec_key":"lumi.number", "api_arg":"lumi_list"},
@@ -412,7 +412,7 @@ params : {"run_num":"required"}
 lookup : run
 das_map : [
     {"das_key": "run", "rec_key":"run.run_number", "api_arg":"run_num",
-     "pattern": "^[0-9]{3,10}"},
+     "pattern": ".*[0-9]{3,10}.*"},
 ]
 ---
 urn: runsummaries
@@ -423,7 +423,7 @@ lookup : lumi
 das_map : [
     {"das_key": "lumi", "rec_key":"lumi.number"},
     {"das_key": "run", "rec_key":"run.run_number", "api_arg":"run_num",
-     "pattern": "^[0-9]{3,10}"},
+     "pattern": ".*[0-9]{3,10}.*"},
     {"das_key": "dataset", "rec_key":"dataset.name", "api_arg":"dataset",
      "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+"},
 ]
@@ -475,7 +475,8 @@ expire : 3600
 params : {"dataset":"required", "run_num": "optional"}
 lookup : run,lumi
 das_map : [
-    {"das_key":"run", "rec_key":"run.run_number", "api_arg":"run_num"},
+    {"das_key":"run", "rec_key":"run.run_number", "api_arg":"run_num",
+     "pattern": ".*[0-9]{3,10}.*"},
     {"das_key":"lumi", "rec_key":"lumi.number", "api_arg":"lumi"},
     {"das_key":"dataset", "rec_key":"dataset.name", "api_arg":"dataset",
      "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+"},
@@ -490,7 +491,8 @@ expire : 3600
 params : {"block_name":"required", "run_num": "optional"}
 lookup : run,lumi
 das_map : [
-    {"das_key":"run", "rec_key":"run.run_number", "api_arg":"run_num"},
+    {"das_key":"run", "rec_key":"run.run_number", "api_arg":"run_num",
+     "pattern": ".*[0-9]{3,10}.*"},
     {"das_key":"lumi", "rec_key":"lumi.number", "api_arg":"lumi"},
     {"das_key":"block", "rec_key":"block.name", "api_arg":"block_name",
      "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+#[0-9a-zA-Z-]"},
@@ -504,7 +506,8 @@ params : {"dataset":"required", "run_num": "optional"}
 lookup : file,lumi
 das_map : [
     {"das_key":"file", "rec_key":"file.name"},
-    {"das_key":"run", "rec_key":"run.run_number", "api_arg":"run_num"},
+    {"das_key":"run", "rec_key":"run.run_number", "api_arg":"run_num",
+     "pattern": ".*[0-9]{3,10}.*"},
     {"das_key":"lumi", "rec_key":"lumi.number", "api_arg":"lumi"},
     {"das_key":"dataset", "rec_key":"dataset.name", "api_arg":"dataset",
      "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+"},
@@ -518,7 +521,8 @@ params : {"block_name":"required", "run_num": "optional"}
 lookup : file,lumi
 das_map : [
     {"das_key":"file", "rec_key":"file.name"},
-    {"das_key":"run", "rec_key":"run.run_number", "api_arg":"run_num"},
+    {"das_key":"run", "rec_key":"run.run_number", "api_arg":"run_num",
+     "pattern": ".*[0-9]{3,10}.*"},
     {"das_key":"lumi", "rec_key":"lumi.number", "api_arg":"lumi"},
     {"das_key":"block", "rec_key":"block.name", "api_arg":"block_name",
      "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+#[0-9a-zA-Z-]"},
@@ -532,7 +536,8 @@ params : {"dataset":"required", "run_num": "optional"}
 lookup : file,run,lumi
 das_map : [
     {"das_key":"file", "rec_key":"file.name"},
-    {"das_key":"run", "rec_key":"run.run_number", "api_arg":"run_num"},
+    {"das_key":"run", "rec_key":"run.run_number", "api_arg":"run_num",
+     "pattern": ".*[0-9]{3,10}.*"},
     {"das_key":"lumi", "rec_key":"lumi.number", "api_arg":"lumi"},
     {"das_key":"dataset", "rec_key":"dataset.name", "api_arg":"dataset",
      "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+"},
@@ -546,7 +551,8 @@ params : {"block_name":"required", "run_num": "optional"}
 lookup : file,run,lumi
 das_map : [
     {"das_key":"file", "rec_key":"file.name"},
-    {"das_key":"run", "rec_key":"run.run_number", "api_arg":"run_num"},
+    {"das_key":"run", "rec_key":"run.run_number", "api_arg":"run_num",
+     "pattern": ".*[0-9]{3,10}.*"},
     {"das_key":"lumi", "rec_key":"lumi.number", "api_arg":"lumi"},
     {"das_key":"block", "rec_key":"block.name", "api_arg":"block_name",
      "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+#[0-9a-zA-Z-]"},
@@ -560,7 +566,8 @@ params : {"dataset":"required", "run_num": "optional"}
 lookup : block,run,lumi
 das_map : [
     {"das_key":"block", "rec_key":"block.name"},
-    {"das_key":"run", "rec_key":"run.run_number", "api_arg":"run_num"},
+    {"das_key":"run", "rec_key":"run.run_number", "api_arg":"run_num",
+     "pattern": ".*[0-9]{3,10}.*"},
     {"das_key":"lumi", "rec_key":"lumi.number", "api_arg":"lumi"},
     {"das_key":"dataset", "rec_key":"dataset.name", "api_arg":"dataset",
      "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+"},
@@ -575,7 +582,7 @@ lookup : lumi
 das_map : [
     {"das_key":"lumi", "rec_key":"lumi.number", "api_arg":"lumi"},
     {"das_key":"run", "rec_key":"run.run_number", "api_arg":"run_num",
-     "pattern": "^[0-9]{3,10}"},
+     "pattern": ".*[0-9]{3,10}.*"},
     {"das_key":"block", "rec_key":"block.name", "api_arg":"block_name",
      "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+#[0-9a-zA-Z-]"},
 ]
@@ -589,7 +596,7 @@ lookup : file
 das_map : [
     {"das_key":"file", "rec_key":"file.name"},
     {"das_key":"run", "rec_key":"run.run_number", "api_arg":"run_num",
-     "pattern": "^[0-9]{3,10}"},
+     "pattern": ".*[0-9]{3,10}.*"},
     {"das_key":"lumi", "rec_key":"lumi.number", "api_arg":"lumi"},
     {"das_key":"dataset", "rec_key":"dataset.name", "api_arg":"dataset",
      "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+"},
