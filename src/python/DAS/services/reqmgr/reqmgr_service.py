@@ -30,6 +30,8 @@ def get_ids(url, params, dataset, verbose=False):
     for row in json_parser(source, None):
         for rec in row.get('rows', []):
             doc = rec['doc']
+            if  not doc:
+                continue
             if  'ProcConfigCacheID' in doc:
                 ids.append(doc['ProcConfigCacheID'])
             elif 'ConfigCacheID' in doc:
