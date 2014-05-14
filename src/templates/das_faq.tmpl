@@ -138,8 +138,7 @@ Here are few examples of DAS cli usage:
 ./das_client.py --query="dataset=/EG/Run2010A*/AOD"
 ./das_client.py --query="dataset=/EG/Run2010A*/AOD" --verbose=1
 ./das_client.py --query="dataset=/EG/Run2010A*/AOD | grep dataset.name"
-./das_client.py --query="dataset=/EG/Run2010A*/AOD | sort dataset.nevents"
-./das_client.py --query="dataset=/EG/Run2010A*/AOD | grep dataset.name, dataset.nevents" --format=plain
+./das_client.py --query="dataset=/EG/Run2010A*/AOD | grep dataset.name" --format=plain
 </pre>
 Please note, the --format option can only be used together with DAS filters, since
 tabulated format requires knowledge of columns (which are fields you specify in a filter).
