@@ -653,6 +653,16 @@ class DASWebService(DASWebManager):
                 head.update({'status': 'warning', 'reason': cli_msg})
         return head, data
 
+    def hint_datasets(self, kwargs):
+        "Use hint functions to find datasets in non-default DBS istances"
+        query = kwargs.get('input', '').strip()
+        dbsinst = kwargs.get('instance', self.dbs_global)
+        hint_functions = [hint_dataset_case_insensitive,
+                          hint_dataset_in_other_insts, ]
+        hints = (hint(query, dbsinst) for hint in hint_functions)
+        hints = [r for r in hints if r and r.get('results')]
+        return hints
+
     def get_data(self, kwargs):
         """
         Invoke DAS workflow and get data from the cache.
@@ -727,6 +737,21 @@ class DASWebService(DASWebManager):
             head.update({'reason': reason})
         if  status != 'ok':
             head.update(self.info())
+
+        # check if query had dataset input and returned no results
+        # then run hint functions to find dataset in other DBS instances
+        skeys = dasquery.mongo_query['spec']
+        empty = False
+        for item in data:
+            if  'dataset.name' in skeys and 'dataset' in item:
+                if  not item['dataset']:
+                    empty = True
+                    break
+        if  empty:
+            hints = self.hint_datasets(kwargs)
+            for item in data:
+                item.update({'hints': hints})
+
         return head, data
 
     def info(self):
@@ -778,8 +803,6 @@ class DASWebService(DASWebManager):
             return  False
 
         return True
-
-
 
     @expose
     @checkargs(DAS_WEB_INPUTS)
@@ -1114,17 +1137,7 @@ class DASWebService(DASWebManager):
     @checkargs(DAS_WEB_INPUTS)
     def hints(self, **kwargs):
         """ ajax callback to return the hints """
-        query = kwargs.get('input', '').strip()
-        dbsinst = kwargs.get('instance', self.dbs_global)
-        hint_functions = [hint_dataset_case_insensitive,
-                          hint_dataset_in_other_insts, ]
-        hints = (hint(query, dbsinst)
-                 for hint in hint_functions)
-
-        # select only non-empty hints
-        # p.s. need a list to be able to check if we have any results
-        hints = [r for r in hints
-                 if r and r.get('results')]
+        hints = self.hint_datasets(kwargs)
 
         # print out the results if debugging
         if self.dasconfig.get('verbose'):
