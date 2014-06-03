@@ -61,10 +61,10 @@ def findReqMgrIds(dataset, base='https://cmsweb.cern.ch', verbose=False):
         ids += get_ids(url, params, dataset, verbose)
         source = 'ReqMgr'
     if  not ids: # we will query WMStats
-        url = '%s/couchdb/wmstats/_design/WMStats/_view/requestByOutputDataset' \
-            % base
-        ids = get_ids(url, params, dataset, verbose)
-        source = 'WMStats'
+        for view in ['requestByOutputDataset', 'requestByInputDataset']:
+            url = '%s/couchdb/wmstats/_design/WMStats/_view/%s' % (base, view)
+            ids = get_ids(url, params, dataset, verbose)
+            source = 'WMStats'
     return ids, source
 
 def rurl(base, ids):
