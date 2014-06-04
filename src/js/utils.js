@@ -74,6 +74,25 @@ function ToggleTag(tag, link_tag) {
         }
     }
 }
+function ToggleTagNames(tag, link_tag) {
+    var attrs=document.getElementsByName(tag);
+    for(var i=0; i<attrs.length; ++i) {
+        var val=attrs[i];
+        if  (val.className == "show") {
+            val.className="hide";
+        } else {
+            val.className="show";
+        }
+    }
+    var lid=document.getElementById(link_tag);
+    if (lid) {
+        if  (lid.innerHTML == "show") {
+            lid.innerHTML="hide";
+        } else {
+            lid.innerHTML="show";
+        }
+    }
+}
 function load(url) {
     window.location.href=url;
 }
