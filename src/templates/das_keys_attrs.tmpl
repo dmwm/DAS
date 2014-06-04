@@ -1,0 +1,48 @@
+#from DAS.web.utils import quote
+
+<!-- das_keys_attrs.tmpl -->
+<div class="page">
+<h2>DAS keys/attributes</h2>
+This page lists known DAS keys along with their attributes. Please note,
+specific attribute depeneds on input DAS query and may not be shown with other
+attributes for given DAS key.
+<br/>
+
+For example,
+<br/>
+&nbsp;&nsbp;&nbsp;<b>file.size appears in file=/a/b/c/file.root</b>
+<br/>
+DAS query output, but is not shown in
+<br/>
+&nbsp;&nsbp;&nbsp;<b>file dataset=/a/b/c run=123</b>
+<br/>
+query. This happens due to nature of underlying data-service APIs which may or
+may not return specific attribute based on given input. It also means that
+specific attribute may be shown in different DAS queries.
+<br/>
+<br/>
+Please use
+<a href="javascript:ToggleTagNames('id_qpat', 'link_qpat')" id="link_qpat"
+class="highlight"><b>show</b></a> link
+to turn on/off query patterns for given DAS key attributes.
+<br/>
+
+#for key, adict in $attrs.items()
+<h3>$quote($key)</h3>
+#for attr, plist in $adict.items()
+&nbsp;&nbsp;&nbsp;<b><em>$quote($attr)</em></b>
+<br/>
+<div class="hide" name="id_qpat">
+#for item in $plist
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+$quote($item)<br/>
+#end for
+</div>
+#end for
+<br/>
+<hr class="line" />
+
+#end for
+
+</div>
+<!-- end of das_keys_attrs.tmpl -->
