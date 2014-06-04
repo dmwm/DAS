@@ -13,6 +13,7 @@ from   bson.objectid import ObjectId
 
 # DAS modules
 import DAS.utils.jsonwrapper as json
+from   DAS.core.das_ql import DAS_RECORD_KEYS
 from   DAS.utils.regex import RE_3SLASHES
 from   DAS.utils.utils import genkey, deepcopy, print_exc, dastimestamp
 from   DAS.utils.query_utils import compare_specs
@@ -82,6 +83,7 @@ class DASQuery(object):
         self._service_apis_map = {}
         self._str           = ''
         self._query         = ''
+        self._query_pat     = ''
         self._query_full    = ''
         self._storage_query = {}
         self._mongo_query   = {}
@@ -126,6 +128,7 @@ class DASQuery(object):
         elif isinstance(query, object) and hasattr(query, '__class__')\
             and query.__class__.__name__ == 'DASQuery':
             self._query = query.query
+            self._query_pat = query.query_pat
             self._hashes = query.hashes
             self._mongo_query = query.mongo_query
             self._storage_query = query.storage_query
@@ -216,6 +219,20 @@ class DASQuery(object):
     def instance(self):
         "instance property of the DAS query"
         return self._instance
+
+    @property
+    def query_pat(self):
+        "Creates pattern for DAS query"
+        if  not self._query_pat:
+            fields = self.mongo_query.get('fields', [])
+            if  not fields:
+                fields = [] # will use empty list for conversion
+            query  = ','.join([f for f in fields if f not in DAS_RECORD_KEYS])
+            query += ' ' # space between fields and spec values
+            query += ' '.join(['{0}={0}_value'.format(k.split('.')[0]) for k \
+                        in self.mongo_query.get('spec', {}).keys()])
+            self._query_pat = query.strip()
+        return self._query_pat
 
     @property
     def query(self):
