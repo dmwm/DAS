@@ -1,9 +1,32 @@
 # pymongo modules
 from bson.objectid import ObjectId
 # DAS modules
+from DAS.core.das_ql import DAS_RECORD_KEYS
 from DAS.utils.das_db import db_connection, create_indexes
 from DAS.utils.logger import PrintManager
 import collections
+
+def dict_members(data, prefix):
+    """
+    Extract all key/attributes from given data structure
+    and update members container based on given key prefix
+    """
+    members = set()
+    for rdict in data:
+        if  not isinstance(rdict, dict):
+            members.add(prefix)
+            continue
+        for key, val in rdict.items():
+            ckey = '%s.%s' % (prefix, key)
+            if  isinstance(val, list):
+                for row in dict_members(val, ckey):
+                    members.add(row)
+            elif  isinstance(val, dict):
+                for row in dict_members([val], ckey):
+                    members.add(row)
+            else:
+                members.add(ckey)
+    return list(members)
 
 class DASKeyLearning(object):
     """
@@ -33,14 +56,41 @@ class DASKeyLearning(object):
 
         self.col = None
         self.create_db()
-
-
+        index_list = [('system', 1), ('urn', 1), ('members', 1), ('stems', 1)]
+        create_indexes(self.col, index_list)
 
     def create_db(self):
         """
         Establish connection to MongoDB back-end and create DB.
         """
         self.col = db_connection(self.dburi)[self.dbname][self.colname]
+
+    def add_record(self, dasquery, rec):
+        """
+        Add/update to keylearning DB keys/attributes from given record.
+        To do so, we parse it and call add_members method.
+        """
+        if  not ('das' in rec and 'system' in rec['das']):
+            return
+        systems = rec['das']['system']
+        apis = rec['das']['api']
+        pkey = rec['das']['primary_key'].split('.')[0]
+        data = rec[pkey]
+        members = dict_members(data, pkey)
+        for srv, api in zip(systems, apis):
+            self.add_members(srv, api, members)
+        # insert new record for query patern
+        fields = dasquery.mongo_query.get('fields', [])
+        if  fields:
+            for field in fields:
+                if  field in DAS_RECORD_KEYS:
+                    continue
+                new_members = [m for m in dict_members(rec[field], field) if m]
+                members += new_members
+        for attr in members:
+            spec = {'member': attr}
+            doc = {'query_pat': dasquery.query_pat}
+            self.col.update(spec, {'$addToSet': doc}, upsert=True)
 
     def add_members(self, system, urn, members):
         """
@@ -66,9 +116,6 @@ class DASKeyLearning(object):
                 self.col.insert({'member': member,
                                  'stems': self.stem(member)})
 
-        index_list = [('system', 1), ('urn', 1), ('members', 1), ('stems', 1)]
-        create_indexes(self.col, index_list)
-
     def stem(self, member):
         """
         Produce an extended set of strings which can be used for text-search.
@@ -91,9 +138,14 @@ class DASKeyLearning(object):
         else:
             possible_members = self.col.find({'stems': text},
                                              fields=['member'])
-
         return [doc['member'] for doc in possible_members]
 
+    def attributes(self):
+        """
+        Return full list of keyword attributes known in DAS.
+        """
+        spec = {'member':{'$exists':True}}
+        return self.col.find(spec)
 
     def member_info(self, member):
         """
