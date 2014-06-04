@@ -329,7 +329,7 @@ def print_from_cache(cache, query):
       exit(0)
     exit(1)
 
-def keys_attrs(lkey, host, ckey, cert, debug=0):
+def keys_attrs(lkey, oformat, host, ckey, cert, debug=0):
     "Contact host for list of key/attributes pairs"
     url = '%s/das/keys?view=json' % host
     headers = {"Accept": "application/json", "User-Agent": DAS_CLIENT}
@@ -347,6 +347,12 @@ def keys_attrs(lkey, host, ckey, cert, debug=0):
     fdesc = opener.open(req)
     data = json.load(fdesc)
     fdesc.close()
+    if  oformat.lower() == 'json':
+        if  lkey == 'all':
+            print json.dumps(data)
+        else:
+            print json.dumps({lkey:data[lkey]})
+        return
     for key, vdict in data.items():
         if  lkey == 'all':
             pass
@@ -374,7 +380,7 @@ def main():
     cert    = opts.cert
     base    = opts.base
     if  opts.keys_attrs:
-        keys_attrs(opts.keys_attrs, host, ckey, cert, debug)
+        keys_attrs(opts.keys_attrs, opts.format, host, ckey, cert, debug)
         return
     if  not query:
         print 'Input query is missing'
