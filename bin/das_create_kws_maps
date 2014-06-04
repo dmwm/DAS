@@ -5,6 +5,8 @@ if [ $# -ne 0 ] || [ "$1" == "-h" ] || [ "$1" == "-help" ] || [ "$1" == "--help"
     exit
 fi
 
+kl_file=update_keylearning_db.js
+
 # create inputvals kws maps
 query="type=*"
 das_cli --query="$query" --js-file=update_inputvals_datatype_name.js
@@ -28,7 +30,7 @@ query="era=*"
 das_cli --query="$query" --js-file=update_inputvals_era_name.js
 
 # create keylearning kws map
-kfile="--keylearning-file=update_keylearning_db.js"
+kfile="--keylearning-file=$kl_file"
 query="block,run,lumi dataset=/ZMM/Summer11-DESIGN42_V11_428_SLHC1-v1/GEN-SIM"
 das_cli --query="$query" $kfile
 query="file,lumi dataset=/ZMM/Summer11-DESIGN42_V11_428_SLHC1-v1/GEN-SIM"
@@ -71,3 +73,7 @@ query="user user=valya"
 das_cli --query="$query" $kfile
 query="run dataset=/HICorePhysics/HIRun2010-ZMM-v2/RAW-RECO"
 das_cli --query="$query" $kfile
+
+# sort update_keylearning_db.js file and remove duplicates
+cat $kl_file | sort | uniq > ${kl_file}.tmp
+mv ${kl_file}.tmp $kl_file
