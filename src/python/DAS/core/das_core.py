@@ -512,7 +512,14 @@ class DASCore(object):
         else:
             res = self.rawcache.get_from_cache(dasquery, idx, limit, \
                     collection=collection)
+        # we assume that all records from single query will have
+        # identical structure, therefore it will be sufficient to update
+        # keylearning DB only with first record
+        count = 0
         for row in res:
+            if  not count:
+                self.keylearning.add_record(dasquery, row)
             fix_times(row)
             yield row
+            count += 1
         das_timer('DASCore::get_from_cache', self.verbose)
