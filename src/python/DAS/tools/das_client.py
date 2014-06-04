@@ -122,6 +122,9 @@ class DASOptionParser:
         self.parser.add_option("--cache", action="store", type="string",
                                default=None, dest="cache", help=msg)
 
+        msg = 'List DAS key/attributes, use "all" or specific DAS key value, e.g. site'
+        self.parser.add_option("--list-attributes", action="store", type="string",
+                               default="", dest="keys_attrs", help=msg)
     def get_opt(self):
         """
         Returns parse list of options
@@ -326,6 +329,37 @@ def print_from_cache(cache, query):
       exit(0)
     exit(1)
 
+def keys_attrs(lkey, host, ckey, cert, debug=0):
+    "Contact host for list of key/attributes pairs"
+    url = '%s/das/keys?view=json' % host
+    headers = {"Accept": "application/json", "User-Agent": DAS_CLIENT}
+    req  = urllib2.Request(url=url, headers=headers)
+    if  ckey and cert:
+        ckey = fullpath(ckey)
+        cert = fullpath(cert)
+        http_hdlr  = HTTPSClientAuthHandler(ckey, cert, debug)
+    else:
+        http_hdlr  = urllib2.HTTPHandler(debuglevel=debug)
+    proxy_handler  = urllib2.ProxyHandler({})
+    cookie_jar     = cookielib.CookieJar()
+    cookie_handler = urllib2.HTTPCookieProcessor(cookie_jar)
+    opener = urllib2.build_opener(http_hdlr, proxy_handler, cookie_handler)
+    fdesc = opener.open(req)
+    data = json.load(fdesc)
+    fdesc.close()
+    for key, vdict in data.items():
+        if  lkey == 'all':
+            pass
+        elif lkey != key:
+            continue
+        print
+        print "DAS key:", key
+        for attr, examples in vdict.items():
+            prefix = '    '
+            print '%s%s' % (prefix, attr)
+            for item in examples:
+                print '%s%s%s' % (prefix, prefix, item)
+
 def main():
     """Main function"""
     optmgr  = DASOptionParser()
@@ -339,6 +373,9 @@ def main():
     ckey    = opts.ckey
     cert    = opts.cert
     base    = opts.base
+    if  opts.keys_attrs:
+        keys_attrs(opts.keys_attrs, host, ckey, cert, debug)
+        return
     if  not query:
         print 'Input query is missing'
         sys.exit(EX_USAGE)
