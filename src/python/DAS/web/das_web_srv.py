@@ -304,7 +304,7 @@ class DASWebService(DASWebManager):
 
     @expose
     @checkargs(DAS_WEB_INPUTS)
-    def keys(self):
+    def keys(self, **kwds):
         """
         Show DAS keys and their attibutes
         """
@@ -321,6 +321,9 @@ class DASWebService(DASWebManager):
                 adict[key] = vdict
             else:
                 adict[key] = {attr: qpat}
+        view = kwds.get('view', '')
+        if  view == 'json':
+            return json.dumps(adict)
         page = self.templatepage('das_keys_attrs', attrs=adict)
         return self.page(page, response_div=False)
 
