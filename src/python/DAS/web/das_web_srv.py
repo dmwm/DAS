@@ -304,6 +304,28 @@ class DASWebService(DASWebManager):
 
     @expose
     @checkargs(DAS_WEB_INPUTS)
+    def keys(self):
+        """
+        Show DAS keys and their attibutes
+        """
+        adict = {}
+        for row in self.dasmgr.keylearning.attributes():
+            qpat = row.get('query_pat', [])
+            key, attr = row['member'].split('.', 1)
+            if  key in adict:
+                vdict = adict[key]
+                if  attr in vdict:
+                    vdict[attr] += qpat
+                else:
+                    vdict[attr] = qpat
+                adict[key] = vdict
+            else:
+                adict[key] = {attr: qpat}
+        page = self.templatepage('das_keys_attrs', attrs=adict)
+        return self.page(page, response_div=False)
+
+    @expose
+    @checkargs(DAS_WEB_INPUTS)
     def services(self):
         """
         represent DAS services
