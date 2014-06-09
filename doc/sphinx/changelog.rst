@@ -7,6 +7,7 @@ This release series is targeted to DAS production stability and quality.
 
 - 2.8.X
 
+  - show type of config link, ticket 4189
   - adjust das_client to show DAS keys/attributes via --list-attributes option
   - add Keys menu which shows list of DAS keys/attributes
   - add functionality to accumulate information about DAS keys/attributes
