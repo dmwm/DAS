@@ -163,7 +163,7 @@ def adjust_values(func, gen, links, pkey):
             to_show.append((key, ', '.join(values)))
             continue
         lookup = func(key)
-        if  key.lower() == 'reason' or key.lower() == 'qhash':
+        if  key.lower() == 'reason' or key.lower() == 'qhash' or key.lower() == 'hints':
             continue
         if  key.lower() == 'error':
             key = '<span %s>WARNING</span>' % red
