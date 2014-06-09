@@ -54,18 +54,26 @@ def findReqMgrIds(dataset, base='https://cmsweb.cern.ch', verbose=False):
     https://hypernews.cern.ch/HyperNews/CMS/get/dmDevelopment/1501/1/1/1/1.html
     """
     params = {'key': '"%s"' % dataset, 'include_docs':'true', 'stale': 'update_after'}
-    ids = []
+    idict = {}
     for view in ['byoutputdataset', 'byinputdataset']:
         url = "%s/couchdb/reqmgr_workload_cache/_design/ReqMgr/_view/%s" \
             % (base, view)
-        ids += get_ids(url, params, dataset, verbose)
+        ids = get_ids(url, params, dataset, verbose)
+        if  view in idict:
+            idict[view] += list(set(ids))
+        else:
+            idict[view] = list(set(ids))
         source = 'ReqMgr'
     if  not ids: # we will query WMStats
         for view in ['requestByOutputDataset', 'requestByInputDataset']:
             url = '%s/couchdb/wmstats/_design/WMStats/_view/%s' % (base, view)
             ids = get_ids(url, params, dataset, verbose)
+            if  view in idict:
+                idict[view] += list(set(ids))
+            else:
+                idict[view] = list(set(ids))
             source = 'WMStats'
-    return ids, source
+    return idict, source
 
 def rurl(base, ids):
     "Construct reqmgr config url"
@@ -79,7 +87,14 @@ def configs(url, args, verbose=False):
     if  not dataset:
         return
     base = 'https://%s' % url.split('/')[2]
-    ids, source = findReqMgrIds(dataset, base, verbose)
+    idict, source = findReqMgrIds(dataset, base, verbose)
+    ids = []
+    ids_types = {} # keep track of ids/types relationship
+    for key, ilist in idict.iteritems():
+        rtype = 'output' if key.lower().find('output') != -1 else 'input'
+        for item in ilist:
+            ids.append(item)
+            ids_types[item] = rtype
     # for hash ids find configs via ReqMgr REST API
     urls = [rurl(base, i) for i in ids if len(i) == 32]
     # for non-hash ids probe to find configs in showWorkload
@@ -90,22 +105,32 @@ def configs(url, args, verbose=False):
         config_urls = []
         for row in gen:
             if  'error' not in row:
+                url = row['url']
+                for key, rtype in ids_types.items():
+                    if  key in url:
+                        break
                 rdict = json.loads(row['data'])
                 for key in rdict.keys():
                     val = rdict[key]
                     if  key.endswith('ConfigCacheID'):
                         if  isinstance(val, basestring):
                             config_urls.append(rurl(base, val))
+                            ids_types[val] = rtype
                     elif isinstance(val, dict):
                         for kkk in val.keys():
                             if  kkk.endswith('ConfigCacheID'):
                                 vvv = val[kkk]
                                 if  isinstance(vvv, basestring):
                                     config_urls.append(rurl(base, vvv))
+                                    ids_types[vvv] = rtype
         if  config_urls:
             urls += config_urls
-    urls = list(set(urls))
-    config = {'dataset':dataset, 'name': source, 'urls': urls, 'ids': ids}
+    udict = {}
+    for rid, rtype in ids_types.items():
+        for url in set(urls):
+            if  rid in url:
+                udict.setdefault(rtype, []).append(url)
+    config = {'dataset':dataset, 'name': source, 'urls': udict, 'ids': ids, 'idict': idict}
     yield {'config': config}
 
 class ReqMgrService(DASAbstractService):

@@ -178,10 +178,11 @@ def adjust_values(func, gen, links, pkey):
                     val = '<a href="%s%s">%s</a>' \
                         % (link, quote(val), quote(val))
             if  key.find('Config urls') != -1 and val:
-                if  isinstance(val, list):
+                if  isinstance(val, dict):
                     urls = []
-                    for vdx in range(len(val)):
-                        urls.append('<a href="%s">config-%d</a>' % (val[vdx], vdx+1))
+                    for rtype, rurls in val.items():
+                        for vdx in range(len(rurls)):
+                            urls.append('<a href="%s">%s-config-%d</a>' % (rurls[vdx], rtype, vdx+1))
                     value = ', '.join(urls)
                 else:
                     value = '<a href="%s">config</a>' % val
