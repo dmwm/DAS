@@ -5,6 +5,14 @@ Release notes
 
 This release series is targeted to DAS production stability and quality.
 
+- 2.8.X
+
+  - adjust das_client to show DAS keys/attributes via --list-attributes option
+  - add Keys menu which shows list of DAS keys/attributes
+  - add functionality to accumulate information about DAS keys/attributes
+    within DAS keylearning DB (ticket #4190)
+  - fixed: 4188, 4178
+
 - 2.7.X
 
   - remove DBS2 code base
