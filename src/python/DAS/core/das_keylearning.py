@@ -72,10 +72,13 @@ class DASKeyLearning(object):
         """
         if  not ('das' in rec and 'system' in rec['das']):
             return
-        systems = rec['das']['system']
-        apis = rec['das']['api']
-        pkey = rec['das']['primary_key'].split('.')[0]
-        data = rec[pkey]
+        das = rec['das']
+        if  'system' not in das or 'api' not in das or 'primary_key' not in das:
+            return
+        systems = das['system']
+        apis = das['api']
+        pkey = das['primary_key'].split('.')[0]
+        data = rec.get(pkey, [])
         members = dict_members(data, pkey)
         for srv, api in zip(systems, apis):
             self.add_members(srv, api, members)
