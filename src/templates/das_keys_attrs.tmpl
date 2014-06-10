@@ -19,9 +19,15 @@ Please use
 to turn on/off query patterns for given DAS key attributes.
 <br/>
 
-#for key, adict in $attrs.items()
+#set keys=$attrs.keys()
+#silent keys.sort()
+#for key in $keys
+#set adict=$attrs[$key]
 <h3>$quote($key)</h3>
-#for attr, plist in $adict.items()
+#set key_attrs=$adict.keys()
+#silent key_attrs.sort()
+#for attr in $key_attrs
+#set plist=$adict[$attr]
 &nbsp;&nbsp;&nbsp;<b><em>$quote($attr)</em></b>
 <br/>
 <div class="hide" name="id_qpat">
