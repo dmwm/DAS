@@ -114,6 +114,11 @@ def tooltip_helper(title):
         tooltip = title + \
         ' is a total number of blocks fully transferred to the site\
  divided by total number of blocks at this site'
+    elif title == 'Config urls':
+        tooltip = title + \
+        ' represents either config file(s) used to produced this dataset\
+ (input-config) or config file(s) used to produce other datasets using dataset\
+ in question (output-config)'
     else:
         title = ''
     if  title:
@@ -186,6 +191,7 @@ def adjust_values(func, gen, links, pkey):
                     value = ', '.join(urls)
                 else:
                     value = '<a href="%s">config</a>' % val
+                key = tooltip_helper(key)
             elif  isinstance(val, list):
                 value = ', '.join([str(v) for v in val])
                 try:
