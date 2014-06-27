@@ -310,8 +310,11 @@ class DASWebService(DASWebManager):
         """
         adict = {}
         for row in self.dasmgr.keylearning.attributes():
-            qpat = row.get('query_pat', [])
-            key, attr = row['member'].split('.', 1)
+            try:
+                qpat = row.get('query_pat', [])
+                key, attr = row['member'].split('.', 1)
+            except:
+                continue
             if  key in adict:
                 vdict = adict[key]
                 if  attr in vdict:
