@@ -224,6 +224,21 @@ das_map : [
      "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+"},
 ]
 ---
+urn: site4block
+url : "https://cmsweb.cern.ch/dbs/prod/global/DBSReader/blocks/"
+expire : 900
+params : {
+        "detail":"True",
+        "block_name":"required",
+        "dataset_access_type": "optional",
+}
+lookup : site
+das_map : [
+    {"das_key": "site", "rec_key":"site.name"},
+    {"das_key": "block", "rec_key":"block.name", "api_arg":"block_name",
+     "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+#[0-9a-zA-Z-]"},
+]
+---
 urn: blocks
 url : "https://cmsweb.cern.ch/dbs/prod/global/DBSReader/blocks/"
 expire : 900

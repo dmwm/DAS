@@ -479,7 +479,7 @@ class DBS3Service(DASAbstractService):
                     kwds['run_num'] = '%s-%s' % (val['$gte'], val['$lte'])
             else:
                 kwds['run_num'] = val
-        if  api == 'site4dataset':
+        if  api in ['site4dataset', 'site4block']:
             # skip API call if inst is global one (data provided by phedex)
             if  inst == self.prim_instance:
                 kwds['dataset'] = 'required' # we skip
@@ -555,11 +555,11 @@ class DBS3Service(DASAbstractService):
         """
         DBS3 data-service parser helper, it is used by parser method.
         """
-        if  api == 'site4dataset':
+        if  api in ['site4dataset', 'site4block']:
             gen = json_parser(source, self.logger)
         else:
             gen = DASAbstractService.parser(self, query, dformat, source, api)
-        if  api == 'site4dataset':
+        if  api in ['site4dataset', 'site4block']:
             sites = set()
             for rec in gen:
                 if  isinstance(rec, list):
