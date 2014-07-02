@@ -299,8 +299,8 @@ class TestDASKeywordSearch(KeywordSearchAbstractTester):
 
     def test_result_field_selections_4(self):
         self.assert_query_result('number of lumis in run 176304',
-                                 'lumi run=176304 | grep lumi.number')
-#                                 'run run=176304 | grep run.nlumis')
+#                                 'lumi run=176304 | grep lumi.number')
+                                 'run run=176304 | grep run.nlumis')
 
 #    def test_result_field_selections_stem(self):
 #        self.assert_query_result('Zmmg event number', [
