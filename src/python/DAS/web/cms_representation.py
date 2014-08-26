@@ -211,6 +211,11 @@ def adjust_values(func, gen, links, pkey):
                 value = int(val)
             elif  key.find('Lumi') != -1 and val:
                 value = int(val)
+            elif  key.find('Site type') != -1 and val:
+                if  isinstance(val, basestring) and val.lower() == 'disk':
+                    value = val
+                else:
+                    value = val +' (<b>no xrootd access</b>)'
             elif  key.find('Tag') != -1 and val:
                 if  isinstance(val, basestring) and val.lower() == 'unknown':
                     value = '<span %s>%s</span>' % (red, val)

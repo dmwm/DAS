@@ -274,6 +274,7 @@ site : [
         {"das":"site.block_fraction", "ui":"Block presence"},
         {"das":"site.block_completion", "ui":"Block completion"},
         {"das":"site.replica_fraction", "ui":"File-replica presence"},
+        {"das":"site.kind", "ui":"Site type"},
         {"das":"site.admin.email", "ui":"Admin Email(s)"},
         {"das":"site.info.usage", "ui":"Usage"},
         {"das":"site.node.name", "ui":"Node name"},

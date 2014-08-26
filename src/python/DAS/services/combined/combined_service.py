@@ -197,6 +197,26 @@ class CombinedService(DASAbstractService):
         self.map = self.dasmapping.servicemap(self.name)
         map_validator(self.map)
         self.dbs = 'dbs3'
+        self.sites = {'tstamp': 0} # local cache
+        self.thr = 24*60*60 # 1 day for local cache
+
+    def site_info(self, phedex_url, site):
+        "Return Phedex site info about given site (rely on local cache)"
+        if  abs(self.sites.get('tstamp') - time.time()) > self.thr \
+                or site not in self.sites:
+            # need to update the cache
+            # use Phedex API https://cmsweb.cern.ch/phedex/datasvc/json/prod/nodes
+            expire = self.thr
+            args = {}
+            api = phedex_url + '/nodes'
+            headers = {'Accept': 'application/json;text/json'}
+            source, expire = \
+                getdata(api, args, headers, expire, post=False, system='phedex')
+            self.sites['tstamp'] = time.time()
+            for rec in json_parser(source, None):
+                for row in rec['phedex']['node']:
+                    self.sites[row['name']] = row['kind']
+        return self.sites.get(site, 'NA')
 
     def services(self):
         "Return data-services used by this class"
@@ -260,6 +280,9 @@ class CombinedService(DASAbstractService):
             try:
                 gen = site4dataset(dbs_url, phedex_api, args, expire)
                 for row in gen:
+                    sname = row.get('site', {}).get('name', '')
+                    skind = self.site_info(phedex_url, sname)
+                    row['site'].update({'kind':skind})
                     yield row
             except Exception as err:
                 print_exc(err)
