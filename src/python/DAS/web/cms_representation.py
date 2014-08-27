@@ -215,7 +215,7 @@ def adjust_values(func, gen, links, pkey):
                 if  isinstance(val, basestring) and val.lower() == 'disk':
                     value = val
                 else:
-                    value = val +' (<b>no xrootd access</b>)'
+                    value = '<span %s><b>TAPE</b></span> <b>no user access</b>' % red
             elif  key.find('Tag') != -1 and val:
                 if  isinstance(val, basestring) and val.lower() == 'unknown':
                     value = '<span %s>%s</span>' % (red, val)
