@@ -48,30 +48,20 @@ class CMSQueryRewrite(object):
         self.schema_adapter = get_schema(dascore=self.dasmgr)
         self.render_template = render_template
 
-    def _get_one_row_with_all_fields(self, dasquery):
+    def get_fields_in_query_result(self, dasquery):
         """
-        returns a query result ignoring the grep filter(s)
+        returns a list of fields in the results of dasquery (must be in cache)
         """
         mongo_query = dasquery.mongo_query.copy()
         mongo_query['filters'] = {}
         dasquery = DASQuery(mongo_query)
 
-        data = list(self.dasmgr.get_from_cache(dasquery, idx=0, limit=1))
-        if len(data):
-            return data[0]
-
-    def get_fields_in_query_result(self, dasquery):
-        """
-        returns a list of fields in the results of dasquery (must be in cache)
-        """
-
-        # if we have filter/aggregator get one row from the given query
-        # this requires qhash to be in cache
+        fieldlist = []
         if dasquery.mongo_query:
-            row = self._get_one_row_with_all_fields(dasquery)
-            return self.cms_rep.get_result_fieldlist(row)
-
-        return []
+            # loop over few records to get unique set of attributes
+            for row in self.dasmgr.get_from_cache(dasquery, idx=0, limit=10):
+                fieldlist += self.cms_rep.get_result_fieldlist(row)
+        return list(set(fieldlist))
 
     def _do_query_rewrite(self, q, fields_avail, pk):
         """

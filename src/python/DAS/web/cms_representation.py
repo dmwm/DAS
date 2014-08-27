@@ -305,20 +305,20 @@ class CMSRepresentation(DASRepresentation):
             tdict[uikey] = mapkey
         return tdict
 
-    def get_one_row(self, dasquery):
+    def get_few_rows(self, dasquery, nrows=5):
         """
-        Invoke DAS workflow and get one rowID from the cache.
+        Invoke DAS workflow and get few rows from the cache.
         """
-        # TODO: sometimes this seem to return ONLY rowID, is this intended use?
-        q = DASQuery({'spec':{'qhash':dasquery.qhash}})
-        data = list(self.dasmgr.get_from_cache(q, idx=0, limit=1))
-        if  len(data):
-            return data[0]
+        for row in self.dasmgr.get_from_cache(dasquery, idx=0, limit=nrows):
+            yield row
 
-    def fltpage(self, row):
+    def fltpage(self, dasquery):
         """Prepare filter snippet for a given query"""
         page = ''
-        fields = self.get_result_fieldlist(row)
+        fields = []
+        for row in self.get_few_rows(dasquery):
+            fields += self.get_result_fieldlist(row)
+        fields = list(set(fields))
         if fields:
             #fields += ['das.conflict']
             dflt = das_filters() + das_aggregators()
@@ -405,7 +405,7 @@ class CMSRepresentation(DASRepresentation):
             # if we have filter/aggregator get one row from the given query
             try:
                 if  dasquery.mongo_query:
-                    fltpage = self.fltpage(self.get_one_row(dasquery))
+                    fltpage = self.fltpage(dasquery)
             except Exception as exc:
                 fltpage = 'N/A, please check DAS record for errors'
                 msg = 'Fail to apply filter to query=%s' % dasquery.query
@@ -466,7 +466,7 @@ class CMSRepresentation(DASRepresentation):
             if  'das' in row and 'primary_key' in row['das']:
                 pkey = row['das']['primary_key']
                 if  pkey and not rowkeys and not fltpage:
-                    fltpage = self.fltpage(row)
+                    fltpage = self.fltpage(dasquery)
                 try:
                     lkey = pkey.split('.')[0]
                     if  pkey == 'summary':
@@ -644,7 +644,7 @@ class CMSRepresentation(DASRepresentation):
                 page += '<br/><span class="box_red">%s</span>' % reason
         for row in data:
             if  not fltbar:
-                fltbar = self.fltpage(row)
+                fltbar = self.fltpage(dasquery)
             try: # we don't need to show qhash in table view
                 del row['qhash']
             except:

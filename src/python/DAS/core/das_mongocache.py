@@ -525,7 +525,6 @@ class DASMongocache(object):
                     'das.record': spec4data_records()}
         if  filter_cond:
             spec.update(filter_cond)
-        self.check_filters(collection, spec, fields)
         conn = db_connection(self.dburi)
         mdb  = conn[self.dbname]
         mdb.add_son_manipulator(self.das_son_manipulator)
@@ -599,43 +598,6 @@ class DASMongocache(object):
         for val in col.index_information().values():
             for idx in val['key']:
                 yield idx[0] # index name
-
-    def check_filters(self, collection, spec, fields):
-        "Check that given filters can be applied to records found with spec"
-        if  not fields:
-            return
-        conn = db_connection(self.dburi)
-        mdb  = conn[self.dbname]
-        mdb.add_son_manipulator(self.das_son_manipulator)
-        col  = mdb[collection]
-        data = find_one(col, spec)
-        if  not data:
-            return
-        found = False
-        for fltr in fields:
-            row = dict(data)
-            if  fltr in row or 'error' in row:
-                found = True
-                break
-            for key in fltr.split('.'):
-                if  isinstance(row, dict):
-                    if  key in row:
-                        row = row[key]
-                        found = True
-                    else:
-                        found = False
-                elif isinstance(row, list):
-                    for row in list(row):
-                        if  key in row:
-                            row = row[key]
-                            found = True
-                            break
-                        else:
-                            found = False
-        if  not found:
-            err  = "check_filters unable to find filter=%s" % fltr
-            err += "\nrecord=%s" % data
-            raise Exception(err)
 
     def get_records(self, coll, spec, fields, skeys, idx, limit, unique=False):
         "Generator to get records from MongoDB."
