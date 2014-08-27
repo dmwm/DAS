@@ -143,17 +143,18 @@ das_map : [
 urn: filesummaries
 url : "https://cmsweb.cern.ch/dbs/prod/global/DBSReader/filesummaries/"
 expire : 900
-params : {"dataset":"required"}
+params : {"dataset":"required", "validFileOnly":1}
 lookup : dataset
 das_map : [
     {"das_key": "dataset", "rec_key":"dataset.name", "api_arg":"dataset",
      "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+"},
+    {"das_key": "status", "rec_key":"status.name", "api_arg":"validFileOnly"},
 ]
 ---
 urn: summary4dataset_run
 url : "https://cmsweb.cern.ch/dbs/prod/global/DBSReader/filesummaries/"
 expire : 900
-params : {"dataset":"required", "run_num":"optional"}
+params : {"dataset":"required", "run_num":"optional", "validFileOnly":1}
 lookup : summary
 das_map : [
     {"das_key": "summary", "rec_key": "summary"},
