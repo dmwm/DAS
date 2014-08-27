@@ -5,6 +5,10 @@ Release notes
 
 This release series is targeted to DAS production stability and quality.
 
+- 2.9.X
+
+  - fixed: 4201, 4200, 4198, 4197, 4196, 4190, 4124, 4188
+
 - 2.8.X
 
   - show type of config link, ticket 4189
