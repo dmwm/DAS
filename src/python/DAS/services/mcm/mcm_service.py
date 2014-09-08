@@ -56,7 +56,11 @@ class MCMService(DASAbstractService):
             if  row:
                 if  api == 'dataset4mcm':
                     for val in row.values():
-                        yield {'dataset':{'name': val}}
+                        if  isinstance(val, basestring):
+                            yield {'dataset':{'name': val}}
+                        elif isinstance(val, list):
+                            for vvv in val:
+                                yield {'dataset':{'name': vvv}}
                 else:
                     yield {'mcm':row}
             counter += 1
