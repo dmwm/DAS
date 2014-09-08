@@ -197,6 +197,20 @@ class ReqMgrService(DASAbstractService):
                         yield data
                 except:
                     yield row
+        elif api == 'datasetByPrepID':
+            gen = DASAbstractService.parser(self, query, dformat, source, api)
+            for row in gen:
+                data = row['dataset']
+                for val in data.values():
+                    if  isinstance(val, basestring):
+                        yield {'dataset':{'name': val}}
+                    elif isinstance(val, list):
+                        for vvv in val:
+                            yield {'dataset':{'name': vvv}}
+        elif api == 'recentDatasetByPrepID':
+            gen = DASAbstractService.parser(self, query, dformat, source, api)
+            for row in gen:
+                yield {'dataset':{'name':row['dataset']}}
         elif api == 'configIDs':
             gen = DASAbstractService.parser(self, query, dformat, source, api)
             for row in gen:
