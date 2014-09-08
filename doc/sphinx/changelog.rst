@@ -7,6 +7,10 @@ This release series is targeted to DAS production stability and quality.
 
 - 2.9.X
 
+  - replaced hints ajax calls with template parsing of DAS records which
+    carry hints parts
+  - Add support for dataset prepid=XXX queries (done via Reqmgr, MCM, DBS3
+    calls)
   - Add prepid support via DBS3 datasets call
   - fixed: 4201, 4200, 4198, 4197, 4196, 4190, 4124, 4188
 
