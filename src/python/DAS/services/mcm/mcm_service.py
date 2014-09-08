@@ -30,6 +30,8 @@ class MCMService(DASAbstractService):
             url  = '%s%s' % (url, params.get('dataset'))
         elif 'mcm' in params:
             url = '%s/%s' % (url, params.get('mcm'))
+        elif 'prepid' in params:
+            url = '%s/%s' % (url, params.get('prepid'))
         else:
             return {}
         params = {}
