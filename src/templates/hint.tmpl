@@ -1,26 +1,28 @@
 #from DAS.web.utils import quote
 #from DAS.utils.url_utils import url_extend_params
 
-#set title=$quote($hint.title)
+#set title=$quote($hint['title'])
 
 <div class="hint-block">
     <b>$title</b><br/>
     #if 'descr' in $hint
-        #set descr=$quote($hint.descr)
+        #set descr=$quote($hint['descr'])
         <p>$descr</p>
     #end if
-    #for result in $hint.results
-        #set inst=$quote($result.inst)
+    #for result in $hint['results']
+        #try
+            #set inst=$quote($result['inst'])
+        #except
+            #set inst=$quote($dbs)
+        #end try
         <ul class="result">
         Results in: <em>$inst</em> instance
         <br/>
-        #if 'examples' in result and $result.examples
-            #for example in $result.examples
-            #set url=$base + '/request'
-            #set link=url_extend_params(url=$url, input=$example, instance=$inst)
-            <li><a href="${link}">$quote($example)</a></li>
-            #end for
-        #end if
+        #for example in $result.get('examples', [])
+        #set url=$base + '/request'
+        #set link=url_extend_params(url=$url, input=$example, instance=$inst)
+        <li><a href="${link}">$quote($example)</a></li>
+        #end for
         </ul>
     #end for
 

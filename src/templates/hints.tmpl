@@ -1,9 +1,0 @@
-#if $hints
-        <div id="cms-hints-sidebar">
-            #for hint in $hints
-                ## this is needed to pass param to included tmpl, cheetah's lol
-                #set global hint=$hint
-                #include $templatedir + "/hint.tmpl"
-            #end for
-        </div>
-#end if

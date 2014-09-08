@@ -495,7 +495,15 @@ class DASWebService(DASWebManager):
                                 suggest=err.options.values)
         except WildcardMatchingException as err:
             das_parser_error(uinput, str(type(err)) + ' ' + str(err))
-            return 1, self.add_hints_plugin(error_msg(str(err)))
+            kwds = {'input':uinput, 'instance':inst}
+            hints = self.hint_datasets(kwds)
+            page = error_msg(str(err))
+            page += '<div id="cms-hints-sidebar">'
+            for hint in hints:
+                page += self.templatepage('hint',
+                        hint=hint, base=self.base, dbs=self.dbs_global)
+            page += '</div>'
+            return 1, page
         except Exception as err:
             das_parser_error(uinput, str(type(err)) + ' ' + str(err))
 
@@ -768,14 +776,14 @@ class DASWebService(DASWebManager):
 
         # check if query had dataset input and returned no results
         # then run hint functions to find dataset in other DBS instances
-        skeys = dasquery.mongo_query['spec']
+        mquery = dasquery.mongo_query
         empty = False
         for item in data:
-            if  'dataset.name' in skeys and 'dataset' in item:
+            if  'dataset.name' in mquery['spec'] and 'dataset' in mquery['fields']:
                 if  not item['dataset']:
                     empty = True
                     break
-        if  empty:
+        if  empty: # if no results found add dataset from other DBS instances
             hints = self.hint_datasets(kwargs)
             for item in data:
                 item.update({'hints': hints})
@@ -934,10 +942,6 @@ class DASWebService(DASWebManager):
 
                 func = getattr(self, view + "view")
                 page = func(head, data)
-
-                # insert hints loader, if enabled
-                if view in html_views:
-                    page = self.add_hints_plugin(page)
         except HTTPError as _err:
             raise
         except Exception as exc:
@@ -945,15 +949,6 @@ class DASWebService(DASWebManager):
             msg  = gen_error_msg(kwargs)
             page = self.templatepage('das_error', msg=msg)
         return page
-
-    def add_hints_plugin(self, page):
-        """ make the hints to be loaded via ajax """
-        #TODO: name this render_results_masterpage?
-        hints_enabled = self.dasconfig['web_plugins']['show_hints']
-        return self.templatepage('das_results_masterpage',
-                                 page=page,
-                                 kws_host='',
-                                 hints_enabled=hints_enabled)
 
     @expose
     def download(self, lfn):
@@ -1158,18 +1153,3 @@ class DASWebService(DASWebManager):
                                'value': prefix + 'dataset=%s' % row,
                                'info': 'dataset'})
         return result
-
-    #@exposedasjson
-    @expose
-    @enable_cross_origin
-    @checkargs(DAS_WEB_INPUTS)
-    def hints(self, **kwargs):
-        """ ajax callback to return the hints """
-        hints = self.hint_datasets(kwargs)
-
-        # print out the results if debugging
-        if self.dasconfig.get('verbose'):
-            pprint.pprint(hints)
-
-        # TODO: base could be a global param passed by templatepage
-        return self.templatepage('hints', hints=hints, base=self.base)

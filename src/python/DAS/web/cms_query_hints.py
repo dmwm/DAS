@@ -19,8 +19,7 @@ def get_dataset_token(query):
     if dataset_tokens:
         return dataset_tokens[0]
     else:
-        return query
-
+        return ''
 
 def repl_dataset_val(query, repl):
     original = get_dataset_token(query)
@@ -32,6 +31,8 @@ def hint_dataset_in_other_insts(query, cur_inst):
     """ find datasets in other DBS instances
      (shown only if no matches in current instance)"""
     dataset_pat = get_dataset_token(query)
+    if  not dataset_pat:
+        return {}
     matches = match_dataset_all_inst(dataset_pat, cur_inst)
 
     # for now, display hints ONLY on no matches in the current instance
@@ -54,6 +55,8 @@ def hint_dataset_case_insensitive(query, cur_inst):
     """ case insensitive dataset suggestions
      shown only if current query return no results """
     dataset_pat = get_dataset_token(query)
+    if  not dataset_pat:
+        return {}
     good_result = lambda m: m != dataset_pat
     if '*' in dataset_pat:
         # the mongo query is quite slow
@@ -66,6 +69,6 @@ def hint_dataset_case_insensitive(query, cur_inst):
                 'query': repl_dataset_val(query, m)}
                for m in find_datasets(dataset_pat, cur_inst)
                if good_result(m)]
-    return {'title': 'Case-insensitive dataset matches',
+    return {'title': 'Case-insensitive dataset matches (NEW)',
             'descr': '(dataset selection in DBS3 is now case-sensitive)',
             'results': matches}
