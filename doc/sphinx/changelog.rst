@@ -7,6 +7,7 @@ This release series is targeted to DAS production stability and quality.
 
 - 2.9.X
 
+  - Add prepid support via DBS3 datasets call
   - fixed: 4201, 4200, 4198, 4197, 4196, 4190, 4124, 4188
 
 - 2.8.X
