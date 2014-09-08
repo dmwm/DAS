@@ -5,11 +5,11 @@ format : JSON
 urn : mcm_summary
 url : "https://cms-pdmv.cern.ch/mcm/public/restapi/requests/get"
 expire : 600
-params : {"mcm": "required"}
+params : {"prepid": "required"}
 lookup : mcm
 das_map : [
-    {"das_key": "mcm", "rec_key": "mcm.prepid", "api_arg":"mcm"},
-    {"das_key": "prepid", "rec_key": "mcm.prepid", "api_arg":"mcm"},
+    {"das_key": "mcm", "rec_key": "mcm"},
+    {"das_key": "prepid", "rec_key": "prepid", "api_arg":"prepid"},
 ]
 ---
 urn : mcm4dataset
@@ -18,7 +18,7 @@ expire : 600
 params : {"dataset": "required"}
 lookup : mcm
 das_map : [
-    {"das_key": "mcm", "rec_key": "mcm.prepid"},
+    {"das_key": "mcm", "rec_key": "prepid"},
     {"das_key": "dataset", "rec_key":"dataset.name", "api_arg":"dataset",
      "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+"},
 ]
@@ -29,7 +29,7 @@ expire : 600
 params : {"dataset": "required"}
 lookup : dataset
 das_map : [
-    {"das_key": "mcm", "rec_key": "mcm.prepid"},
+    {"das_key": "mcm", "rec_key": "prepid"},
     {"das_key": "dataset", "rec_key":"dataset.name", "api_arg":"dataset",
      "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+"},
 ]
@@ -37,11 +37,11 @@ das_map : [
 urn : dataset4mcm
 url : "https://cms-pdmv.cern.ch/mcm/public/restapi/requests/output"
 expire : 600
-params : {"mcm": "required"}
+params : {"prepid": "required"}
 lookup : dataset
 das_map : [
     {"das_key": "dataset", "rec_key":"dataset.name"},
-    {"das_key": "mcm", "rec_key": "mcm.prepid", "api_arg":"mcm"},
+    {"das_key": "prepid", "rec_key": "prepid", "api_arg":"prepid"},
 ]
 ---
 notations : [
