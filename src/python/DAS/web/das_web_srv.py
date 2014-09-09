@@ -498,11 +498,9 @@ class DASWebService(DASWebManager):
             kwds = {'input':uinput, 'instance':inst}
             hints = self.hint_datasets(kwds)
             page = error_msg(str(err))
-            page += '<div id="cms-hints-sidebar">'
             for hint in hints:
                 page += self.templatepage('hint',
                         hint=hint, base=self.base, dbs=self.dbs_global)
-            page += '</div>'
             return 1, page
         except Exception as err:
             das_parser_error(uinput, str(type(err)) + ' ' + str(err))
