@@ -596,11 +596,11 @@ class CMSRepresentation(DASRepresentation):
                 conflict = ', '.join(row['das']['conflict'])
             else:
                 conflict = ''
-            if  'hints' in row:
-                hints = self.templatepage('hints', hints=row['hints'],
-                        base=self.base, dbs=self.dbs_global)
-            else:
-                hints = ''
+            hints = ''
+            for hint in row.get('hints', {}):
+                if  hint:
+                    hints += self.templatepage('hint',
+                            hint=hint, base=self.base, dbs=self.dbs_global)
             page += self.templatepage('das_row', systems=systems, \
                     sanitized_data=jsonhtml, id=mongo_id, rec_id=mongo_id,
                     conflict=conflict, hints=hints)
