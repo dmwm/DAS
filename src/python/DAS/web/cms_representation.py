@@ -17,7 +17,7 @@ from itertools import groupby
 from bson.objectid import ObjectId
 
 # DAS modules
-from DAS.core.das_ql import das_aggregators, das_filters
+from DAS.core.das_ql import das_aggregators, das_filters, das_record_keys
 from DAS.core.das_query import DASQuery
 from DAS.utils.ddict import DotDict
 from DAS.utils.utils import print_exc, getarg, size_format, access
@@ -716,6 +716,7 @@ class CMSRepresentation(DASRepresentation):
             reason = head.get('reason', '')
             if  reason:
                 results += 'ERROR: %s' % reason
+        lookup_items = [i for i in fields if i not in das_record_keys()]
         for row in data:
             if  filters:
                 for flt in filters:
@@ -726,22 +727,25 @@ class CMSRepresentation(DASRepresentation):
                         pass
                 results += '\n'
             else:
-                for item in fields:
-                    systems = self.dasmgr.systems
-                    mapkey  = self.dasmapping.find_mapkey(systems[0], item)
+                for item in lookup_items:
+                    if  item != lookup_items[0]:
+                        results += ', '
                     try:
+                        systems = row['das']['system']
+                        mapkey  = self.dasmapping.find_mapkey(systems[0], item)
                         if  not mapkey:
                             mapkey = '%s.name' % item
                         key, att = mapkey.split('.')
                         if  key in row:
                             val = row[key]
                             if  isinstance(val, dict):
-                                results += val.get(att, '') + '\n'
+                                results += val.get(att, '')
                             elif isinstance(val, list):
                                 results += \
-                                '\n'.join([i.get(att, '') for i in val]) + '\n'
+                                ' '.join([str(i.get(att, '')) for i in val])
                     except:
                         pass
+                results += '\n'
         # use DAS sort_rows function instead of python set, since we need to
         # preserve the order of records in final output
         rows = [r for r in results.split('\n') if r]
