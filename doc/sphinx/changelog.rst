@@ -5,6 +5,10 @@ Release notes
 
 This release series is targeted to DAS production stability and quality.
 
+- 2.10.X
+
+  - fix issues: 4207
+
 - 2.9.X
 
   - replaced hints ajax calls with template parsing of DAS records which
