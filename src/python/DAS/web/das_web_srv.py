@@ -777,7 +777,8 @@ class DASWebService(DASWebManager):
         mquery = dasquery.mongo_query
         empty = False
         for item in data:
-            if  'dataset.name' in mquery['spec'] and 'dataset' in mquery['fields']:
+            if  'dataset.name' in mquery['spec'] and 'dataset' in mquery['fields'] \
+                    and 'result' not in item:
                 if  not item['dataset']:
                     empty = True
                     break
