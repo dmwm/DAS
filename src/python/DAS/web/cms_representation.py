@@ -742,7 +742,7 @@ class CMSRepresentation(DASRepresentation):
                                 results += val.get(att, '')
                             elif isinstance(val, list):
                                 results += \
-                                ' '.join([str(i.get(att, '')) for i in val])
+                                ' '.join(set([str(i.get(att, '')) for i in val]))
                     except:
                         pass
                 results += '\n'
