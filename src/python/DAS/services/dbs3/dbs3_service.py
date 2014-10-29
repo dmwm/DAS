@@ -523,6 +523,9 @@ class DBS3Service(DASAbstractService):
         if  api == 'filesummaries' or api == 'dataset_info':
             if  kwds['dataset'].find('*') != -1:
                 kwds['dataset'] = 'required'
+        if  api == 'filesummaries' or api == 'summary4dataset_run':
+            if  kwds['validFileOnly'] == '*':
+                kwds['validFileOnly'] = 0 # show all files
 
     def parser(self, query, dformat, source, api):
         """
