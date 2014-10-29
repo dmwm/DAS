@@ -605,12 +605,193 @@ release=CMSSW_2_0_8 | grep release.name, release.algorithm.executable, release.a
 </div>
 
 <p>
-Miscellaneous queries:
+Miscellaneous examples:
 </p>
 <div class="example">
 <pre>
-monitor date last 24h | grep monitor.node=T3_US_UCLA
+# dataset queries
+dataset primary_dataset=ZJetToEE_Pt* tier=*GEN*
+dataset primary_dataset=ZJetToEE_Pt*
+dataset=/ElectronHad/Run2011A-05Aug2011-v1/AOD
+
+# this should yield warning since reqmgr requires full path
+dataset dataset=/A*/A*herwig/AODSIM
+
+dataset tier=*GEN-SIM-RECO*
+dataset group=Top
+dataset group=local site=T2_CH_CERN
+dataset=*ZMM*
+dataset=/ZMM*/*/*
+dataset=/ZMM*/*/* | sort dataset.nfiles
+dataset=/ZMM*/*/* | sort dataset.nfiles-
+
+# should show hints from global/phys01 instance
+dataset=/ZMM_7TeV*/*/*
+dataset=/ZMM_7TeV*
+
+dataset=/*/Run2013A-PromptReco*/* | sort dataset.name
+dataset=/Cosmics/Run2010B-TkAlCosmics0T*/* site=T1_DE_KIT
+dataset dataset=/Cosmics/Run2010B-TkAlCosmics0T*/* site=T1_DE_KIT
+dataset release=CMSSW_4_2_0 site=T2_EE_Estonia
+dataset release=CMSSW_2_0_8
+dataset dataset=/Cosmics/Run2010B-TkAlCosmics0T-Dec22ReReco_v2/ALCARECO run=149011
+
+# parent/child queries
+parent dataset=/Cosmics/Run2010B-TkAlCosmics0T-Dec22ReReco_v2/ALCARECO
+dataset parent=/Cosmics/Run2010B-v1/RAW site=T1_US_FNAL release=CMSSW_3_9_7
+child dataset=/Cosmics/Run2010B-v1/RAW site=T1_US_FNAL release=CMSSW_3_9_7
+
+dataset block=/ZG_Inclusive_8TeV-madgraph_v2/Summer12_DR53X-PU_S10_START53_V7A-v1/AODSIM#8ce42772-2410-11e2-85d7-003048f02c8a
+
+dataset run=148126
+dataset date=20101103
+dataset date between [20101001, 20101002]
+
+dataset status=PRODUCTION
+dataset file=/store/data/Run2010B/ZeroBias/RAW-RECO/v2/000/145/820/784478E3-52C2-DF11-A0CC-0018F3D0969A.root
+dataset=/ElectronHad/Run2011A-05Aug2011-v1/AOD | grep dataset.nevents, dataset.nblocks, dataset.nfiles
+
+# dbs+phedex query
+dataset release=CMSSW_4_2_8 site=T2_IT_Bari
+dataset site=T2_IT_Bari
+
+# wild-card (underscore) query
+dataset=/RelValZpMM/CMSSW_6_2_0_pre7_*v1/GEN-SIM-RECO
+
+# block queries
+block dataset=/ElectronHad/Run2011A-05Aug2011-v1/AOD
+block=/Cosmics/Run2010B-TkAlCosmics0T* site=T1_DE_KIT
+block=/Cosmics/Run2010B-TkAlCosmics0T* site=T1_DE_KIT*
+# this should yield warning in phedex, since phedex requires full block path
+block block=/Cosmics/Run2010B-TkAlCosmics0T* site=T1_DE_KIT*
+block dataset=/AlCaP0/Run2011A-ALCARECOEcalCalEtaCalib-v4/ALCARECO site=T1_US_FNAL*
+block site=T1_CH_CERN*
+block site=ganymede.hep.kbfi.ee
+block=/EG/Run2010A-Dec4ReReco_v1/AOD#f15ed71e-6491-4f73-a0e3-ac4248a6367d
+block dataset=/SingleElectron/Run2011A-414_preprod_GR_H_V16-v1/RAW run=161311
+block file=/store/data/Run2010B/ZeroBias/RAW-RECO/v2/000/145/820/784478E3-52C2-DF11-A0CC-0018F3D0969A.root
+block dataset=/SingleMu/Run2012A-v1/RAW run in [191226, 191845]
+block dataset=/SingleMu/Run2012A-v1/RAW run between [191840, 191845]
+block dataset=/ElectronHad/Run2011A-05Aug2011-v1/AOD | grep block.name,block.is_open=n | count(block.name)
+block tier=GEN-SIM date between [20120223, 20120224]
+
+# look-up file,run,lumi info for given set of conditions
+run,lumi dataset=/SingleMu/Run2011B-WMu-19Nov2011-v1/RAW-RECO
+run,lumi dataset=/SingleMu/Run2011B-WMu-19Nov2011-v1/RAW-RECO run in [177718, 177053]
+run,lumi block=/SingleMu/Run2011B-WMu-19Nov2011-v1/RAW-RECO#19110c74-1b66-11e1-a98b-003048f02c8a
+run,lumi block=/SingleMu/Run2011B-WMu-19Nov2011-v1/RAW-RECO#19110c74-1b66-11e1-a98b-003048f02c8a run in [177487, 177878]
+
+file,lumi dataset=/SingleMu/Run2011B-WMu-19Nov2011-v1/RAW-RECO
+file,lumi dataset=/SingleMu/Run2011B-WMu-19Nov2011-v1/RAW-RECO run in [177718, 177053]
+file,lumi block=/SingleMu/Run2011B-WMu-19Nov2011-v1/RAW-RECO#19110c74-1b66-11e1-a98b-003048f02c8a
+file,lumi block=/SingleMu/Run2011B-WMu-19Nov2011-v1/RAW-RECO#19110c74-1b66-11e1-a98b-003048f02c8a run in [177487, 177878]
+
+file,run,lumi dataset=/SingleMu/Run2011B-WMu-19Nov2011-v1/RAW-RECO
+file,run,lumi dataset=/SingleMu/Run2011B-WMu-19Nov2011-v1/RAW-RECO run in [177718, 177053]
+file,run,lumi block=/SingleMu/Run2011B-WMu-19Nov2011-v1/RAW-RECO#19110c74-1b66-11e1-a98b-003048f02c8a
+file,run,lumi block=/SingleMu/Run2011B-WMu-19Nov2011-v1/RAW-RECO#19110c74-1b66-11e1-a98b-003048f02c8a run in [177487, 177878]
+
+file,run,lumi dataset=/DoubleMu/Run2012A-22Jan2013-v1/AOD run between [190456,190500]
+
+# IB queries
+file dataset=/SingleMu/Run2011B-WMu-19Nov2011-v1/RAW-RECO run=177718
+file dataset=/SingleMu/Run2011B-WMu-19Nov2011-v1/RAW-RECO run in [177718, 177053]
+file block=/SingleMu/Run2011B-WMu-19Nov2011-v1/RAW-RECO#19110c74-1b66-11e1-a98b-003048f02c8a run=177487
+file block=/SingleMu/Run2011B-WMu-19Nov2011-v1/RAW-RECO#19110c74-1b66-11e1-a98b-003048f02c8a run in [177487,177878]
+file dataset=/SingleMu/Run2011B-WMu-19Nov2011-v1/RAW-RECO run in [177718, 177053] site=T2_IN_TIFR
+file block=/SingleMu/Run2011B-WMu-19Nov2011-v1/RAW-RECO#19110c74-1b66-11e1-a98b-003048f02c8a run in [177487,177878] site=T2_IN_TIFR
+
+# file queries
+file=/store/data/Run2010A/EG/AOD/Dec4ReReco_v1/0031/E26F28FC-4A07-E011-9CF3-0030487F1653.root
+file=/store/data/Run2011A/AlCaP0/ALCARECO/ALCARECOEcalCalEtaCalib-Jun3ReReco-v1/0000/785C8376-518F-E011-B3CC-002618943852.root
+# file from invalid dataset
+dataset dataset=/Z*/*/* status=INVALID
+file=/store/mc/Summer10/Ztautau_M20_CTEQ66-powheg/GEN-SIM-RECO/START36_V9_S09-v1/0026/02579C1B-E276-DF11-949B-00261894380D.root
+
+file block=/EG/Run2010A-Dec4ReReco_v1/AOD#f15ed71e-6491-4f73-a0e3-ac4248a6367d
+file run=148126 dataset=/ZeroBias/Run2010B-Dec4ReReco_v1/RECO
+
+file dataset=/ZeroBias/Run2010B-Skim_logerror-v2/RAW-RECO run=145820 lumi=1
+file,lumi dataset=/ZMM/Summer11-DESIGN42_V11_428_SLHC1-v1/GEN-SIM
+
+file dataset=/AlCaP0/Run2011A-ALCARECOEcalCalEtaCalib-Jun3ReReco-v1/ALCARECO run between [160383,160400]
+file dataset=/AlCaP0/Run2011A-ALCARECOEcalCalEtaCalib-Jun3ReReco-v1/ALCARECO run=160383
+file dataset=/AlCaP0/Run2011A-ALCARECOEcalCalEtaCalib-Jun3ReReco-v1/ALCARECO run=160383 site=T1_US_FNAL
+file dataset=/AlCaP0/Run2011A-ALCARECOEcalCalEtaCalib-Jun3ReReco-v1/ALCARECO run in [160383,162921] site=T1_US_FNAL
+file dataset=/AlCaP0/Run2011A-ALCARECOEcalCalEtaCalib-Jun3ReReco-v1/ALCARECO run=160383 lumi=67
+file dataset=/ElectronHad/Run2011A-05Aug2011-v1/AOD
+file dataset=/Cosmics/Run2010B-TkAlCosmics0T-v1/ALCARECO site=T1_US_FNAL_Buffer
+file dataset=/ElectronHad/Run2011A-05Aug2011-v1/AOD | grep file.name, file.size, file.size>0
+file dataset=/ElectronHad/Run2011A-05Aug2011-v1/AOD | grep file.name, file.size, file.size<2000000000
+file dataset=/ElectronHad/Run2011A-05Aug2011-v1/AOD | grep file.name, file.size, file.size<2000000000 | sort file.size
+file dataset=/ElectronHad/Run2011A-05Aug2011-v1/AOD | grep file.name, file.size, file.size<2000000000 | sort file.size-
+file dataset=/ElectronHad/Run2011A-05Aug2011-v1/AOD | sum(file.size), min(file.size), max(file.size), avg(file.size), median(file.size)
+file dataset=/WGstarToLNu2Tau_TuneZ2_7TeV-madgraph-tauola/Summer11-PU_S4_START42_V11-v1/AODSIM status=INVALID
+
+# look-up not valid files
+file block=/WGstarToLNu2Tau_TuneZ2_7TeV-madgraph-tauola/Summer11-PU_S4_START42_V11-v1/AODSIM#29e86674-fe2d-11e0-a5f0-00221959e69e status=*
+
+# look-up jobsummary information
 jobsummary date last 24h
+jobsummary site=T1_DE_KIT date last 24h
+jobsummary user=AlekoKhukhunaishvili
+jobsummary date between [20110208, 20110209]
+
+# run queries
+run dataset=/Monitor/Commissioning08-v1/RAW
+run block=/SingleElectron/Run2011A-414_preprod_GR_H_V16-v1/RAW#12ac2478-3b25-4a02-a7d4-6f2138f35171
+run file=/store/data/Commissioning11/Commissioning/RAW/v3/000/160/292/E863DF08-024C-E011-B2ED-0030487A3232.root
+run=160915
+run between [160910, 160920]
+run between [160910, 160920] |  sum(run.delivered_lumi), sum(run.nevents), sum(run.nlumis)
+run in [160915,190595]
+run in [160915,190595] | sum(run.delivered_lumi), sum(run.nevents), sum(run.nlumis)
+run between [148124,148126]
+run date = 20110320
+run date between [20101001, 20101002]
+
+# site queries
+site=T2_*
+site=T3_*
+site=T1_CH_CERN
+site dataset=/WJets_matchingup_7TeV-madgraph/Summer10-START36_V10_FastSim-v3/DQM
+site dataset=/QCD_Pt_0to5_TuneZ2_7TeV_pythia6/wteo-qcd_tunez2_pt0to5_pythia_fall10_387-250136cb6ade55a0822a3f1b6b851d5a/USER instance=cms_dbs_ph_analysis_02
+site dataset=/Cosmics/Run2010B-TkAlCosmics0T-v1/ALCARECO
+
+# find site for PRODUCTION dataset
+site dataset=/tt1j_mT_70-alpgen/CMSSW_1_5_2-CSA07-2211/GEN-SIM-DIGI-RECO
+
+# find site info of dataset from local instance (should yield DBS3 origin_site_name)
+site dataset=/SingleLongLivedFlatPt_M_1000_CTau350_cfi_py_GEN_SIM/zhenhu-SingleLongLivedFlatPt_M_1000_CTau350_cfi_py_GEN_SIM-6db2d900755bd45dd25b8bfc112dfb1f/USER instance=prod/phys03
+
+# summary queries
+summary dataset=/Cosmics/Run2010B-TkAlCosmics0T-Dec22ReReco_v2/ALCARECO run=149011
+summary dataset=/Cosmics/Run2010B-TkAlCosmics0T-Dec22ReReco_v2/ALCARECO
+summary block=/Cosmics/Run2010B-TkAlCosmics0T-Dec22ReReco_v2/ALCARECO#ee89be3a-5a9a-46a7-91eb-28c4728f3aaa
+summary dataset=/SingleMu/Run2011B-WMu-19Nov2011-v1/RAW-RECO run in [177718, 177053]
+
+# MCM queries
+mcm prepid=HIG-Summer12-01312
+mcm dataset=/GluGluToHToWWTo2LAndTau2Nu_M-115_8TeV-minloHJJ-pythia6-tauola/Summer12-START53_V7C-v3/GEN
+dataset dataset=/GluGluToHToWWTo2LAndTau2Nu_M-115_8TeV-minloHJJ-pythia6-tauola/Summer12-START53_V7C-v3/GEN
+dataset prepid=TSG-Fall13dr-00015
+mcm dataset=/WToENu_Tune4C_13TeV-pythia8/Fall13dr-tsg_PU40bx25_POSTLS162_V2-v1/GEN-SIM-RAW
+
+# lumi queries
+lumi file=/store/data/Run2010B/ZeroBias/RAW-RECO/v2/000/145/820/784478E3-52C2-DF11-A0CC-0018F3D0969A.root
+lumi file=/store/data/Run2010B/Cosmics/ALCARECO/TkAlCosmics0T-Dec22ReReco_v2/0153/9221DEAF-7223-E011-B79F-002618943886.root run=149011
+lumi block=/ZeroBias/Run2010B-Skim_logerror-v2/RAW-RECO#a14a71ba-055f-4469-9180-4653f8db4fe6
+lumi block=/HPlusPlusHMinusMinusHTo4L_M-300_8TeV-pythia6/Summer12-START53_V7C-v1/GEN-SIM#f69ecdb6-86ad-11e2-8309-003048f0e7dc | count(lumi)
+
+# DBS info queries
+primary_dataset=Cosmics
+release=CMSSW_2_0_8
+config dataset=/Cosmics/Run2010B-TkAlCosmics0T-Dec22ReReco_v2/ALCARECO
+config dataset=/SingleMu/CMSSW_6_2_0_pre4-PRE_61_V1_RelVal_mu2012A-v1/RECO | grep config.global_tag
+dataset=/TrackerTIF/Online-CMSSW_1_1_0/RAW
+release dataset=/ElectronHad/Run2011A-05Aug2011-v1/AOD
+release file=/store/data/Run2011A/ElectronHad/AOD/05Aug2011-v1/0000/00157DBB-0AC0-E011-AB7A-0019BB3DE6F4.root
+
 </pre>
 </div>
 
