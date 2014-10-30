@@ -7,7 +7,7 @@ This release series is targeted to DAS production stability and quality.
 
 - 2.10.X
 
-  - fix issues: 4207
+  - fix issues: 4207, 4209, 4210
 
 - 2.9.X
 
