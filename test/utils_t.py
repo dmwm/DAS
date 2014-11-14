@@ -464,7 +464,7 @@ class testUtils(unittest.TestCase):
         result = [r for r in aggregator(dasquery, res, das['expire'])]
         for r in result:
             del r['das']['ts'] # we don't need record timestamp
-        expect = [{'run': [{'a': 1, 'b': 1}], 'das':das, 'qhash':qhash,
+        expect = [{'run': [{'a':1,'b':1}, {'a':1,'b':1}], 'das':das, 'qhash':qhash,
                    'das_id': [1, 2], 'cache_id': [1, 2]}]
         self.assertEqual(result, expect)
 
@@ -508,6 +508,12 @@ class testUtils(unittest.TestCase):
         dict1  = {'test':1}
         dict2  = {'test':[2,3]}
         expect = {'test':[1,2,3]}
+        merge_dict(dict1, dict2)
+        self.assertEqual(expect, dict1)
+
+        dict1  = {'test':1, 'foo': 1}
+        dict2  = {'test':1, 'foo': [2,3]}
+        expect = {'test':[1,1], 'foo':[1,2,3]}
         merge_dict(dict1, dict2)
         self.assertEqual(expect, dict1)
 

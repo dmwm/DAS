@@ -625,7 +625,7 @@ def merge_dict(dict1, dict2):
         if  key in dict1:
             val = dict1[key]
             if  val == value:
-                dict1[key] = [value]
+                dict1[key] = [value, value]
             elif isinstance(val, list):
                 if  isinstance(value, list):
                     dict1[key] = val + value
