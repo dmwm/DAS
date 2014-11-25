@@ -5,6 +5,10 @@ Release notes
 
 This release series is targeted to DAS production stability and quality.
 
+- 2.11.X
+
+  - fix issues: 4212
+
 - 2.10.X
 
   - fix issues: 4207, 4209, 4210
