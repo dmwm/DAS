@@ -8,7 +8,7 @@ expire : 600
 params : {"prepid": "required"}
 lookup : mcm
 das_map : [
-    {"das_key": "mcm", "rec_key": "mcm"},
+    {"das_key": "mcm", "rec_key": "mcm.prepid"},
     {"das_key": "prepid", "rec_key": "prepid", "api_arg":"prepid"},
 ]
 ---
@@ -18,7 +18,7 @@ expire : 600
 params : {"dataset": "required"}
 lookup : mcm
 das_map : [
-    {"das_key": "mcm", "rec_key": "prepid"},
+    {"das_key": "mcm", "rec_key": "mcm.prepid"},
     {"das_key": "dataset", "rec_key":"dataset.name", "api_arg":"dataset",
      "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+"},
 ]
@@ -29,7 +29,7 @@ expire : 600
 params : {"dataset": "required"}
 lookup : dataset
 das_map : [
-    {"das_key": "mcm", "rec_key": "prepid"},
+    {"das_key": "mcm", "rec_key": "mcm.prepid"},
     {"das_key": "dataset", "rec_key":"dataset.name", "api_arg":"dataset",
      "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+"},
 ]

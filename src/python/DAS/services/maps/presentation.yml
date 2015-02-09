@@ -398,7 +398,7 @@ user    : [
         ],
 mcm   : [
         {"das":"mcm.prepid", "ui":"McM prepid",
-         "link":[{"name":"ReqMgr", "query":"dataset prepid=%s"}],
+         "link":[{"name":"Dataset", "query":"dataset prepid=%s"}],
          "description": "Most recent dataset for given prepid",
          "examples":["dataset prepid=HIG-Summer12-01312"]
         },
@@ -406,6 +406,7 @@ mcm   : [
         {"das":"mcm.notes", "ui":"Physics channel"},
         {"das":"mcm.pwg", "ui":"Physics group"},
         {"das":"mcm.nevents", "ui":"Number of events"},
+        {"das":"mcm.generator_parameters.cross_section", "ui":"Generator cross-secion"},
         ],
 status: [
         {"das":"status.name", "ui":"Status", "link":[],
