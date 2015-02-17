@@ -23,6 +23,7 @@ import httplib
 import cookielib
 from   optparse import OptionParser
 from   math import log
+from   types import GeneratorType
 
 # define exit codes according to Linux sysexists.h
 EX_OK           = 0  # successful termination
@@ -188,38 +189,39 @@ def unique_filter(rows):
         old_row = row
     yield row
 
+def extract_value(row, key):
+    """Generator which extracts row[key] value"""
+    if  isinstance(row, dict) and key in row:
+        if  key == 'creation_time':
+            row = convert_time(row[key])
+        elif  key == 'size':
+            row = size_format(row[key], base)
+        else:
+            row = row[key]
+        yield row
+    if  isinstance(row, list) or isinstance(row, GeneratorType):
+        for item in row:
+            for vvv in extract_value(item, key):
+                yield vvv
+
 def get_value(data, filters, base=10):
     """Filter data from a row for given list of filters"""
     for ftr in filters:
         if  ftr.find('>') != -1 or ftr.find('<') != -1 or ftr.find('=') != -1:
             continue
         row = dict(data)
-        values = set()
-        for key in ftr.split('.'):
-            if  isinstance(row, dict) and key in row:
-                if  key == 'creation_time':
-                    row = convert_time(row[key])
-                elif  key == 'size':
-                    row = size_format(row[key], base)
-                else:
-                    row = row[key]
-            if  isinstance(row, list):
-                for item in row:
-                    if  isinstance(item, dict) and key in item:
-                        if  key == 'creation_time':
-                            row = convert_time(item[key])
-                        elif  key == 'size':
-                            row = size_format(item[key], base)
-                        else:
-                            row = item[key]
-                        values.add(row)
-                    else:
-                        if  isinstance(item, basestring):
-                            values.add(item)
+        values = []
+        keys = ftr.split('.')
+        for key in keys:
+            val = [v for v in extract_value(row, key)]
+            if  key == keys[-1]: # we collect all values at last key
+                values += [json.dumps(i) for i in val]
+            else:
+                row = val
         if  len(values) == 1:
-            yield str(values.pop())
+            yield values[0]
         else:
-            yield str(list(values))
+            yield values
 
 def fullpath(path):
     "Expand path to full path"
