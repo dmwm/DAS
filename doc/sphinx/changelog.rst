@@ -5,6 +5,11 @@ Release notes
 
 This release series is targeted to DAS production stability and quality.
 
+- 2.12.X
+
+  - add nltk_legacy module to keep functions from NLTK-2 release
+  - create db.collection with empty storage (required by mongo3/pymongo2.8)
+
 - 2.11.X
 
   - fix issues: 4212
