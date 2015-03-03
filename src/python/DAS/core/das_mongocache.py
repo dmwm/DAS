@@ -215,6 +215,10 @@ class DASMongocache(object):
         "col property provides access to DAS cache collection"
         conn = db_connection(self.dburi)
         mdb  = conn[self.dbname]
+        colnames = mdb.collection_names()
+        if  not colnames or self.col_ not in colnames:
+            print "Create", mdb, self.col_
+            mdb.create_collection(self.col_)
         mdb.add_son_manipulator(self.das_son_manipulator)
         return mdb[self.col_]
 
@@ -223,6 +227,10 @@ class DASMongocache(object):
         "merge property provides access to DAS merge collection"
         conn = db_connection(self.dburi)
         mdb  = conn[self.dbname]
+        colnames = mdb.collection_names()
+        if  not colnames or self.merge_ not in colnames:
+            print "Create", mdb, self.merge_
+            mdb.create_collection(self.merge_)
         mdb.add_son_manipulator(self.das_son_manipulator)
         return mdb[self.merge_]
 
