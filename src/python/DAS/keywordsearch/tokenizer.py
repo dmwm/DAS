@@ -10,7 +10,10 @@ Module description:
 """
 
 import re
-from nltk.internals import convert_regexp_to_nongrouping
+try:
+    from nltk.internals import convert_regexp_to_nongrouping
+except:
+    from DAS.keywordsearch.nltk_legacy import convert_regexp_to_nongrouping
 from DAS.keywordsearch.metadata import das_ql
 
 
