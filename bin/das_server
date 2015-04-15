@@ -19,8 +19,9 @@ mongo_status="no"
 
 # helper function to check MongoDB status
 check4db() {
-    mongo=`mongostat --noheaders -n 1 --port 8230 2>&1`
-    mongo_ok=`echo $mongo | grep connected`
+    port=8230
+    mongo=`mongostat --noheaders -n 1 --port $port --discover 2>&1`
+    mongo_ok=`echo $mongo | tail -1 | grep $port`
     if  [ -n "$mongo_ok" ]; then
         mongo_status="ok"
         return
