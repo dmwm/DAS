@@ -165,7 +165,7 @@ class DASRepresentation(DASWebManager):
         if  'dasquery' in kwargs:
             del kwargs['dasquery'] # we don't need it
         idx     = getarg(kwargs, 'idx', 0)
-        limit   = getarg(kwargs, 'limit', 10)
+        limit   = getarg(kwargs, 'limit', 100)
         uinput  = getarg(kwargs, 'input', '')
         skip_args = ['status', 'error', 'reason']
         page    = ''
