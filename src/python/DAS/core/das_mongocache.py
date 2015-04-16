@@ -43,6 +43,12 @@ from pymongo import DESCENDING, ASCENDING
 from bson.errors import InvalidDocument
 from pymongo.errors import ConnectionFailure, InvalidOperation, DuplicateKeyError
 
+def adjust_expire(expire):
+    "Adjust expire timestamp"
+    if  expire < time.time(): # it means we got plain expire tstamp
+        expire = time.time()+expire
+    return expire
+
 def spec4data_records():
     "Return spec part for data_records"
     data_record = record_codes('data_record')
@@ -923,6 +929,9 @@ class DASMongocache(object):
         api         = dasheader['api']
         collection  = 'cache'
         check_query = True
+        expire = dasheader.get('expire', None)
+        if  expire:
+            dasheader['expire'] = adjust_expire(expire)
         if  not self.incache(dasquery, collection, system, api, check_query):
             msg = "query=%s, header=%s" % (dasquery, header)
             self.logger.debug(msg)
@@ -950,7 +959,7 @@ class DASMongocache(object):
             return
 
         dasheader  = header['das']
-        expire     = dasheader['expire']
+        expire     = adjust_expire(dasheader['expire'])
         system     = dasheader['system'] # DAS service names, e.g. combined
         services   = dasheader['services'] # CMS services used to get data
         api        = dasheader['api']
