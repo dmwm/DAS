@@ -620,7 +620,7 @@ class DASWebService(DASWebManager):
             res      = ''
             time0    = time.time()
             idx      = getarg(kwargs, 'idx', 0)
-            limit    = getarg(kwargs, 'limit', 10)
+            limit    = getarg(kwargs, 'limit', 50)
             coll     = kwargs.get('collection', 'merge')
             view     = kwargs.get('view', '')
             if  view == 'json':

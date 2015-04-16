@@ -8,7 +8,7 @@ function updateInput(myinput, dbs_global_inst) {
 
    var ulimit = gup('limit');
    if  (ulimit) updateTag('limit', ulimit);
-   else updateTag('limit', '10');
+   else updateTag('limit', '50');
 
    var uview = gup('view');
    if  (uview) updateTag('view', uview);
