@@ -38,6 +38,9 @@ from   DAS.utils.regex import rr_time_pattern, das_time_pattern
 from   DAS.utils.regex import http_ts_pattern
 import DAS.utils.jsonwrapper as json
 
+# Define transient fields in DAS records to be removed by hash function
+TRANSIENT_FIELDS = ['ts', 'expire']
+
 class DASHTMLParser(HTMLParser):
     """
     Minimalistic HTML parser suitable to parsing HTML content from data-providers.
@@ -87,7 +90,11 @@ def add_hash(record):
     "Add hash into given record"
     if  not isinstance(record, dict):
         raise NotImplementedError
-    md5 = md5hash(record)
+    rec = dict(record)
+    for key in TRANSIENT_FIELDS:
+        if  key in rec:
+            del rec[key]
+    md5 = md5hash(rec)
     record.update({'hash':md5})
 
 def record_codes(rtype):
