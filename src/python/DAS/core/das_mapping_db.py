@@ -36,7 +36,7 @@ from pymongo import DESCENDING
 from pymongo.errors import ConnectionFailure
 
 # DAS modules
-from DAS.utils.utils import dastimestamp, print_exc, md5hash
+from DAS.utils.utils import dastimestamp, print_exc, md5hash, TRANSIENT_FIELDS
 from DAS.utils.utils import gen2list, parse_dbs_url, get_dbs_instance
 from DAS.utils.das_db import db_connection, is_db_alive, create_indexes
 from DAS.utils.das_db import find_one
@@ -45,11 +45,13 @@ from DAS.utils.thread import start_new_thread
 
 import DAS.utils.jsonwrapper as json
 
-def check_map_record(rec):
+def check_map_record(record):
     "Check hash of given map record"
+    rec = dict(record)
     # remove _id MongoDB Object
-    if  '_id' in rec:
-        del rec['_id']
+    for key in ['_id']+TRANSIENT_FIELDS:
+        if  key in rec:
+            del rec[key]
     if  'hash' in rec:
         md5 = rec.pop('hash')
         rec_md5 = md5hash(rec)
