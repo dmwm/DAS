@@ -301,7 +301,9 @@ class DASCore(object):
             ack_services = services
         if  dasquery.query.find('records ') != -1:
             srv_status = True # skip DAS queries w/ records request
-        expire = 2*60 # 2 minutes, it should be overwriten by data-srv
+        # create das record with initial expire tstamp 2 min in a future
+        # it should be sufficient for processing data-srv records
+        expire = time.time()+2*60
         header = dasheader("das", dasquery, expire, api='das_core',
                 services=dict(das=ack_services))
         header['lookup_keys'] = []
