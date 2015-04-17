@@ -152,7 +152,7 @@ def block_run_lumis(url, blocks, runs=None, verbose=0):
         blk, run = key
         yield blk, run, lumis
 
-def file_run_lumis(url, blocks, runs=None, verbose=0):
+def file_run_lumis(url, blocks, runs=None, valid=None, verbose=0):
     """
     Find file, run, lumi tuple for given set of files and (optional) runs.
     """
@@ -162,6 +162,8 @@ def file_run_lumis(url, blocks, runs=None, verbose=0):
         if  not blk:
             continue
         dbs_url = '%s/filelumis/?block_name=%s' % (url, urllib.quote(blk))
+        if  valid:
+            dbs_url += '&validFileOnly=1'
         if  runs:
             dbs_url += "&run_num=%s" % urllib.quote(str(runs))
         urls.append(dbs_url)
@@ -258,7 +260,8 @@ def get_file_run_lumis(url, api, args, verbose=0):
         blocks = dbs_find('block', url, args, verbose)
     if  not blocks:
         return
-    gen = file_run_lumis(url, blocks, runs, verbose)
+    valid = 1 if args.get('validFileOnly', '') else 0
+    gen = file_run_lumis(url, blocks, runs, valid, verbose)
     key = 'file_run'
     if  api.startswith('run_lumi'):
         key = 'run'
@@ -281,7 +284,8 @@ def get_file4dataset_run_lumi(url, api, args, verbose=0):
     ilumi = args.get('lumi')
     args.update({'runs': runs})
     blocks = dbs_find('block', url, args, verbose)
-    gen = file_run_lumis(url, blocks, runs, verbose)
+    valid = 1 if args.get('validFileOnly', '') else 0
+    gen = file_run_lumis(url, blocks, runs, valid, verbose)
     for lfn, _run, lumi in gen:
         if  lumi == ilumi:
             yield lfn
