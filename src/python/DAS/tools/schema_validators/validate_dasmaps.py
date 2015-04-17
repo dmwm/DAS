@@ -15,22 +15,15 @@ import sys
 
 from DAS.tools.schema_validators.schema import Schema, And, Or, Optional
 from DAS.tools.schema_validators.json_validator import validate_file_verbose
-
+from DAS.utils.utils import add_hash
 
 def check_hash(rec):
     """ Check record hash """
     nrec = dict(rec)
     if 'hash' in nrec:
         md5 = nrec.pop('hash')
-        # exclude timestamps since they are dynamic
-        if 'ts' in nrec:
-            del nrec['ts']
-        if 'timestamp' in nrec:
-            del nrec['timestamp']
-        nrec = json.JSONEncoder(sort_keys=True).encode(nrec)
-        keyhash = hashlib.md5()
-        keyhash.update(nrec)
-        rmd5 = keyhash.hexdigest()
+        add_hash(nrec)
+        rmd5 = nrec.pop('hash')
         if md5 != rmd5:
             print 'Invalid hash'
             print "record:", rec
