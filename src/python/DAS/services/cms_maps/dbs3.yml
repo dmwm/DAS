@@ -520,7 +520,7 @@ urn : file_lumi4dataset
 url : "https://cmsweb.cern.ch/dbs/prod/global/DBSReader/filelumis"
 format : JSON
 expire : 3600
-params : {"dataset":"required", "run_num": "optional"}
+params : {"dataset":"required", "run_num": "optional", "validFileOnly": "optional"}
 lookup : file,lumi
 das_map : [
     {"das_key":"file", "rec_key":"file.name"},
@@ -529,13 +529,14 @@ das_map : [
     {"das_key":"lumi", "rec_key":"lumi.number", "api_arg":"lumi"},
     {"das_key":"dataset", "rec_key":"dataset.name", "api_arg":"dataset",
      "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+"},
+    {"das_key": "status", "rec_key":"status.name", "api_arg":"validFileOnly"},
 ]
 ---
 urn : file_lumi4block
 url : "https://cmsweb.cern.ch/dbs/prod/global/DBSReader/filelumis"
 format : JSON
 expire : 3600
-params : {"block_name":"required", "run_num": "optional"}
+params : {"block_name":"required", "run_num": "optional", "ValidFileOnly": "optional"}
 lookup : file,lumi
 das_map : [
     {"das_key":"file", "rec_key":"file.name"},
@@ -544,13 +545,14 @@ das_map : [
     {"das_key":"lumi", "rec_key":"lumi.number", "api_arg":"lumi"},
     {"das_key":"block", "rec_key":"block.name", "api_arg":"block_name",
      "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+#[0-9a-zA-Z-]"},
+    {"das_key": "status", "rec_key":"status.name", "api_arg":"validFileOnly"},
 ]
 ---
 urn : file_run_lumi4dataset
 url : "https://cmsweb.cern.ch/dbs/prod/global/DBSReader/filelumis"
 format : JSON
 expire : 3600
-params : {"dataset":"required", "run_num": "optional"}
+params : {"dataset":"required", "run_num": "optional", "validFileOnly": "optional"}
 lookup : file,run,lumi
 das_map : [
     {"das_key":"file", "rec_key":"file.name"},
@@ -559,13 +561,14 @@ das_map : [
     {"das_key":"lumi", "rec_key":"lumi.number", "api_arg":"lumi"},
     {"das_key":"dataset", "rec_key":"dataset.name", "api_arg":"dataset",
      "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+"},
+    {"das_key": "status", "rec_key":"status.name", "api_arg":"validFileOnly"},
 ]
 ---
 urn : file_run_lumi4block
 url : "https://cmsweb.cern.ch/dbs/prod/global/DBSReader/filelumis"
 format : JSON
 expire : 3600
-params : {"block_name":"required", "run_num": "optional"}
+params : {"block_name":"required", "run_num": "optional", "validFileOnly": "optional"}
 lookup : file,run,lumi
 das_map : [
     {"das_key":"file", "rec_key":"file.name"},
@@ -574,6 +577,7 @@ das_map : [
     {"das_key":"lumi", "rec_key":"lumi.number", "api_arg":"lumi"},
     {"das_key":"block", "rec_key":"block.name", "api_arg":"block_name",
      "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+#[0-9a-zA-Z-]"},
+    {"das_key": "status", "rec_key":"status.name", "api_arg":"validFileOnly"},
 ]
 ---
 urn : block_run_lumi4dataset
@@ -609,7 +613,7 @@ urn : file4dataset_run_lumi
 url : "https://cmsweb.cern.ch/dbs/prod/global/DBSReader/filelumis"
 format : JSON
 expire : 3600
-params : {"dataset":"required", "run_num": "required", "lumi": "required"}
+params : {"dataset":"required", "run_num": "required", "lumi": "required", "validFileOnly": "optional"}
 lookup : file
 das_map : [
     {"das_key":"file", "rec_key":"file.name"},
@@ -618,6 +622,7 @@ das_map : [
     {"das_key":"lumi", "rec_key":"lumi.number", "api_arg":"lumi"},
     {"das_key":"dataset", "rec_key":"dataset.name", "api_arg":"dataset",
      "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+"},
+    {"das_key": "status", "rec_key":"status.name", "api_arg":"validFileOnly"},
 ]
 ---
 urn : blocks4tier_dates
