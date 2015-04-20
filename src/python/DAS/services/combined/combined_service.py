@@ -391,4 +391,3 @@ def files4site(phedex_url, files, site):
                 replica = fobj['replica']
                 for item in replica:
                     yield fname
-                    break # only need to yield once since its replica
