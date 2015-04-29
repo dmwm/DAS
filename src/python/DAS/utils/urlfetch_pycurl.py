@@ -29,8 +29,13 @@ try:
 except:
     import StringIO
 
+# DAS modules
+from DAS.utils.das_config import das_readconfig
+
 PAT = re.compile(\
         "(https|http)://[-A-Za-z0-9_+&@#/%?=~_|!:,.;]*[-A-Za-z0-9+&@#/%=~_|]")
+
+PYCURL = das_readconfig()['pycurl']
 
 def validate_url(url):
     "Validate URL"
@@ -57,14 +62,10 @@ def getdata(urls, ckey, cert, headers=None, num_conn=100):
     for _ in range(num_conn):
         curl = pycurl.Curl()
         curl.fp = None
-        curl.setopt(pycurl.FOLLOWLOCATION, 1)
-        curl.setopt(pycurl.MAXREDIRS, 5)
-        curl.setopt(pycurl.CONNECTTIMEOUT, 30)
-        curl.setopt(pycurl.TIMEOUT, 300)
-        curl.setopt(pycurl.NOSIGNAL, 1)
+        for key, val in PYCURL.items():
+            curl.setopt(getattr(pycurl, key), val)
         curl.setopt(pycurl.SSLKEY, ckey)
         curl.setopt(pycurl.SSLCERT, cert)
-        curl.setopt(pycurl.SSL_VERIFYPEER, False)
         mcurl.handles.append(curl)
         if  headers:
             curl.setopt(pycurl.HTTPHEADER, \

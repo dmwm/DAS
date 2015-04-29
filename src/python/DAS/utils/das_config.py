@@ -13,6 +13,16 @@ from DAS.utils.das_option import DASOption
 
 DAS_OPTIONS = [
 #
+# pycurl options
+#
+DASOption('pycurl', 'FOLLOWLOCATION', 'int', 1),
+DASOption('pycurl', 'MAXREDIRS', 'int', 5),
+DASOption('pycurl', 'CONNECTTIMEOUT', 'int', 270),
+DASOption('pycurl', 'TIMEOUT', 'int', 270),
+DASOption('pycurl', 'NOSIGNAL', 'int', 1),
+DASOption('pycurl', 'SSL_VERIFYPEER', 'bool', False),
+DASOption('pycurl', 'VERBOSE', 'int', 0),
+#
 # MongoDB options
 #
 # URI, can be multiple
