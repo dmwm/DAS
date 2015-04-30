@@ -35,6 +35,7 @@ from DAS.utils.das_db import db_connection, find_one
 from DAS.utils.das_db import db_gridfs, parse2gridfs, create_indexes
 from DAS.utils.logger import PrintManager
 from DAS.utils.thread import start_new_thread
+from DAS.utils.das_pymongo import PYMONGO_OPTS, PYMONGO_NOEXHAUST
 
 # monogo db modules
 from bson.objectid import ObjectId
@@ -269,7 +270,7 @@ class DASMongocache(object):
         hashes = [r for r in self.get_dataset_hashes(dasquery)]
         if  hashes:
             spec = {'qhash': {'$in': hashes}}
-            if  len(hashes) == self.merge.find(spec, exhaust=True).count():
+            if  len(hashes) == self.merge.find(spec, **PYMONGO_OPTS).count():
                 dasquery._hashes = hashes
 
     def get_superset_keys(self, key, value):
@@ -283,7 +284,7 @@ class DASMongocache(object):
         msg = "%s=%s" % (key, value)
         self.logger.debug(msg)
         cond = {'query.spec.key': key}
-        for row in self.col.find(cond, exhaust=True):
+        for row in self.col.find(cond, **PYMONGO_OPTS):
             mongo_query = decode_mongo_query(row['query'])
             for thiskey, thisvalue in mongo_query.iteritems():
                 if thiskey == key:
@@ -349,7 +350,7 @@ class DASMongocache(object):
             return False
         spec = {'qhash':dasquery.qhash, 'das.system':{'$ne':'das'},
                 'das.expire':{'$gt':time.time()}}
-        nres = self.col.find(spec, exhaust=True).count()
+        nres = self.col.find(spec, **PYMONGO_OPTS).count()
         if  nres:
             return True
         return False
@@ -374,7 +375,7 @@ class DASMongocache(object):
         if  system:
             cond.update({'das.system': system})
         cond.update({'das.expire':{'$gt':time.time()}})
-        return self.col.find(cond, exhaust=True)
+        return self.col.find(cond, **PYMONGO_OPTS)
 
     def get_das_ids(self, dasquery):
         """
@@ -402,14 +403,14 @@ class DASMongocache(object):
 
     def find_records(self, das_id):
         " Return all the records matching a given das_id"
-        return self.col.find({'das_id': das_id}, exhaust=True)
+        return self.col.find({'das_id': das_id}, **PYMONGO_OPTS)
 
     def is_error_in_records(self, dasquery, collection='cache'):
         "Scan DAS cache for error records and return true or not"
         if  collection == 'cache':
-            results = self.col.find({'qhash':dasquery.qhash}, exhaust=True)
+            results = self.col.find({'qhash':dasquery.qhash}, **PYMONGO_OPTS)
         else:
-            results = self.merge.find({'qhash':dasquery.qhash}, exhaust=True)
+            results = self.merge.find({'qhash':dasquery.qhash}, **PYMONGO_OPTS)
         error  = None
         reason = None
         for row in results:
@@ -433,7 +434,7 @@ class DASMongocache(object):
         """Find minimal expire timestamp across all records for given DAS query"""
         spec   = {'qhash': dasquery.qhash}
         min_expire = 2*time.time() # upper bound, will update
-        for rec in self.col.find(spec, exhaust=True):
+        for rec in self.col.find(spec, **PYMONGO_OPTS):
             if  'das' in rec and 'expire' in rec['das']:
                 estamp = rec['das']['expire']
                 if  min_expire > estamp:
@@ -451,9 +452,7 @@ class DASMongocache(object):
             expire = header['das']['expire']
             spec   = {'qhash': dasquery.qhash, 'das.system': system}
             new_expire = None
-            # use exhaust=True since since we use records for updates and
-            # exhaust requires to loop over all records
-            for rec in self.col.find(spec, exhaust=True):
+            for rec in self.col.find(spec, **PYMONGO_OPTS):
                 if  'das' in rec and 'expire' in rec['das']:
                     if  rec['das']['expire'] > expire:
                         new_expire = expire
@@ -483,7 +482,7 @@ class DASMongocache(object):
         spec = {'qhash':dasquery.qhash,
                 'das.record':record_codes('query_record')}
         apis = []
-        for row in self.col.find(spec, ['das.api'], exhaust=True):
+        for row in self.col.find(spec, ['das.api'], **PYMONGO_OPTS):
             try:
                 apis += row['das']['api']
             except Exception as _err:
@@ -512,7 +511,7 @@ class DASMongocache(object):
         mdb  = conn[self.dbname]
         mdb.add_son_manipulator(self.das_son_manipulator)
         col  = mdb[collection]
-        res  = col.find(spec=spec, exhaust=True).count()
+        res  = col.find(spec, **PYMONGO_OPTS).count()
         msg  = "(%s, coll=%s) found %s results" % (dasquery, collection, res)
         self.logger.info(msg)
         if  res:
@@ -546,15 +545,15 @@ class DASMongocache(object):
         if  dasquery.unique_filter:
             skeys = self.mongo_sort_keys(collection, dasquery)
             if  skeys:
-                gen = col.find(spec=spec, exhaust=True).sort(skeys)
+                gen = col.find(spec=spec, **PYMONGO_OPTS).sort(skeys)
             else:
-                gen = col.find(spec=spec, exhaust=True)
+                gen = col.find(spec=spec, **PYMONGO_OPTS)
             res = len([r for r in unique_filter(gen)])
         else:
-            res = col.find(spec=spec, exhaust=True).count()
+            res = col.find(spec=spec, **PYMONGO_OPTS).count()
             if  not res: # double check that this is really the case
                 time.sleep(1)
-                res = col.find(spec=spec, exhaust=True).count()
+                res = col.find(spec=spec, **PYMONGO_OPTS).count()
         msg = "%s" % res
         self.logger.info(msg)
         return res
@@ -620,15 +619,13 @@ class DASMongocache(object):
             mdb  = conn[self.dbname]
             mdb.add_son_manipulator(self.das_son_manipulator)
             col = mdb[coll]
-            nres = col.find(spec, exhaust=True).count()
+            nres = col.find(spec, **PYMONGO_OPTS).count()
             if  nres == 1 or nres <= limit:
                 limit = 0
             if  limit:
-                res = col.find(spec=spec, fields=fields,
-                        sort=skeys, skip=idx, limit=limit)
+                res = col.find(spec, fields, sort=skeys, skip=idx, limit=limit)
             else:
-                res = col.find(spec=spec, fields=fields,
-                        sort=skeys, exhaust=True)
+                res = col.find(spec, fields, sort=skeys, **PYMONGO_OPTS)
             if  unique:
                 res = unique_filter(res)
             for row in res:
@@ -713,12 +710,12 @@ class DASMongocache(object):
         # and reset timestamp for record with system:['das']
         if  not counter:
             spec = {'qhash':dasquery.qhash}
-            nrec = self.col.find(spec, exhaust=True).count()
+            nrec = self.col.find(spec, **PYMONGO_OPTS).count()
             if  nrec:
                 msg = "for query %s, found %s non-result record(s)" \
                         % (dasquery, nrec)
                 print dastimestamp('DAS WARNING'), msg
-                for rec in self.col.find(spec, exhaust=True):
+                for rec in self.col.find(spec, **PYMONGO_OPTS):
                     if  'query' in rec:
                         print dastimestamp('DAS das record'), rec
             self.update_das_expire(dasquery, etstamp())
@@ -782,7 +779,7 @@ class DASMongocache(object):
         spec = {}
         if  name:
             spec = {'name':name}
-        result = self.mrcol.find(spec, exhaust=True)
+        result = self.mrcol.find(spec, **PYMONGO_OPTS)
         for row in result:
             yield row
 
@@ -801,7 +798,7 @@ class DASMongocache(object):
         spec    = {'qhash':dasquery.qhash,
                    'das.expire':{'$gt':time.time()},
                    'das.record':record_codes('query_record')}
-        records = self.col.find(spec, exhaust=True)
+        records = self.col.find(spec, **PYMONGO_OPTS)
         for row in records:
             # find smallest expire timestamp to be used by aggregator
             rexpire = row.get('das', {}).get('expire', expire)
@@ -822,14 +819,14 @@ class DASMongocache(object):
             # lookup all service records
             spec = {'das_id': {'$in': id_list}, 'das.primary_key': pkey}
             if  self.verbose:
-                nrec = self.col.find(spec, exhaust=True).sort(skey).count()
+                nrec = self.col.find(spec, **PYMONGO_OPTS).sort(skey).count()
                 msg  = "merging %s records, for %s key" % (nrec, pkey)
             else:
                 msg  = "merging records, for %s key" % pkey
             self.logger.debug(msg)
             # use exhaust=False since we process all records in aggregator
             # and it can be delay in processing
-            records = self.col.find(spec, exhaust=False).sort(skey)
+            records = self.col.find(spec, **PYMONGO_NOEXHAUST).sort(skey)
             # aggregate all records
             agen = aggregator(dasquery, records, expire)
             # diff aggregated records
@@ -846,7 +843,7 @@ class DASMongocache(object):
             except InvalidDocument as exp:
                 msg = "Caught bson error: " + str(exp)
                 self.logger.info(msg)
-                records = self.col.find(spec, exhaust=True).sort(skey)
+                records = self.col.find(spec, **PYMONGO_OPTS).sort(skey)
                 gen = aggregator(dasquery, records, expire)
                 genrows = parse2gridfs(self.gfs, pkey, gen, self.logger)
                 das_dict = {'das':{'expire':expire,
@@ -977,7 +974,7 @@ class DASMongocache(object):
                       'das.record': record_codes('query_record')}
         counter    = 0
         rids = [str(r['_id']) for r in \
-                self.col.find(spec, fields=['_id'], exhaust=True)]
+                self.col.find(spec, ['_id'], **PYMONGO_OPTS)]
         if  rids:
             if  isinstance(results, list) or isinstance(results, GeneratorType):
                 for item in results:
@@ -1011,7 +1008,7 @@ class DASMongocache(object):
         Remove query from DAS cache. To do so, we retrieve API record
         and remove all data records from das.cache and das.merge
         """
-        records = self.col.find({'qhash':dasquery.qhash}, exhaust=True)
+        records = self.col.find({'qhash':dasquery.qhash}, **PYMONGO_OPTS)
         id_list = []
         for row in records:
             if  row['_id'] not in id_list:

@@ -17,11 +17,13 @@ import threading
 from pymongo import MongoClient
 from pymongo.errors import AutoReconnect, ConnectionFailure
 import gridfs
+import pymongo
 
 # DAS modules
 from DAS.utils.utils import genkey, print_exc, dastimestamp
 from DAS.utils.das_config import das_readconfig
 from DAS.utils.ddict import DotDict
+from DAS.utils.das_pymongo import PYMONGO_OPTS, MongoOpts
 
 # MongoDB does not allow to store documents whose size more then 4MB
 MONGODB_LIMIT = 4*1024*1024
@@ -30,7 +32,7 @@ def find_one(col, spec, fields=None):
     "Custom implementation of find_one function for given MongoDB parameters"
     res = None
     try:
-        res = [r for r in col.find(spec, fields, exhaust=True)]
+        res = [r for r in col.find(spec, fields, **PYMONGO_OPTS)]
     except StopIteration:
         return None
     if  res:
@@ -69,6 +71,7 @@ class DBConnection(object):
         self.thr      = lifetime
         self.retry    = retry
         self.psize    = pool_size
+        self.mongo_opts = MongoOpts(w=1, psize=self.psize).opts()
 
     def genkey(self, uri):
         "Generate unique key"
@@ -100,7 +103,7 @@ class DBConnection(object):
         key = self.genkey(uri)
         for idx in xrange(0, self.retry):
             try:
-                dbinst = MongoClient(host=uri, w=1, max_pool_size=self.psize)
+                dbinst = MongoClient(host=uri, **self.mongo_opts)
                 gfs    = dbinst.gridfs
                 fsinst = gridfs.GridFS(gfs)
                 self.conndict[key] = (dbinst, fsinst)
@@ -237,7 +240,7 @@ def query_db(dbname, dbcol, query,  idx=0, limit=10):
     if col:
         try:
             if limit == -1:
-                for row in col.find(query, exhaust=True):
+                for row in col.find(query, **PYMONGO_OPTS):
                     yield row
             else:
                 for row in col.find(query).skip(idx).limit(limit):
