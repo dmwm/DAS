@@ -42,6 +42,7 @@ from DAS.utils.das_db import db_connection, is_db_alive, create_indexes
 from DAS.utils.das_db import find_one
 from DAS.utils.logger import PrintManager
 from DAS.utils.thread import start_new_thread
+from DAS.utils.das_pymongo import PYMONGO_OPTS
 
 import DAS.utils.jsonwrapper as json
 
@@ -112,7 +113,7 @@ class DASMapping(object):
 
         msg = "%s@%s" % (self.dburi, self.dbname)
         self.logger.info(msg)
-        
+
         self.init()
 
         self.daskeyscache = {}         # to be filled at run time
@@ -160,7 +161,7 @@ class DASMapping(object):
         "Read DAS maps and initialize DAS API maps"
         if  not records:
             spec = {'type':'service'}
-            records = self.col.find(spec, exhaust=True)
+            records = self.col.find(spec, **PYMONGO_OPTS)
         for row in records:
             if  'urn' in row:
                 api = row['urn']
@@ -273,7 +274,7 @@ class DASMapping(object):
         pdict = defaultdict(int)
         adict = {}
         maps_hash = False
-        for row in self.col.find(exhaust=True):
+        for row in self.col.find(**PYMONGO_OPTS):
             check_map_record(row)
             if  'urn' in row:
                 udict[row['system']] += 1
@@ -303,7 +304,7 @@ class DASMapping(object):
         status_nmap = sum(nlist) == len(nlist)
         status_pmap = adict.get('presentation', {}).get('presentation', 0) == 1
         # verify completeness of maps
-        calc_token = verification_token(self.col.find(exhaust=True))
+        calc_token = verification_token(self.col.find(**PYMONGO_OPTS))
         status_complete = maps_hash and maps_hash == calc_token
         if  self.verbose:
             print "### DAS map status, umap=%s, nmap=%s, pmap=%s, complete=%s" \
@@ -418,7 +419,7 @@ class DASMapping(object):
         if  not self.systems:
             spec = { 'type': 'service', 'system' : { '$ne' : None } }
             gen  = (row['system'] \
-                    for row in self.col.find(spec, ['system'], exhaust=True))
+                    for row in self.col.find(spec, ['system'], **PYMONGO_OPTS))
             self.systems = list( set(gen2list(gen)) & set(self.services) )
         return self.systems
 
@@ -432,7 +433,7 @@ class DASMapping(object):
         if  system:
             spec['system'] = system
         gen  = (row['urn'] \
-                for row in self.col.find(spec, ['urn'], exhaust=True))
+                for row in self.col.find(spec, ['urn'], **PYMONGO_OPTS))
         self.apicache[system] = gen2list(gen)
         return self.apicache[system]
 
@@ -464,13 +465,13 @@ class DASMapping(object):
         if  das_system:
             spec  = { 'system' : das_system }
         gen   = (row['system'] \
-                for row in self.col.find(spec, ['system'], exhaust=True))
+                for row in self.col.find(spec, ['system'], **PYMONGO_OPTS))
         gen   = [r for r in gen]
         kdict = {}
         for system in gen:
             spec = {'system':system, 'urn':{'$ne':None}}
             keys = []
-            for row in self.col.find(spec, exhaust=True):
+            for row in self.col.find(spec, **PYMONGO_OPTS):
                 for entry in row['das_map']:
                     if  entry['das_key'] not in keys:
                         keys.append(entry['das_key'])
@@ -587,7 +588,7 @@ class DASMapping(object):
             return self.keymap[daskey]
         spec = {'das_map.das_key' : daskey}
         mapkeys = []
-        for row in self.col.find(spec, ['das_map'], exhaust=True):
+        for row in self.col.find(spec, ['das_map'], **PYMONGO_OPTS):
             for kmap in row['das_map']:
                 if  kmap['das_key'] == daskey and \
                     kmap['rec_key'] not in mapkeys:
@@ -602,7 +603,7 @@ class DASMapping(object):
         """
         spec  = { 'system' : das_system, 'das_map.rec_key': map_key }
         apilist = []
-        for row in self.col.find(spec, ['urn'], exhaust=True):
+        for row in self.col.find(spec, ['urn'], **PYMONGO_OPTS):
             if  'urn' in row and row['urn'] not in apilist:
                 apilist.append(row['urn'])
         return apilist
@@ -613,7 +614,7 @@ class DASMapping(object):
         """
         spec = { 'das_map.das_key' : key }
         gen  = (row['system'] \
-                for row in self.col.find(spec, ['system'], exhaust=True))
+                for row in self.col.find(spec, ['system'], **PYMONGO_OPTS))
         systems = []
         for system in gen:
             if  system not in systems:
@@ -654,7 +655,7 @@ class DASMapping(object):
         """
         query = {'system':system, 'das_map.api_arg' : api_input_name}
         names = []
-        for adas in self.col.find(query, ['das_map'], exhaust=True):
+        for adas in self.col.find(query, ['das_map'], **PYMONGO_OPTS):
             for row in adas['das_map']:
                 try:
                     if  'api_arg' in row:
@@ -719,7 +720,7 @@ class DASMapping(object):
         spec = {'type':'notation'}
         if  system:
             spec['system'] = system
-        for item in self.col.find(spec, exhaust=True):
+        for item in self.col.find(spec, **PYMONGO_OPTS):
             notationmap[item['system']] = item['notations']
         return notationmap
 
@@ -749,7 +750,7 @@ class DASMapping(object):
         """
         spec = {'system':system, 'urn':api}
         keys = []
-        for row in self.col.find(spec, exhaust=True):
+        for row in self.col.find(spec, **PYMONGO_OPTS):
             for entry in row['das_map']:
                 keys.append(entry['das_key'])
         return keys
@@ -765,7 +766,7 @@ class DASMapping(object):
         """
         spec = {'system':system, 'urn':{'$ne':None}}
         smap = {}
-        for row in self.col.find(spec, exhaust=True):
+        for row in self.col.find(spec, **PYMONGO_OPTS):
             url  = row['url']
             exp  = row['expire']
             ext  = row['format']
@@ -815,7 +816,7 @@ class DASMapping(object):
         certain commonly used input fields (from enabled DAS systems only)
         """
         uris = []
-        for row in self.col.find({'type': 'input_values'}, exhaust=True):
+        for row in self.col.find({'type': 'input_values'}, **PYMONGO_OPTS):
             # check that system is active
             if row['system'] not in self.services:
                 continue
