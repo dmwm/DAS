@@ -1,24 +1,25 @@
 #!/bin/bash
 
-if [ "$#" -gt 2 ]; then
-    echo "Usage: das_code_quality.sh <optional threashold up to 10> <stop at first failure, true or false>"
+if [ "$#" -gt 3 ] || [ "$#" -eq 0 ]; then
+    echo "Usage: das_code_quality.sh <dir to look for code> <optional threashold up to 10> <stop at first failure, true or false>"
     exit 1
 fi 
 
-if [ "$#" -eq 0 ]; then
+root=$1
+
+if [ "$#" -eq 1 ]; then
 thr=9
 else
-thr=$1
+thr=$2
 fi
 
-if  [ "$#" -eq 2 ]; then
-immediate=$2
+if  [ "$#" -eq 3 ]; then
+immediate=$3
 else
 immediate="true"
 fi
 
-# find out where DAS is installed on a system
-dasroot=`python -c "import DAS; print '/'.join(DAS.__file__.split('/')[:-1])"`
+cmd="pylint --disable=C0326"
 
 echo "Run pylint with $thr/10 threashold level, exit immediate=$immediate"
 echo
@@ -27,7 +28,7 @@ RED=$(tput setaf 1)
 GREEN=$(tput setaf 2)
 NO_COLOUR=$(tput sgr0)
 
-files=`find $dasroot -name "*.py" | grep -v ipy_profile_mongo | grep -v sample_config | grep -v parsetab.py`
+files=`find $root -name "*.py" | grep -v ipy_profile_mongo | grep -v sample_config | grep -v parsetab.py`
 fail_files=0
 for f in $files
 do
@@ -44,10 +45,11 @@ do
         echo "File $f has has_key dict method (obsolete in python3), please fix this issue"
         exit 1
     fi
-    out=`pylint --disable=C0326 $f | grep "Your code"`
+    out=`$cmd $f | grep "Your code"`
     msg=`echo $out | grep -v "No config" | awk '{split($0,a,"at "); split(a[2],b,"/"); split(b[1],c,".");if(c[1]<THR) print "FAIL, score "b[1]"/10"; else print "PASS"}' THR=$thr`
     if  [ "$msg" != "PASS" ] && [ "$immediate" == "true" ]; then
         echo "${RED}--- $msg${NO_COLOUR}"
+        $cmd $f
         exit 1
     fi
     if [ "$msg" == "PASS" ]; then
