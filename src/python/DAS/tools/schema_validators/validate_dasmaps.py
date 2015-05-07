@@ -9,6 +9,7 @@ The validator checks:
  * correct naming/typing of known fields
  * validity of hash value, if one present
 """
+from __future__ import print_function
 import sys
 
 from DAS.tools.schema_validators.schema import Schema, And, Or, Optional
@@ -23,11 +24,11 @@ def check_hash(rec):
         add_hash(nrec)
         rmd5 = nrec.pop('hash')
         if md5 != rmd5:
-            print 'Invalid hash'
-            print "record:", rec
-            print "nrec:", nrec
-            print "md5   :", md5
-            print "rmd5  :", rmd5
+            print('Invalid hash')
+            print("record:", rec)
+            print("nrec:", nrec)
+            print("md5   :", md5)
+            print("rmd5  :", rmd5)
             return False
     return True
 
@@ -113,7 +114,7 @@ SCHEMA_RULES = {
 def main():
     """Main function"""
     if len(sys.argv) != 2:
-        print "Usage: validator <dasmap_update_file.js>"
+        print("Usage: validator <dasmap_update_file.js>")
         sys.exit(1)
     if not validate_file_verbose(SCHEMA_RULES, sys.argv[1]):
         sys.exit(1)

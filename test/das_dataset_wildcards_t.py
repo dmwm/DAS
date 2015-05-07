@@ -5,6 +5,7 @@
 """
 tests for dataset wildcard processing
 """
+from __future__ import print_function
 # system modules
 
 import unittest
@@ -28,8 +29,8 @@ class TestDASDatasetWildcards(unittest.TestCase):
         sets up dbs manager instance
         """
 
-        print '\nsetUp: getting dbs manager to access current datasets '\
-              '(and fetching them if needed)'
+        print('\nsetUp: getting dbs manager to access current datasets '\
+              '(and fetching them if needed)')
         # set up only once
         if not self.global_dbs_mngr:
             self.global_dbs_mngr = initialize_global_dbs_mngr()

@@ -6,6 +6,7 @@ File: url_utils.py
 Author: Valentin Kuznetsov <vkuznet@gmail.com>
 Description: Set of url utilities for DAS
 """
+from __future__ import print_function
 
 # system modules
 import time
@@ -100,13 +101,13 @@ def getdata_pycurl(url, params, headers=None, expire=3600, post=None,
         except Exception as exp:
             data.update({'httperror': None})
             msg += '\n' + str(exp)
-        print dastimestamp('getdata_pycurl'), msg
+        print(dastimestamp('getdata_pycurl'), msg)
         data = json.dumps(data)
         expire = expire_timestamp(error_expire)
     except Exception as exp:
         msg  = 'HTTPError, system=%s, url=%s, args=%s, headers=%s' \
                     % (system, url, json.dumps(params), json.dumps(headers))
-        print dastimestamp('getdata_pycurl'), msg + '\n' + str(exp)
+        print(dastimestamp('getdata_pycurl'), msg + '\n' + str(exp))
         data = {'error': 'Received generic error from %s data-service' % contact,
                 'reason': msg, 'ts':time.time()}
         data = json.dumps(data)
@@ -135,7 +136,7 @@ def getdata_urllib(url, params, headers=None, expire=3600, post=None,
     if  tstamp and 'If-Modified-Since' not in headers.keys():
         headers['If-Modified-Since'] = http_timestamp(tstamp)
     if  verbose:
-        print '+++ getdata, url=%s, headers=%s' % (url, headers)
+        print('+++ getdata, url=%s, headers=%s' % (url, headers))
     req = urllib2.Request(url)
     for key, val in headers.iteritems():
         req.add_header(key, val)
@@ -157,8 +158,8 @@ def getdata_urllib(url, params, headers=None, expire=3600, post=None,
         info = data.info()
         code = data.getcode()
         if  verbose > 1:
-            print "+++ response code:", code
-            print "+++ response info\n", info
+            print("+++ response code:", code)
+            print("+++ response info\n", info)
         try: # get HTTP header and look for Expires
             e_time = expire_timestamp(\
                 info.__dict__['dict']['expires'])
@@ -180,13 +181,13 @@ def getdata_urllib(url, params, headers=None, expire=3600, post=None,
         except Exception as exp:
             data.update({'httperror': None})
             msg += '\n' + str(exp)
-        print msg
+        print(msg)
         data = json.dumps(data)
         expire = expire_timestamp(error_expire)
     except Exception as exp:
         msg  = 'HTTPError, url=%s, args=%s, headers=%s' \
                     % (url, params, headers)
-        print msg + '\n' + str(exp)
+        print(msg + '\n' + str(exp))
         data = {'error': 'Received generic error from %s data-service' % contact,
                 'reason': msg}
         data = json.dumps(data)
@@ -222,7 +223,7 @@ def httplib_request(host, path, params, request='POST', debug=0):
     if  not isinstance(params, str):
         params = urllib.urlencode(params, doseq=True)
     if  debug:
-        print "input parameters", params
+        print("input parameters", params)
     headers = {"Content-type": "application/x-www-form-urlencoded",
                "Accept": "text/plain"}
     if  host.find('https://') != -1:
@@ -239,7 +240,7 @@ def httplib_request(host, path, params, request='POST', debug=0):
     response = conn.getresponse()
 
     if  response.reason != "OK":
-        print response.status, response.reason, response.read()
+        print(response.status, response.reason, response.read())
         return 0
     else:
         res = response.read()
@@ -287,7 +288,7 @@ def get_proxy():
         result = []
     if  len(result) == 1 and result[0] == {'ping':'pong'}:
         return urlfetch_proxy
-    print "\n### No UrlFecth Proxy Server"
+    print("\n### No UrlFecth Proxy Server")
     return False
 
 def urlfetch_proxy(urls):

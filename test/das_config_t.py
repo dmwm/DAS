@@ -19,20 +19,20 @@ class testDASConfig(unittest.TestCase):
 
     def testEnvConfig(self):
         """test das configuration file"""
-        if  os.environ.has_key('DAS_CONFIG'):
+        if  'DAS_CONFIG' in os.environ:
             del os.environ['DAS_CONFIG']
         self.assertRaises(EnvironmentError, das_configfile)
         
     def testConfig(self):                          
         """test read/write of configuration file"""
-        if  os.environ.has_key('DAS_CONFIG'):
+        if  'DAS_CONFIG' in os.environ:
             del os.environ['DAS_CONFIG']
         fds = NamedTemporaryFile()
         os.environ['DAS_CONFIG'] = fds.name
         dasconfig = das_configfile()
         write_configparser(dasconfig, True)
         readdict = deepcopy(das_readconfig())
-        self.assertEqual(types.DictType, type(readdict))
+        self.assertEqual(dict, type(readdict))
 #
 # main
 #

@@ -6,6 +6,7 @@
 this is the IR-based ranker used in matching keywords into names of
 fields in service outputs. These may be composed of unclean,technical terms.
 """
+from __future__ import print_function
 import pprint
 import os
 import shutil
@@ -60,12 +61,12 @@ class SimpleIREntityAttributeMatcher(object):
         """
         build the index from given field list and remove the old index if any
         """
-        print 'starting to build the index...'
+        print('starting to build the index...')
         # restructure data - flatten the field list
         field_list = chain(*(x.itervalues()
                              for x in fields_by_entity.itervalues()))
         self.__create_idx(field_list)
-        print 'index creation done.'
+        print('index creation done.')
 
     @classmethod
     def __load_index(cls):
@@ -84,7 +85,7 @@ class SimpleIREntityAttributeMatcher(object):
           - promotes complete word match over partial (e.g. stem)
         """
         if _DEBUG:
-            print 'Evaluating query: ', kwds
+            print('Evaluating query: ', kwds)
 
         with self._ix.searcher(weighting=self.weighting) as s:
             all_fields_and_terms = self.__build_search_query(kwds)
@@ -95,7 +96,7 @@ class SimpleIREntityAttributeMatcher(object):
                 q = And([Term('result_type', result_type),
                          Or(all_fields_and_terms)])
             if _DEBUG:
-                print 'Q:'
+                print('Q:')
                 pprint.pprint(q)
             hits = s.search(q, terms=True, optimize=True, limit=limit)
 
@@ -107,14 +108,14 @@ class SimpleIREntityAttributeMatcher(object):
                 keyword_list_no_stopw = kwlist_no_stopwords(kwds)
                 terms_matched = set(val for _, val in hit.matched_terms())
                 if _DEBUG:
-                    print 'matched_terms_list', terms_matched
+                    print('matched_terms_list', terms_matched)
 
                 matched_kws = set()
                 for kw in keyword_list_no_stopw:
                     keyword_stemmed = kwlist_stemmed(kw)[0]
                     if _DEBUG:
-                        print 'kw', kw, 'stemmed:', keyword_stemmed, \
-                            'kw no stopw', kwlist_no_stopwords(kw)
+                        print('kw', kw, 'stemmed:', keyword_stemmed, \
+                            'kw no stopw', kwlist_no_stopwords(kw))
                     if keyword_stemmed in terms_matched or kw in terms_matched:
                         matched_kws |= set([kw])
                 return matched_kws
@@ -347,7 +348,7 @@ def manual_tests():
         print_results(keywords=u'custodial replica', result_type=u'block')
         print_results(keywords=u'replica_fraction', result_type=u'site')
 
-        print '========================================================='
+        print('=========================================================')
 
         print_results(keywords=u'number', result_type=u'dataset')
         print_results(keywords=u'of', result_type=u'dataset')
@@ -355,17 +356,17 @@ def manual_tests():
         print_results(keywords=u'number of', result_type=u'dataset')
         print_results(keywords=u'of events', result_type=u'dataset')
         print_results(keywords=u'Number OF Events', result_type=u'dataset')
-    print 'Q: dataset_fraction'
+    print('Q: dataset_fraction')
     print_results(keywords=u'dataset_fraction', result_type=u'site')
-    print 'Q: dataset fraction'
+    print('Q: dataset fraction')
     print_results(keywords=u'dataset fraction', result_type=u'site')
-    print 'Q: dataset part'
+    print('Q: dataset part')
     print_results(keywords=u'dataset part', result_type=u'site')
-    print '============================================'
-    print 'Q: file'
+    print('============================================')
+    print('Q: file')
     print_results(keywords=u'file in', result_type='file', limit=4)
-    print '============================================'
-    print 'Q: file in'
+    print('============================================')
+    print('Q: file in')
     print_results(keywords=u'file in', result_type='file', limit=4)
 
 

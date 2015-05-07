@@ -5,6 +5,7 @@
 DAS robot base class. Code based on
 http://www.jejik.com/articles/2007/02/a_simple_unix_linux_daemon_in_python/
 """
+from __future__ import print_function
 
 __revision__ = "$Id: das_robot.py,v 1.4 2010/03/05 18:14:46 valya Exp $"
 __version__ = "$Revision: 1.4 $"
@@ -167,14 +168,14 @@ class Robot(object):
             sys.stderr.write(message % self.pidfile)
             return # not an error in a restart
 
-        print "DAS populator information"
-        print "PID    :", pid
-        print "pidfile:", self.pidfile
-        print "stdin  :", self.stdin
-        print "stdout :", self.stdout
-        print "stderr :", self.stderr
-        print "sleep  :", self.sleep
-        print "query  :", self.query
+        print("DAS populator information")
+        print("PID    :", pid)
+        print("pidfile:", self.pidfile)
+        print("stdin  :", self.stdin)
+        print("stdout :", self.stdout)
+        print("stderr :", self.stderr)
+        print("sleep  :", self.sleep)
+        print("query  :", self.query)
 
 
     def run(self):
@@ -183,7 +184,7 @@ class Robot(object):
         daemonized by start() or restart().
         """
         if  not self.query:
-            print "DAS query is not provided"
+            print("DAS query is not provided")
             sys.exit(1)
 
         while True:

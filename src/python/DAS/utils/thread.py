@@ -6,6 +6,7 @@ File       : thread.py
 Author     : Valentin Kuznetsov <vkuznet@gmail.com>
 Description: Wrapper around python threading/thread modules
 """
+from __future__ import print_function
 
 # system modules
 import sys
@@ -38,7 +39,7 @@ def dumpstacks(isignal, iframe):
     Dump context of all threads upon given signal
     http://stackoverflow.com/questions/132058/showing-the-stack-trace-from-a-running-python-application
     """
-    print "DAS stack, signal=%s, frame=%s" % (isignal, iframe)
+    print("DAS stack, signal=%s, frame=%s" % (isignal, iframe))
     id2name = dict([(th.ident, th.name) for th in threading.enumerate()])
     code = []
     for tid, stack in sys._current_frames().items():
@@ -47,6 +48,6 @@ def dumpstacks(isignal, iframe):
             code.append('File: "%s", line %d, in %s' % (filename, lineno, name))
             if  line:
                 code.append("  %s" % (line.strip()))
-    print "\n".join(code)
+    print("\n".join(code))
 
 signal.signal(signal.SIGUSR1, dumpstacks)

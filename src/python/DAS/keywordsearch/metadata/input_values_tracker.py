@@ -4,6 +4,7 @@
 Description: maintains a list of the allowed input values for certain DAS keys
 by querying certain web-services.
 """
+from __future__ import print_function
 
 # system modules
 import re
@@ -83,7 +84,7 @@ class InputValuesTracker(object):
             if not KEEP_EXISTING_RECORDS_ON_RESTART:
                 self.col.remove()
         except Exception as exc:
-            print dastimestamp(), exc
+            print(dastimestamp(), exc)
 
     def update(self):
         """
@@ -108,10 +109,10 @@ class InputValuesTracker(object):
                 self.col.update(spec, {'$set': {'ts': time0}}, upsert=True)
                 # remove records with old ts
         self.col.remove({'ts': {'$lt': time0 - self.expire}})
-        print "%s InputValuesTracker updated" \
+        print("%s InputValuesTracker updated" \
               " %s collection in %s sec, nrec=%s" \
               % (dastimestamp(), self.dbcoll, time.time() - time0,
-                 self.col.count())
+                 self.col.count()))
 
     def find(self, pattern, idx=0, limit=10):
         """
@@ -152,7 +153,7 @@ class InputValuesTracker(object):
 
         service = self.cfg
         url = service['url'] + encoded_data
-        print str(url)
+        print(str(url))
         req = urllib2.Request(url)
 
         # ensure we get json (sitedb is messed up and randomly returns xml)
@@ -215,13 +216,13 @@ def check_unique_match(tracker, field, keyword):
         match2 = next(matches_maybe, False)
         if match2:
             if DEBUG:
-                print 'non-unique match of %(keyword)s into %(match)s' \
-                      ' and %(match2)s' % locals()
+                print('non-unique match of %(keyword)s into %(match)s' \
+                      ' and %(match2)s' % locals())
             return True, None
         else:
             # there's no second item -- it's unique
             if DEBUG:
-                print 'unique match of %(keyword)s into %(match)s' % locals()
+                print('unique match of %(keyword)s into %(match)s' % locals())
             return True, match
 
     else:
@@ -271,10 +272,10 @@ def test(tracker):
     tracker.update()
     idx = 0
     limit = 10
-    print 'matching {0:s} in {1:s}:'.format(tracker.cfg['test'],
-                                            tracker.cfg['input'])
+    print('matching {0:s} in {1:s}:'.format(tracker.cfg['test'],
+                                            tracker.cfg['input']))
     for row in tracker.find(tracker.cfg['test'], idx, limit):
-        print row
+        print(row)
 
 
 def test_all():

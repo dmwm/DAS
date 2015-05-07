@@ -5,6 +5,7 @@
 """
 DAS admin tool to handle DAS records in DAS cache server
 """
+from __future__ import print_function
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -209,16 +210,16 @@ class DASMongoDB(object):
         if  system:
             spec['das.system'] = system
         dbname, collection = db.split('.')
-        print self.line
-        print "MongoDB query:", dict(spec=spec, fields=fields)
+        print(self.line)
+        print("MongoDB query:", dict(spec=spec, fields=fields))
         idx = 0
         for row in self.conn[dbname][collection].find(spec, fields):
-            print "\nrow: %s" % idx
+            print("\nrow: %s" % idx)
             if  pretty:
                 print_dict(row)
-                print
+                print()
             else:
-                print row
+                print(row)
             idx += 1
 
     def delete(self, system=None):
@@ -232,10 +233,10 @@ class DASMongoDB(object):
         try:
             self.cache.remove(spec)
             msg += ", delete operation [OK]"
-            print msg
+            print(msg)
         except Exception as exc:
             msg += ", delete operation [FAIL]"
-            print msg
+            print(msg)
             print_exc(exc)
 
     def renew(self, interval, system=None):
@@ -254,7 +255,7 @@ class DASMongoDB(object):
             self.cache.update(spec, row)
             idx += 1
         msg += "Updated %s document(s)" % idx
-        print msg
+        print(msg)
 
     def stats(self, isystem=None):
         """
@@ -268,18 +269,18 @@ class DASMongoDB(object):
         if  isystem:
             systems = [isystem]
 
-        print self.line
-        print "DB report, cache,", timestamp
-        print "total number of records:", nrecords
-        print "total number of expired records:", nexpire
+        print(self.line)
+        print("DB report, cache,", timestamp)
+        print("total number of records:", nrecords)
+        print("total number of expired records:", nexpire)
         for system in systems:
             spec = {'das.system' : system}
             nrec = self.cache.find(spec).count()
-            print "number of records for %s: %s" % (system, nrec)
+            print("number of records for %s: %s" % (system, nrec))
         # get info about indexes
-        print "Existing indexes:"
+        print("Existing indexes:")
         for row in self.conn.das.system.indexes.find({}):
-            print row
+            print(row)
 
 # see this thread
 # http://groups.google.com/group/mongodb-user/browse_thread/thread/2c62409009b5a3e4
@@ -291,13 +292,13 @@ class DASMongoDB(object):
 
         if  not isystem:
             nrecords   = self.conn.mapping.db.count()
-            print self.line
-            print "DB report, mapping,", timestamp
-            print "total number of records:", nrecords
+            print(self.line)
+            print("DB report, mapping,", timestamp)
+            print("total number of records:", nrecords)
             # get info about indexes
-            print "Existing indexes:"
+            print("Existing indexes:")
             for row in self.conn.mapping.system.indexes.find({}):
-                print row
+                print(row)
 
 #
 # main
@@ -319,7 +320,7 @@ if __name__ == '__main__':
 
     if  opts.renew:
         if  not opts.interval:
-            print "Specify non-zero interval"
+            print("Specify non-zero interval")
             sys.exit(0)
         DASMONGO.renew(opts.interval, opts.system)
 
@@ -331,5 +332,5 @@ if __name__ == '__main__':
             DBNAME, DBCOLL = opts.clean.split('.')
             DASMONGO.clean(DBNAME, DBCOLL)
         except:
-            print "Please provide <dbname>.<dbcollection>"
+            print("Please provide <dbname>.<dbcollection>")
 

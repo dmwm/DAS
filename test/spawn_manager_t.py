@@ -4,6 +4,7 @@
 """
 Unit test for DAS spawn manager
 """
+from __future__ import print_function
 
 import os
 import time
@@ -27,8 +28,8 @@ def test_dict(val):
     return {'val': val, 'array': [val, val]}
 
 def test_wait(val):
-    print "test_wait, time=%s, PID=%s, PPID=%s" \
-            % (time.time(), os.getpid(), os.getppid())
+    print("test_wait, time=%s, PID=%s, PPID=%s" \
+            % (time.time(), os.getpid(), os.getppid()))
     time.sleep(val)
     return val
 
@@ -73,7 +74,7 @@ class testUtils(unittest.TestCase):
 
     def test_spawn_queue(self):
         """Test spawn_queue function"""
-        print "\n### test_spawn_queue"
+        print("\n### test_spawn_queue")
         queue  = multiprocessing.Queue()
         sleep  = 2
         # spawn 3 processes which will sleep for given time
@@ -103,7 +104,7 @@ class testUtils(unittest.TestCase):
 
     def test_spawn_manager(self):
         """Test spawn_queue function"""
-        print "\n### test_spawn_manager"
+        print("\n### test_spawn_manager")
         mgr = SpawnManager()
         sleep  = 2
         # spawn 3 processes which will sleep for given time

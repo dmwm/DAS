@@ -8,6 +8,7 @@ is_alive(pid) return status of executing job
 joinall() to join all tasks in a queue and exiting existing workers
 join(jobs) to join all tasks without stopping workers
 """
+from __future__ import print_function
 
 # system modules
 from cherrypy.process import plugins
@@ -83,7 +84,7 @@ class Worker(Thread):
             except Exception as err:
                 self._pids.discard(pid)
                 print_exc(err)
-                print "\n### args", func, args, kwargs
+                print("\n### args", func, args, kwargs)
             evt.set()
 
 class TaskManager(object):
@@ -165,11 +166,11 @@ class TaskManager(object):
         Clear all tasks in a queue. It allows current jobs to run, but will
         block all new requests till workers event flag is set again
         """
-        map(lambda (evt, pid): (evt.clear(), pid), tasks)
+        map(lambda evt_pid: (evt_pid[0].clear(), evt_pid[1]), tasks)
 
     def joinall(self, tasks):
         """Join all tasks in a queue and quite"""
-        map(lambda (evt, pid): (evt.wait(), pid), tasks)
+        map(lambda evt_pid1: (evt_pid1[0].wait(), evt_pid1[1]), tasks)
 
     def quit(self):
         """Put None task to all workers and let them quit"""
@@ -191,7 +192,7 @@ class PluginTaskManager(TaskManager, plugins.SimplePlugin):
         plugins.SimplePlugin.__init__(self, bus)
         TaskManager.__init__(self, nworkers, name, debug)
         if  debug:
-            print "%s init with %s workers" % (name, nworkers)
+            print("%s init with %s workers" % (name, nworkers))
 
     def start(self):
         """
@@ -199,7 +200,7 @@ class PluginTaskManager(TaskManager, plugins.SimplePlugin):
         When external bus will start this method will be invoked.
         """
         if  self.debug:
-            print "%s start" % self.name
+            print("%s start" % self.name)
 
     def stop(self):
         """
@@ -207,7 +208,7 @@ class PluginTaskManager(TaskManager, plugins.SimplePlugin):
         When external bus will stop this method will be invoked.
         """
         if  self.debug:
-            print "%s stop" % self.name
+            print("%s stop" % self.name)
         self.force_exit()
 
     def exit(self):
@@ -216,7 +217,7 @@ class PluginTaskManager(TaskManager, plugins.SimplePlugin):
         When external bus will exit this method will be invoked.
         """
         if  self.debug:
-            print "%s exit" % self.name
+            print("%s exit" % self.name)
         self.stop()
 
     def graceful(self):
@@ -225,6 +226,6 @@ class PluginTaskManager(TaskManager, plugins.SimplePlugin):
         When external bus will stop this method will be invoked.
         """
         if  self.debug:
-            print "%s graceful" % self.name
+            print("%s graceful" % self.name)
         self.quit()
 

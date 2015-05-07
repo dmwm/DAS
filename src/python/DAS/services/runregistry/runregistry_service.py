@@ -4,6 +4,7 @@
 """
 RunRegistry service
 """
+from __future__ import print_function
 __revision__ = "$Id"
 __version__ = "$Revision"
 __author__ = "Valentin Kuznetsov"
@@ -250,7 +251,7 @@ def test():
     url = 'http://localhost:8081/runregistry/'
     ver = 3
     for row in rr_worker(url, query, ver):
-        print row, type(row)
+        print(row, type(row))
 
 if __name__ == '__main__':
     test()

@@ -229,7 +229,7 @@ class DASFilecache(Cache):
             Query.expire < '%s' % curtime ))
         try:
             res = sql_stm.one()
-        except Exception, exp:
+        except Exception as exp:
             msg = 'query=%s\n%s %s %s\n%s' % (query, sql_stm, key, curtime, exp)
             self.logger.debug(msg)
 #            print "\n### das_filecache:is_expired msg=", msg
@@ -250,7 +250,7 @@ class DASFilecache(Cache):
             Query.expire > '%s' % time.time() ))
         try:
             res = sql_stm.one()
-        except Exception, exp:
+        except Exception as exp:
             msg = 'query=%s\n%s %s %s\n%s' % (query, sql_stm, key, curtime, exp)
             self.logger.debug(msg)
 #            print "\n### das_filecache:incache msg=", msg
@@ -294,11 +294,11 @@ class DASFilecache(Cache):
                         while 1:
                             try:
                                 res = marshal.load(fdr)
-                                if  type(res) is types.DictType:
+                                if  type(res) is dict:
                                     res['id'] = id
                                 data.append(res)
                                 id += 1
-                            except EOFError, err:
+                            except EOFError as err:
                                 break
                         fdr.close()
                         sorted_data = sort_data(data, skey, order)
@@ -316,7 +316,7 @@ class DASFilecache(Cache):
                         while 1:
                             try:
                                 res = marshal.load(fdr)
-                                if  type(res) is types.DictType:
+                                if  type(res) is dict:
                                     res['id'] = id
                                 if  limit:
                                     if  id >= idx and id < stop:
@@ -326,7 +326,7 @@ class DASFilecache(Cache):
                                 else:
                                     yield res
                                 id += 1
-                            except EOFError, err:
+                            except EOFError as err:
                                 break
                         fdr.close()
             else:
@@ -361,7 +361,7 @@ class DASFilecache(Cache):
         idir = create_dir(self.dir, system, self.base_dir, self.files_dir)
         filename = os.path.join(idir, key)
         fdr = open(filename, 'wb')
-        if  type(results) is types.ListType or \
+        if  type(results) is list or \
             type(results) is types.GeneratorType:
             for item in results:
                 marshal.dump(item, fdr)

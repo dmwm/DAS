@@ -7,6 +7,7 @@ Author     : Valentin Kuznetsov <vkuznet AT gmail dot com>
 Description: implementation of spawn function via multiprocessing module
              it is based on Process/Queue pairing.
 """
+from __future__ import print_function
 
 # system modules
 import os
@@ -89,7 +90,7 @@ class SpawnManager(object):
         results = []
         for proc in self.procs:
             if  debug:
-                print proc.name
+                print(proc.name)
             proc.join()
             results.append(self.queue.get())
         return results

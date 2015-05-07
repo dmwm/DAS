@@ -11,6 +11,7 @@ The DAS consists of several sub-systems:
     - DAS merge contains merged data records
     - DAS mapreduce collection
 """
+from __future__ import print_function
 
 __author__ = "Valentin Kuznetsov"
 
@@ -224,7 +225,7 @@ class DASMongocache(object):
         mdb  = conn[self.dbname]
         colnames = mdb.collection_names()
         if  not colnames or self.col_ not in colnames:
-            print "Create", mdb, self.col_
+            print("Create", mdb, self.col_)
             mdb.create_collection(self.col_)
         mdb.add_son_manipulator(self.das_son_manipulator)
         return mdb[self.col_]
@@ -236,7 +237,7 @@ class DASMongocache(object):
         mdb  = conn[self.dbname]
         colnames = mdb.collection_names()
         if  not colnames or self.merge_ not in colnames:
-            print "Create", mdb, self.merge_
+            print("Create", mdb, self.merge_)
             mdb.create_collection(self.merge_)
         mdb.add_son_manipulator(self.das_son_manipulator)
         return mdb[self.merge_]
@@ -700,7 +701,7 @@ class DASMongocache(object):
             yield row
         msg = 'qhash %s, found %s record(s) in %s collection' \
                 % (dasquery.qhash, counter, collection)
-        print dastimestamp('DAS INFO '), msg
+        print(dastimestamp('DAS INFO '), msg)
 
         if  counter:
             msg = "yield %s record(s)" % counter
@@ -714,10 +715,10 @@ class DASMongocache(object):
             if  nrec:
                 msg = "for query %s, found %s non-result record(s)" \
                         % (dasquery, nrec)
-                print dastimestamp('DAS WARNING'), msg
+                print(dastimestamp('DAS WARNING'), msg)
                 for rec in self.col.find(spec, **PYMONGO_OPTS):
                     if  'query' in rec:
-                        print dastimestamp('DAS das record'), rec
+                        print(dastimestamp('DAS das record'), rec)
             self.update_das_expire(dasquery, etstamp())
 
     def map_reduce(self, mr_input, dasquery, collection='merge'):
@@ -865,11 +866,11 @@ class DASMongocache(object):
             pass
         elif  not lookup_keys: # we get query w/o fields
             msg = 'qhash %s, no lookup_keys' % dasquery.qhash
-            print dastimestamp('DAS WARNING'), msg
+            print(dastimestamp('DAS WARNING'), msg)
             pass
         else: # we didn't merge anything, it is DB look-up failure
             msg  = 'qhash %s, did not insert into das.merge' % dasquery.qhash
-            print dastimestamp('DAS WARNING'), msg
+            print(dastimestamp('DAS WARNING'), msg)
             empty_expire = etstamp()
             lkeys = list(lookup_keys)
             das = dict(expire=empty_expire, primary_key=lkeys[0],
@@ -940,11 +941,11 @@ class DASMongocache(object):
             res = self.col.insert(q_record)
             if  not res:
                 msg = 'unable to insert query record'
-                print dastimestamp('DAS ERROR '), dasquery, msg, ', will retry'
+                print(dastimestamp('DAS ERROR '), dasquery, msg, ', will retry')
                 time.sleep(1)
                 res = self.col.insert(q_record)
                 if  not res:
-                    print dastimestamp('DAS ERROR '), dasquery, msg
+                    print(dastimestamp('DAS ERROR '), dasquery, msg)
 
     def generate_records(self, dasquery, results, header):
         """
@@ -992,7 +993,7 @@ class DASMongocache(object):
                     item['qhash'] = dasquery.qhash
                     yield item
             else:
-                print "\n\n ### results = ", str(results)
+                print("\n\n ### results = ", str(results))
                 raise Exception('Provided results is not a list/generator type')
         if  expire != dasheader['expire']: # update DAS records
             header['das']['expire'] = expire

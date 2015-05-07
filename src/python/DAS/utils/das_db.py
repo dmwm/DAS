@@ -5,6 +5,7 @@
 """
 DAS DB utilities.
 """
+from __future__ import print_function
 
 __author__ = "Valentin Kuznetsov"
 
@@ -112,8 +113,8 @@ class DBConnection(object):
             except (ConnectionFailure, AutoReconnect) as exc:
                 tstamp = dastimestamp('')
                 thread = threading.current_thread()
-                print "### MongoDB connection failure thread=%s, id=%s, time=%s" \
-                        % (thread.name, thread.ident, tstamp)
+                print("### MongoDB connection failure thread=%s, id=%s, time=%s" \
+                        % (thread.name, thread.ident, tstamp))
                 print_exc(exc)
             except Exception as exc:
                 print_exc(exc)
@@ -215,9 +216,9 @@ def db_monitor(uri, func, sleep=5):
                 conn = db_connection(uri)
                 func()
                 if  conn:
-                    print "### db_monitor re-established connection %s" % conn
+                    print("### db_monitor re-established connection %s" % conn)
                 else:
-                    print "### db_monitor, lost connection"
+                    print("### db_monitor, lost connection")
             except:
                 pass
         time.sleep(sleep)

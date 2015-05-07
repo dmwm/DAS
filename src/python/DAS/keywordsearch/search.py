@@ -3,6 +3,7 @@
 """
 main module for Keyword Search
 """
+from __future__ import print_function
 from math import exp
 import pprint
 
@@ -67,9 +68,9 @@ class KeywordSearch(object):
         clean_query = cleanup_query(query)
         tokens = tokenize(query)
         if DEBUG:
-            print 'Query:', query
-            print 'CLEAN Query:', clean_query
-            print 'TOKENS:', tokens
+            print('Query:', query)
+            print('CLEAN Query:', clean_query)
+            print('TOKENS:', tokens)
         return query, tokens
 
     @classmethod
@@ -79,7 +80,7 @@ class KeywordSearch(object):
         """
         results = thread_data.results[:]
         if DEBUG:
-            print "============= Results for: %s ===" % query
+            print("============= Results for: %s ===" % query)
 
         # did we store all results?
         if K_RESULTS_TO_STORE:
@@ -100,7 +101,7 @@ class KeywordSearch(object):
 
             if USE_LOG_PROBABILITIES:
                 if DEBUG:
-                    print result['score'], '-->', exp(result['score']), query
+                    print(result['score'], '-->', exp(result['score']), query)
                 result['score'] = exp(result['score'])
 
             if get_best_score(best_scores, query) < result['score']:
@@ -117,8 +118,8 @@ class KeywordSearch(object):
             for res in best_scores:
                 res['scorebar_normalized_score'] = _get_score(res) / score_norm
         if DEBUG:
-            print '\n'.join(
-                '%.2f: %s' % (r['score'], r['result']) for r in best_scores)
+            print('\n'.join(
+                '%.2f: %s' % (r['score'], r['result']) for r in best_scores))
         return best_scores
 
     def search(self, query, dbs_inst, timeout=5):
@@ -133,12 +134,12 @@ class KeywordSearch(object):
         chunks, schema_ws, values_ws = self.get_entry_points(keywords)
 
         if MINIMAL_DEBUG:
-            print '============= Q: %s, tokens: %s ' % (query, str(tokens))
-            print '============= Schema mappings =========='
+            print('============= Q: %s, tokens: %s ' % (query, str(tokens)))
+            print('============= Schema mappings ==========')
             pprint.pprint(schema_ws)
-            print '------ chunks ---'
+            print('------ chunks ---')
             pprint.pprint(chunks)
-            print '=============== Values mappings ============'
+            print('=============== Values mappings ============')
             pprint.pprint(values_ws)
 
         thread_data.results = []
@@ -150,8 +151,8 @@ class KeywordSearch(object):
             self.ranker.perform_search(schema_ws, values_ws, kw_list=keywords,
                                        chunks=chunks, time_limit=timeout)
         except TimeLimitExceeded as exc:
-            print 'time limit exceeded, still returning some results...'
-            print exc
+            print('time limit exceeded, still returning some results...')
+            print(exc)
             err = exc
 
         return err, self.process_results(query)

@@ -69,7 +69,7 @@ class LumiService(object):
             mapping     = dasmapping.servicemap(self.service_name)
             self.urls   = mapping[self.service_api]['services']
             self.expire = mapping[self.service_api]['expire']
-        except Exception, _exp:
+        except Exception as _exp:
             pass
 
     @cherrypy.expose

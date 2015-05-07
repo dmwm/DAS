@@ -71,7 +71,7 @@ class testUtils(unittest.TestCase):
     def test_regen(self):
         "Test regen function"
         rows   = (i for i in range(5))
-        first  = rows.next()
+        first  = next(rows)
         expect = [i for i in range(5)]
         result = [i for i in regen(first, rows)]
         self.assertEqual(result, expect)
@@ -910,7 +910,7 @@ class testUtils(unittest.TestCase):
         {"notation": "admin.contacts.cms_name", "map":"site.name", "api":""}
         ]       
         res = translate(notations, api, row)
-        result = res.next()
+        result = next(res)
         expect = {"site":{"name":"AA", "resource_element":{"size":1}}}
         self.assertEqual(expect, result)
 
@@ -933,13 +933,13 @@ class testUtils(unittest.TestCase):
         stream.close()
         stream = file(fname, 'r')
         gen    = xml_parser(stream, "block", [])
-        result = gen.next()
+        result = next(gen)
         expect = {'block': {'bytes': 1, 'file': {'size': 10}}}
         self.assertEqual(expect, result)
 
         stream = file(fname, 'r')
         gen    = xml_parser(stream, "file", ["block.bytes"])
-        result = gen.next()
+        result = next(gen)
         expect = {'file': {'block': {'bytes': 1}, 'size': 10}}
         self.assertEqual(expect, result)
 
@@ -968,7 +968,7 @@ class testUtils(unittest.TestCase):
         stream.close()
         stream = file(fname, 'r')
         gen    = xml_parser(stream, "RUNS", [])
-        result = gen.next()
+        result = next(gen)
         expect = {'RUNS': {'RUN': {'id': 751084.0, 
                                    'LUMI': {'TEST': {'FOO': 1, 'BOO': 2},
                                             'NUMBER': 1, 
@@ -997,7 +997,7 @@ class testUtils(unittest.TestCase):
         stream.close()
         stream = file(fname, 'r')
         gen    = qlxml_parser(stream, "dataset")
-        result = gen.next()
+        result = next(gen)
         expect = {'dataset': {'dataset':'/a/b/c', 'nblocks': 25}}
         self.assertEqual(expect, result)
 
@@ -1105,7 +1105,7 @@ class testUtils(unittest.TestCase):
         stream.close()
         stream = file(fname, 'r')
         gen    = json_parser(stream)
-        result = gen.next()
+        result = next(gen)
         expect = {'beer': {'amstel': 'good', 'guiness': 'better'}}
         self.assertEqual(expect, result)
 
@@ -1134,7 +1134,7 @@ class testUtils(unittest.TestCase):
         stream.close()
         stream = file(fname, 'r')
         gen    = plist_parser(stream)
-        result = gen.next()
+        result = next(gen)
         expect = {'beer': {'amstel': 'good', 'guiness': 'better'}}
         self.assertEqual(expect, result)
 

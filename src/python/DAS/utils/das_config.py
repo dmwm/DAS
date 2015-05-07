@@ -4,6 +4,7 @@
 """
 Config utilities
 """
+from __future__ import print_function
 
 __author__ = "Valentin Kuznetsov"
 
@@ -306,15 +307,15 @@ def das_readconfig_helper(debug=False):
     try:
         configdict = read_wmcore(dasconfig)
         if  debug:
-            print "### Reading DAS configuration from %s" % dasconfig
+            print("### Reading DAS configuration from %s" % dasconfig)
     except Exception as err:
         try:
             configdict = read_configparser(dasconfig)
             if  debug:
-                print "### Reading DAS configuration from %s" % dasconfig
+                print("### Reading DAS configuration from %s" % dasconfig)
         except Exception as exp:
-            print 'Unable to read DAS cfg configuration,', str(exp)
-            print 'Unable to read DAS CMS configuration,', str(err)
+            print('Unable to read DAS cfg configuration,', str(exp))
+            print('Unable to read DAS CMS configuration,', str(err))
     if  not configdict:
         msg = 'Unable to read DAS configuration'
         raise Exception(msg)

@@ -2,6 +2,7 @@
 """
 Validation of inputvals json file (in mongoimport format).
 """
+from __future__ import print_function
 # __author__ = 'Vidmantas Zemleris'
 import sys
 from DAS.tools.schema_validators.json_validator import validate_mongodb_json
@@ -14,7 +15,7 @@ INPUTVALS_SCHEMA = \
 def main():
     """Main function"""
     if  len(sys.argv) != 2:
-        print "Usage: validator <inputvals_update_file.js>"
+        print("Usage: validator <inputvals_update_file.js>")
         sys.exit(1)
     validate_mongodb_json(INPUTVALS_SCHEMA, sys.argv[1])
 #

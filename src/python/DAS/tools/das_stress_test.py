@@ -9,6 +9,7 @@ We retrieve list of all DBS datasets and run
 N-processes which retrieve some information
 about those datasets, e.g. file dataset=X
 """
+from __future__ import print_function
 
 # system modules
 import os
@@ -129,13 +130,13 @@ def run(out, host, query, idx, limit, debug, thr, ckey, cert):
     if  reason:
         msg += ' reason: %s' % reason
     out.put((nres, status, qhash))
-    print msg
+    print(msg)
     if  debug:
         if  nres > 0:
             if  len(data):
-                print data[0]
+                print(data[0])
             else:
-                print "### NO DATA:", jsondict
+                print("### NO DATA:", jsondict)
 
 def main():
     "Main function"
@@ -144,7 +145,7 @@ def main():
 
     ntests   = opts.ntests
     if  not ntests:
-        print "Please specify number of tests to run, see options via --help"
+        print("Please specify number of tests to run, see options via --help")
         sys.exit(0)
     host     = opts.host
     ckey     = opts.ckey
@@ -157,8 +158,8 @@ def main():
     lkeys    = [k.strip().replace('_', ',') for k in opts.lkeys.split(',')]
     uinput   = query.replace('dataset=', '')
     if  query.find('dataset=') == -1:
-        print 'Improper query="%s", please provide dataset query' \
-                % query
+        print('Improper query="%s", please provide dataset query' \
+                % query)
         sys.exit(1)
     # check/start monitoring
     monitor_proc = None
@@ -168,7 +169,7 @@ def main():
             monitor_proc.daemon = True
             monitor_proc.start()
         else:
-            print "Unable to load psutil package, turn off monitoring"
+            print("Unable to load psutil package, turn off monitoring")
     # setup initial parameters
     time0    = time.time()
     if  qfile: # read queries from query file
@@ -187,8 +188,8 @@ def main():
     if  status == 'ok':
         nres = jsondict.get('nresults', None)
         sec = "(all reported times are in seconds)"
-        print "Seed query results: status %s, nrecords %s, time %s %s" \
-                % (status, nres, etime(time0), sec)
+        print("Seed query results: status %s, nrecords %s, time %s %s" \
+                % (status, nres, etime(time0), sec))
         if  nres:
             idx   = 0
             limit = opts.limit # control how many records to get
@@ -198,14 +199,14 @@ def main():
                 msg  = 'Number of tests exceed number of found datasets. '
                 msg += 'Please use another value for ntests'
                 msg += 'ndatasets=%s, ntests=%s' % (len(datasets), ntests)
-                print '\nERROR:', msg
+                print('\nERROR:', msg)
                 sys.exit(1)
             datasets.sort()
             if  debug:
-                print "Found %s datasets" % len(datasets)
-                print "First %s datasets:" % ntests
+                print("Found %s datasets" % len(datasets))
+                print("First %s datasets:" % ntests)
                 for dataset in datasets[:ntests]:
-                    print dataset
+                    print(dataset)
             for dataset in datasets[:ntests]:
                 jdx   = random.randint(0, len(lkeys)-1)
                 skey  = lkeys[jdx] # get random select key
@@ -224,8 +225,8 @@ def main():
             proc.start()
             pool[proc.name] = proc
     else:
-        print 'DAS cli fails status=%s, query=%s' % (status, query)
-        print jsondict
+        print('DAS cli fails status=%s, query=%s' % (status, query))
+        print(jsondict)
     # wait for all processes to finish their tasks
     while 1:
         for pname in pool.keys():
@@ -252,11 +253,11 @@ def main():
                 tot_fail.append(qhash)
         except:
             break
-    print "+++ SUMMARY:"
-    print "# queries  :", ntests
-    print "status ok  :", tot_ok
-    print "status fail:", len(tot_fail), tot_fail
-    print "nresults 0 :", len(tot_zero), tot_zero
+    print("+++ SUMMARY:")
+    print("# queries  :", ntests)
+    print("status ok  :", tot_ok)
+    print("status fail:", len(tot_fail), tot_fail)
+    print("nresults 0 :", len(tot_zero), tot_zero)
 
 # part for system monitoring
 def safe_value(value):
@@ -391,7 +392,7 @@ def monitor(pid, out, sleep=1):
                 stream.flush()
     else:
         for row in output(gen):
-            print row
+            print(row)
 
 ###### end of system monitoring part
 if __name__ == '__main__':

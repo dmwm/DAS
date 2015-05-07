@@ -5,6 +5,7 @@
 """
 KWS web interface, based on WMCore/WebTools
 """
+from __future__ import print_function
 __author__ = "Vidmantas Zemleris"
 
 # system modules
@@ -70,8 +71,8 @@ class KWSWebService(DASWebManager):
         except ConnectionFailure:
             tstamp = dastimestamp('')
             mythr = threading.current_thread()
-            print "### MongoDB connection failure thread=%s, id=%s, time=%s" \
-                  % (mythr.name, mythr.ident, tstamp)
+            print("### MongoDB connection failure thread=%s, id=%s, time=%s" \
+                  % (mythr.name, mythr.ident, tstamp))
         except Exception as exc:
             print_exc(exc)
             self.dasmgr = None

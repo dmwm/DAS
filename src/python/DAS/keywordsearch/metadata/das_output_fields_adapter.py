@@ -3,6 +3,7 @@
 """
 Gathers the list of fields available in service outputs
 """
+from __future__ import print_function
 import pprint
 from collections import defaultdict
 from itertools import chain
@@ -30,7 +31,7 @@ def result_contained_errors(rec):
     errors = any(1 for field in rec.get('members', [])
                  if field.endswith('.error'))
     if errors and FULL_DEBUG:
-        print 'WARN: contain errors: ', rec.get('keys'), ':', rec.get('members')
+        print('WARN: contain errors: ', rec.get('keys'), ':', rec.get('members'))
     return errors
 
 
@@ -88,15 +89,15 @@ def get_outputs_field_list(dascore):
 def print_debug(dascore, fields_by_entity, results_by_entity):
     """verbose output for get_outputs_field_list"""
     if FULL_DEBUG:
-        print 'keylearning collection:', dascore.keylearning.col
-        print 'keylearning members:'
+        print('keylearning collection:', dascore.keylearning.col)
+        print('keylearning members:')
         pprint.pprint([item for item in dascore.keylearning.list_members()])
-        print 'presentation cache:'
+        print('presentation cache:')
         pprint.pprint(dascore.mapping.presentationcache)
-        print 'fields by entity'
+        print('fields by entity')
         pprint.pprint(fields_by_entity)
-        print 'results by entity'
+        print('results by entity')
         pprint.pprint(results_by_entity)
     elif MINIMAL_DEBUG:
-        print 'fields by entity'
+        print('fields by entity')
         pprint.pprint(fields_by_entity)

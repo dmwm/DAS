@@ -5,6 +5,7 @@ a common use-case is retrieving an entity by it's primary key. this module
 checks if the input can be unambiguously matched as a single value token and
 if so returns a valid DAS Query
 """
+from __future__ import print_function
 from DAS.utils.regex import NON_AMBIGUOUS_INPUT_PATTERNS, \
     DATASET_PATTERN_RELAXED
 from DAS.keywordsearch.entity_matchers.value_matching_dataset import \
@@ -125,7 +126,7 @@ def identify_apparent_query_patterns(uinput, inst=None):
         msg += '\n'
         msg += '\n'.join(format_dataset_match(m, dbs_inst)
                          for m in inst_matches)
-        print msg
+        print(msg)
         response.dataset_matches_msg = msg
 
     return uinput

@@ -21,6 +21,7 @@ fields) and *das_map* provides actual mapping from DAS key to record key and
 associated api argument. Please note that the first record in *das_map*
 represents DAS primary key.
 """
+from __future__ import print_function
 
 __author__ = "Valentin Kuznetsov"
 
@@ -93,12 +94,12 @@ class DASMapping(object):
         # check if we can reuse an existing instance
         if cls.__cached_inst and cls.__cached_params == config:
             if  config['verbose']:
-                print "DASMapping::__new__: returning a cached instance"
+                print("DASMapping::__new__: returning a cached instance")
             return cls.__cached_inst
 
         # otherwise create and initialize a new instance
         if  config['verbose']:
-            print "DASMapping::__new__: creating a new instance"
+            print("DASMapping::__new__: creating a new instance")
         self = object.__new__(cls)
 
         self.verbose  = config['verbose']
@@ -232,8 +233,8 @@ class DASMapping(object):
         except ConnectionFailure as _err:
             tstamp = dastimestamp('')
             thread = threading.current_thread()
-            print "### MongoDB connection failure thread=%s, id=%s, time=%s" \
-                    % (thread.name, thread.ident, tstamp)
+            print("### MongoDB connection failure thread=%s, id=%s, time=%s" \
+                    % (thread.name, thread.ident, tstamp))
         except Exception as exc:
             print_exc(exc)
         if  col:
@@ -307,11 +308,11 @@ class DASMapping(object):
         calc_token = verification_token(self.col.find(**PYMONGO_OPTS))
         status_complete = maps_hash and maps_hash == calc_token
         if  self.verbose:
-            print "### DAS map status, umap=%s, nmap=%s, pmap=%s, complete=%s" \
-                    % (status_umap, status_nmap, status_pmap, status_complete)
+            print("### DAS map status, umap=%s, nmap=%s, pmap=%s, complete=%s" \
+                    % (status_umap, status_nmap, status_pmap, status_complete))
         if not status_complete:
-            print "### DAS map hash do not match, got=%s calculated=%s" \
-                    % (maps_hash, calc_token)
+            print("### DAS map hash do not match, got=%s calculated=%s" \
+                    % (maps_hash, calc_token))
         # multiply statuses as a result of this map check
         return status_umap*status_nmap*status_pmap*status_complete
 
@@ -663,8 +664,8 @@ class DASMapping(object):
                         daskey = row['das_key']
                         if  aparam == api_input_name and daskey not in names:
                             names.append(daskey)
-                except Exception, err:
-                    print "ERROR: look-up api_param/das_key in", row
+                except Exception as err:
+                    print("ERROR: look-up api_param/das_key in", row)
                     raise err
         return names
 

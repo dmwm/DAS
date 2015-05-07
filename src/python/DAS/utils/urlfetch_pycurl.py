@@ -9,6 +9,7 @@ Description: pycurl module for processing multiple URLs.
 Credits: original idea has been taken and modified from
 https://github.com/Lispython/pycurl/blob/master/examples/retriever-multi.py
 """
+from __future__ import print_function
 
 import os
 import re
@@ -156,7 +157,7 @@ def test():
     urls = [url1, url2]
     data = getdata(urls, ckey, cert)
     for row in data:
-        print row
+        print(row)
 
 if __name__ == '__main__':
     test()

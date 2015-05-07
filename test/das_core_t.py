@@ -9,7 +9,7 @@ import os
 import socket
 import unittest
 
-from pymongo.connection import Connection
+from pymongo import MongoClient
 
 from DAS.utils.das_config import das_readconfig
 from DAS.core.das_core import DASCore
@@ -29,7 +29,7 @@ class testDASCore(unittest.TestCase):
         self.das = DASCore(debug=debug, multitask=False)
         config = deepcopy(das_readconfig())
         dburi = config['mongodb']['dburi']
-        connection = Connection(dburi)
+        connection = MongoClient(dburi)
         connection.drop_database('das') 
 
     def testAggregators(self):
@@ -40,7 +40,7 @@ class testDASCore(unittest.TestCase):
         result = self.das.call(dquery)
         result = self.das.get_from_cache(dquery)
         result = [r for r in result][0]
-        if  result.has_key('das'):
+        if  'das' in result:
             del result['das'] # strip off DAS info
         expect = {"function": "count", "result": {"value": 1}, 
                   "key": "zip.code", "_id":0}

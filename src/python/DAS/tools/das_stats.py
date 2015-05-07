@@ -5,6 +5,7 @@
 DAS statistics tool based on results of DAS logdb, see
 DAS/core/das_mongocache.py
 """
+from __future__ import print_function
 
 import datetime
 from optparse import OptionParser
@@ -133,13 +134,13 @@ def print_row(row, header=False):
         header = frmt \
         % ('date', 'cache+', 'cache-', 'merge+', 'merge-', \
                 'cliip', 'cliq', 'webip', 'webq')
-        print header
-        print '-'*len(header)
+        print(header)
+        print('-'*len(header))
     else:
-        print frmt \
+        print(frmt \
         % (row['date'], row['cachein'], row['cacheout'],
            row['mergein'], row['mergeout'], row['cliip'], row['cliq'],
-           row['webip'], row['webq'])
+           row['webip'], row['webq']))
 
 def empty_row():
     "Return empty row for stat table"

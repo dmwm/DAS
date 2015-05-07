@@ -8,6 +8,7 @@ sum, count, avg. We use coroutines to get all results into
 das_func sink, which by itself hold ResultObject as a result
 holder.
 """
+from __future__ import print_function
 
 __author__ = "Valentin Kuznetsov"
 
@@ -88,7 +89,7 @@ def coroutine(func):
     def start(*args, **kwargs):
         """Function call inside of coroutine helper"""
         cor = func(*args, **kwargs)
-        cor.next()
+        next(cor)
         return cor
     return start
 
@@ -126,7 +127,7 @@ def printer():
     """A coroutine that recieves data, it is a sink"""
     while True:
         value = (yield)
-        print value
+        print(value)
 
 
 @coroutine

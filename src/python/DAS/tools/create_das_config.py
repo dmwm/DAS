@@ -5,6 +5,7 @@
 """
 DAS config generator
 """
+from __future__ import print_function
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -39,7 +40,7 @@ def main():
     for option in DAS_OPTIONS:
         option.write_to_configparser(config, use_default=False)
     config.write(open(outconfig, 'wb'))
-    print "Created DAS configuration file", outconfig
+    print("Created DAS configuration file", outconfig)
 
 if __name__ == '__main__':
     main()

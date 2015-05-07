@@ -5,6 +5,7 @@
 """
 DAS admin tool to handle DAS map/reduce records.
 """
+from __future__ import print_function
 __revision__ = "$Id"
 __version__ = "$Revision"
 __author__ = "Valentin Kuznetsov"
@@ -61,7 +62,7 @@ class MapReduceMgr(object):
         """
         Add mapreduce record and assign it to given name.
         """
-        print "Add %s map/reduce function" % name
+        print("Add %s map/reduce function" % name)
         exists = find_one(self.mapreduce, {'name':name})
         if  exists:
             raise Exception('Map/reduce functions for %s already exists' % name)
@@ -104,7 +105,7 @@ class MapReduceMgr(object):
         """
         Delete existing mapreduce records for given name
         """
-        print "Delete %s map/reduce function(s)" % name
+        print("Delete %s map/reduce function(s)" % name)
         if  name and name != '*':
             self.mapreduce.remove({'name':name})
         else:
@@ -125,7 +126,7 @@ if __name__ == '__main__':
     list_name = opts.list
     if  list_name:
         for row in MGR.list_mapreduce(list_name):
-            print row
+            print(row)
         sys.exit(0)
 
     # delete all existing records

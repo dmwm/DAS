@@ -7,7 +7,7 @@ Unit test for CMS data-services
 
 import os
 from cherrypy import engine, tree
-from pymongo.connection import Connection
+from pymongo import MongoClient 
 import unittest
 
 from DAS.utils.das_db import db_connection
@@ -58,7 +58,7 @@ class testCMSFakeDataServices(unittest.TestCase):
         config['keylearningdb'] = {'collname': collname, 'dbname': 'keylearning'}
         config['parserdb'] = {'collname': collname, 'dbname': 'parser', 
                                 'enable': True, 'sizecap': 10000}
-        config['services'] = ['dbs3', 'phedex', 'sitedb', 'google_maps', 'ip']
+        config['services'] = ['dbs3', 'phedex', 'google_maps', 'ip']
         # Do not perform DAS map test, since we overwrite system and urls.
         # This is done to use standard DAS maps, but use local URLs, which
         # cause DAS hash map to be be wrong during a test
@@ -70,7 +70,6 @@ class testCMSFakeDataServices(unittest.TestCase):
         self.add_service('google_maps', 'google_maps.yml')
         self.add_service('dbs3', 'dbs3.yml')
         self.add_service('phedex', 'phedex.yml')
-        self.add_service('sitedb', 'sitedb.yml')
 
         # setup DAS mapper
         self.mgr = DASMapping(config)
@@ -110,7 +109,7 @@ class testCMSFakeDataServices(unittest.TestCase):
 
     def clear_collections(self):
         """clean-up test collections"""
-        conn = Connection(host=self.dburi)
+        conn = MongoClient(self.dburi)
         for dbname in ['mapping', 'analytics', 'das', 'parser', 'keylearning']:
             db = conn[dbname]
             if  dbname != 'das':
@@ -176,7 +175,7 @@ class testCMSFakeDataServices(unittest.TestCase):
         result = self.das.get_from_cache(dquery, collection=self.dasmerge)
         result = [r for r in result]
         result = result[0] # take first result
-        if  result.has_key('das'):
+        if  'das' in result:
             del result['das'] # strip off DAS info
         expect = {"function": "count", "result": {"value": 2}, 
                   "key": "zip.place.city", "_id":0}
@@ -232,14 +231,14 @@ class testCMSFakeDataServices(unittest.TestCase):
         result = self.das.get_from_cache(dquery, collection=self.dasmerge)
         res    = []
         for row in result:
-            if  row.has_key('das') and row['das'].has_key('empty_record'):
+            if  'das' in row and 'empty_record' in row['das']:
                 if  row['das'].get('empty_record'):
                     continue
-            if  row.has_key('ip'):
+            if  'ip' in row:
                 res.append(DotDict(row).get('ip.address'))
-            if  row.has_key('site'):
+            if  'site' in row:
                 for item in row['site']:
-                    if  item.has_key('name') and item['name'] not in res:
+                    if  'name' in item and item['name'] not in res:
                         res.append(item['name'])
         res.sort()
         expect = ['137.138.141.145', 'T3_US_Cornell']

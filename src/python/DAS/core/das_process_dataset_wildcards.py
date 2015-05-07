@@ -9,6 +9,7 @@ Description: The class handles the wildcard search for dataset,
  three slashes as required by the data-services.
  It also solves possible ambiguities in the user's input.
 """
+from __future__ import print_function
 import re
 import string
 from collections import defaultdict
@@ -37,7 +38,7 @@ def substitute_multiple(target, replacements, to_replace ='*',):
         subs['v%d' % index] = value
         
     if DEBUG:
-        print 'trying to substitute * in %s with %s' % (target, subs)
+        print('trying to substitute * in %s with %s' % (target, subs))
         
     template = target
     for index, value in enumerate(replacements):
@@ -82,7 +83,7 @@ def extract_wildcard_patterns(dbs_inst, pattern, ignorecase=False):
 
         groups = match.groups()
         if DEBUG:
-            print "matched groups", groups
+            print("matched groups", groups)
 
         # a group may contain more than one slash
         f_replace_group = lambda group: (group.count('/') == 3 and '*/*/*/*')\
@@ -202,7 +203,7 @@ def process_dataset_wildcards(pattern, dbs_inst, ignorecase=False):
     #TODO: use the counts, e.g. display number of datasets for each pattern
     for input_interpretation, count in options.items():
         if DEBUG:
-            print 'option', input_interpretation, count
+            print('option', input_interpretation, count)
 
         subs = []
         # we check if all groups are the same, if so replace by a string
@@ -220,7 +221,7 @@ def process_dataset_wildcards(pattern, dbs_inst, ignorecase=False):
             result = result.replace('*/*', '/*', 1)
 
         if DEBUG:
-            print 'result', result
+            print('result', result)
         results.append(result)
 
     return sorted(results)
@@ -229,8 +230,8 @@ def process_dataset_wildcards(pattern, dbs_inst, ignorecase=False):
 def test():
     """ Local test function """
     # TODO: init  DAS:   Reading DAS configuration from ...
-    print 'setUp: getting dbs manager to access current datasets ' \
-          '(and fetching them if needed)'
+    print('setUp: getting dbs manager to access current datasets ' \
+          '(and fetching them if needed)')
 
     # make sure DBS dataset cache is initialized
     initialize_global_dbs_mngr(update_required=False)

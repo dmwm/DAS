@@ -5,6 +5,7 @@
 The module contain functions for presenting the results as DASQL
 and formatting/coloring them in HTML.
 """
+from __future__ import print_function
 
 import cgi
 
@@ -155,7 +156,7 @@ def result_to_dasql(result, frmt='text', shorten_html=True,
 
     if result_projections or result_filters:
         if DEBUG:
-            print 'selections before:', result_projections
+            print('selections before:', result_projections)
         result_projections = list(result_projections)
 
         # automatically add wildcard fields to selections (if any),
@@ -174,8 +175,8 @@ def result_to_dasql(result, frmt='text', shorten_html=True,
         s_query += tmpl('GREP') + ', '.join(result_grep)
 
         if DEBUG:
-            print 'projections after:', result_projections
-            print 'filters after:', result_filters
+            print('projections after:', result_projections)
+            print('filters after:', result_filters)
 
     return {
         'result': s_query,

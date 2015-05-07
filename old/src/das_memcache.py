@@ -49,7 +49,7 @@ class DASMemcache(Cache):
         """
         key = genkey(query)
         res = self.memcache.get(key)
-        if  res and type(res) is types.IntType:
+        if  res and type(res) is int:
             return True
         return False
 
@@ -63,7 +63,7 @@ class DASMemcache(Cache):
         key   = genkey(query)
         res   = self.memcache.get(key)
         id    = idx
-        if  res and type(res) is types.IntType:
+        if  res and type(res) is int:
             self.logger.info("DASMemcache::result(%s) using cache" % query)
             if  skey:
                 rowlist = [i for i in range(0, res)]
@@ -123,7 +123,7 @@ class DASMemcache(Cache):
         rowdict = {}
         rowid = 0
         for row in results:
-            if  type(row) is types.DictType:
+            if  type(row) is dict:
                 row['id'] = rowid
             rowdict[rowid] = row
             rowid += 1

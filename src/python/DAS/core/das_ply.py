@@ -5,6 +5,7 @@
 """
 DAS Query Language parser based on PLY.
 """
+from __future__ import print_function
 
 __author__ = "Gordon Ball and Valentin Kuznetsov"
 
@@ -22,7 +23,7 @@ from   DAS.utils.regex import date_yyyymmdd_pattern
 
 def das_parser_error(query, error):
     """Return DAS keyword which cause parser to burk"""
-    print "DAS PARSER ERROR", error
+    print("DAS PARSER ERROR", error)
     try:
         # LexToken returns tok.type, tok.value, tok.lineno, and tok.lexpos
         _msg, tok = error.split("LexToken")
@@ -34,7 +35,7 @@ def das_parser_error(query, error):
 
 def parser_error(error):
     """Return human readable DAS parser error string"""
-    print "ERROR", error
+    print("ERROR", error)
     try:
         # LexToken returns tok.type, tok.value, tok.lineno, and tok.lexpos
         msg, tok = error.split("LexToken")
@@ -218,7 +219,7 @@ class DASPLY(object):
                 msg = lexer_error(data, pos, error)
                 raise Exception(msg)
             if  self.verbose:
-                print tok
+                print(tok)
             if  not tok:
                 break
 

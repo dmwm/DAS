@@ -12,6 +12,7 @@ from DAS.utils.das_config import das_readconfig
 from DAS.utils.logger import PrintManager
 from DAS.utils.utils import deepcopy
 from DAS.core.das_mapping_db import DASMapping, verification_token
+from DAS.utils.das_pymongo import PYMONGO_OPTS
 
 from pymongo import MongoClient
 
@@ -56,7 +57,7 @@ class testDASMapping(unittest.TestCase):
         }
         self.coll.insert(rec)
 
-        ver_token = verification_token(self.coll.find(exhaust=True))
+        ver_token = verification_token(self.coll.find(**PYMONGO_OPTS))
         rec = {'verification_token':ver_token, 'type':'verification_token'}
         self.coll.insert(rec)
 

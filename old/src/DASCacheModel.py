@@ -4,6 +4,7 @@
 """
 DAS cache RESTfull model class.
 """
+from __future__ import print_function
 
 __revision__ = "$Id: DASCacheModel.py,v 1.1 2010/03/18 17:52:25 valya Exp $"
 __version__ = "$Revision: 1.1 $"
@@ -94,16 +95,16 @@ def checkargs(func):
         if  keys:
             msg  = 'Unsupported keys: %s' % keys
             return {'status':'fail', 'reason': msg}
-        if  kwds.has_key('idx') and not pat.match(str(kwds['idx'])):
+        if  'idx' in kwds and not pat.match(str(kwds['idx'])):
             msg  = 'Unsupported value idx=%s' % (kwds['idx'])
             return {'status':'fail', 'reason': msg}
-        if  kwds.has_key('limit') and not pat.match(str(kwds['limit'])):
+        if  'limit' in kwds and not pat.match(str(kwds['limit'])):
             msg  = 'Unsupported value limit=%s' % (kwds['limit'])
             return {'status':'fail', 'reason': msg}
-        if  kwds.has_key('expire') and not pat.match(str(kwds['expire'])):
+        if  'expire' in kwds and not pat.match(str(kwds['expire'])):
             msg  = 'Unsupported value expire=%s' % (kwds['expire'])
             return {'status':'fail', 'reason': msg}
-        if  kwds.has_key('order'):
+        if  'order' in kwds:
             if  kwds['order'] not in ['asc', 'desc']:
                 msg  = 'Unsupported value order=%s' % (kwds['order'])
                 return {'status':'fail', 'reason': msg}
@@ -190,7 +191,7 @@ class DASCacheModel(DASWebManager):
         msg = 'DASCacheMode::init, host=%s, port=%s, capped_size=%s' \
                 % (dbhost, dbport, capped_size)
         self.dascore.logger.debug(msg)
-        print msg
+        print(msg)
 
     def logdb(self, query):
         """
@@ -215,7 +216,7 @@ class DASCacheModel(DASWebManager):
         Retrieve records from provided collection.
         """
         data  = {'server_method':'request'}
-        if  not kwargs.has_key('query'):
+        if  'query' not in kwargs:
             data['status'] = 'fail'
             data['reason'] = 'no query is provided'
             return data
@@ -227,12 +228,12 @@ class DASCacheModel(DASWebManager):
         count = kwargs.get('count', 0)
         data.update({'status':'requested', 'query':kwargs['query'], 
                  'collection':coll, 'count': count})
-        if  query['spec'].has_key('_id'):
+        if  '_id' in query['spec']:
             recid = query['spec']['_id']
             ids   = []
-            if  type(recid) is types.StringType:
+            if  type(recid) is bytes:
                 ids = [ObjectId(recid)]
-            elif type(recid) is types.ListType:
+            elif type(recid) is list:
                 ids = [ObjectId(r) for r in recid]
             spec = {'spec':{'_id':{'$in':ids}}}
         else: # look-up all records
@@ -246,7 +247,7 @@ class DASCacheModel(DASWebManager):
         except:
             self.debug(traceback.format_exc())
             data['status'] = 'fail'
-            data['reason'] =  sys.exc_type
+            data['reason'] =  sys.exc_info()[0]
         return data
 
     @checkargs
@@ -255,7 +256,7 @@ class DASCacheModel(DASWebManager):
         HTTP GET request. Check status of the input query in DAS.
         """
         data = {'server_method':'status'}
-        if  kwargs.has_key('query'):
+        if  'query' in kwargs:
             query  = kwargs['query']
             self.logdb(query)
             query  = self.dascore.mongoparser.parse(query)
@@ -275,7 +276,7 @@ class DASCacheModel(DASWebManager):
         for provided query.
         """
         data = {'server_method':'nresults'}
-        if  kwargs.has_key('query'):
+        if  'query' in kwargs:
             query = kwargs['query']
             self.logdb(query)
             query = self.dascore.mongoparser.parse(query)
@@ -294,7 +295,7 @@ class DASCacheModel(DASWebManager):
         Retrieve results from DAS cache.
         """
         data = {'server_method':'request'}
-        if  kwargs.has_key('query'):
+        if  'query' in kwargs:
             query = kwargs['query']
             self.logdb(query)
             query = self.dascore.mongoparser.parse(query)
@@ -335,7 +336,7 @@ class DASCacheModel(DASWebManager):
         Creates new entry in DAS cache for provided query.
         """
         data = {'server_method':'create'}
-        if  kwargs.has_key('query'):
+        if  'query' in kwargs:
             query  = kwargs['query']
             self.logdb(query)
             query  = self.dascore.mongoparser.parse(query)
@@ -360,7 +361,7 @@ class DASCacheModel(DASWebManager):
         Replace existing query in DAS cache.
         """
         data = {'server_method':'replace'}
-        if  kwargs.has_key('query'):
+        if  'query' in kwargs:
             query = kwargs['query']
             self.logdb(query)
             query = self.dascore.mongoparser.parse(query)
@@ -389,7 +390,7 @@ class DASCacheModel(DASWebManager):
         Delete input query in DAS cache
         """
         data = {'server_method':'delete'}
-        if  kwargs.has_key('query'):
+        if  'query' in kwargs:
             query = kwargs['query']
             self.logdb(query)
             query = self.dascore.mongoparser.parse(query)

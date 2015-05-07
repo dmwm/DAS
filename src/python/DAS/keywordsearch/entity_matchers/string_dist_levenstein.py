@@ -2,6 +2,7 @@
 """
 module provide custom Levenshtein distance function
 """
+from __future__ import print_function
 # adapted from http://en.labs.wikimedia.org/wiki/Algorithm_implementation/
 # Strings/Levenshtein_distance#Python
 
@@ -47,12 +48,12 @@ def levenshtein_normalized(string1, string2, subcost=2, maxcost=3):
 
 
 if __name__ == "__main__":
-    print levenshtein_normalized('dataset', 'dateset', subcost=2, maxcost=3)
-    print levenshtein_normalized('lumi', 'luminosity', subcost=2, maxcost=3)
+    print(levenshtein_normalized('dataset', 'dateset', subcost=2, maxcost=3))
+    print(levenshtein_normalized('lumi', 'luminosity', subcost=2, maxcost=3))
     # deletions in the beginning, or in the middle shall be also quite expensive
     # should this be allowed at all?
-    print levenshtein_normalized('are', 'parent', subcost=2, maxcost=3)
-    print levenshtein_normalized('config', 'configuration',
-                                 subcost=2, maxcost=3)
-    print levenshtein_normalized('size', 'site', subcost=2, maxcost=3)
-    print levenshtein_normalized('size', 'sizes', subcost=2, maxcost=3)
+    print(levenshtein_normalized('are', 'parent', subcost=2, maxcost=3))
+    print(levenshtein_normalized('config', 'configuration',
+                                 subcost=2, maxcost=3))
+    print(levenshtein_normalized('size', 'site', subcost=2, maxcost=3))
+    print(levenshtein_normalized('size', 'sizes', subcost=2, maxcost=3))
