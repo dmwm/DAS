@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
-#pylint: disable=W0703,R0902,R0904,R0914
+#pylint: disable=W0703,R0902,R0904,R0914,C0326
 
 """
 DAS mapping DB module. It provides access to DAS API maps. Every map consists
@@ -26,24 +26,21 @@ from __future__ import print_function
 __author__ = "Valentin Kuznetsov"
 
 import re
-import time
-import threading
 from collections import defaultdict
 import hashlib
 
 
 # monogo db modules
 from pymongo import DESCENDING
-from pymongo.errors import ConnectionFailure
 
 # DAS modules
-from DAS.utils.utils import dastimestamp, print_exc, md5hash, TRANSIENT_FIELDS
+from DAS.utils.utils import md5hash, TRANSIENT_FIELDS
 from DAS.utils.utils import gen2list, parse_dbs_url, get_dbs_instance
-from DAS.utils.das_db import db_connection, is_db_alive, create_indexes
+from DAS.utils.das_db import db_connection, create_indexes
 from DAS.utils.das_db import find_one
 from DAS.utils.logger import PrintManager
-from DAS.utils.thread import start_new_thread
 from DAS.utils.das_pymongo import PYMONGO_OPTS
+from DAS.core.das_son_manipulator import DAS_SONManipulator
 
 import DAS.utils.jsonwrapper as json
 
@@ -115,7 +112,15 @@ class DASMapping(object):
         msg = "%s@%s" % (self.dburi, self.dbname)
         self.logger.info(msg)
 
-        self.init()
+        self.das_son_manipulator = DAS_SONManipulator()
+        index = [('type', DESCENDING),\
+                 ('system', DESCENDING),\
+                 ('urn', DESCENDING),\
+                 ('das_map.das_key', DESCENDING),\
+                 ('das_map.rec_key', DESCENDING),\
+                 ('das_map.api_arg', DESCENDING),\
+                 ]
+        create_indexes(self.col, index)
 
         self.daskeyscache = {}         # to be filled at run time
         self.systems = []              # to be filled at run time
@@ -137,11 +142,15 @@ class DASMapping(object):
 
     @property
     def col(self):
-        "Return MongoDB collection object"
+        "col property provides access to DAS mapping collection"
         conn = db_connection(self.dburi)
-        dbc  = conn[self.dbname]
-        col  = dbc[self.colname]
-        return col
+        mdb  = conn[self.dbname]
+        colnames = mdb.collection_names()
+        if  not colnames or self.colname not in colnames:
+            print("Create", mdb, self.colname)
+            mdb.create_collection(self.colname)
+        mdb.add_son_manipulator(self.das_son_manipulator)
+        return mdb[self.colname]
 
     # ===============
     # Management APIs
@@ -158,15 +167,13 @@ class DASMapping(object):
         self.dbs_inst_names = None # re-initialize DAS dbs instances
         self.dbs_instances()
 
-    def init_dasmapscache(self, records=[]):
+    def init_dasmapscache(self, records=None):
         "Read DAS maps and initialize DAS API maps"
         if  not records:
             spec = {'type':'service'}
             records = self.col.find(spec, **PYMONGO_OPTS)
         for row in records:
             if  'urn' in row:
-                api = row['urn']
-                srv = row['system']
                 for dmap in row['das_map']:
                     for key, val in dmap.iteritems():
                         if  key == 'pattern':
@@ -214,38 +221,10 @@ class DASMapping(object):
         spec  = {'type':'presentation'}
         data  = find_one(self.col, spec)
         if  data:
-            for daskey, uilist in data.get('presentation', {}).iteritems():
+            for _, uilist in data.get('presentation', {}).iteritems():
                 for row in uilist:
                     if  'link' in row:
                         yield row
-
-    def init(self):
-        """
-        Establish connection to MongoDB back-end and create DB.
-        """
-        col = None
-        try:
-            conn = db_connection(self.dburi)
-            if  conn:
-                dbc  = conn[self.dbname]
-                col  = dbc[self.colname]
-#            print "### DASMapping:init started successfully"
-        except ConnectionFailure as _err:
-            tstamp = dastimestamp('')
-            thread = threading.current_thread()
-            print("### MongoDB connection failure thread=%s, id=%s, time=%s" \
-                    % (thread.name, thread.ident, tstamp))
-        except Exception as exc:
-            print_exc(exc)
-        if  col:
-            index = [('type', DESCENDING),
-                     ('system', DESCENDING),
-                     ('urn', DESCENDING),
-                     ('das_map.das_key', DESCENDING),
-                     ('das_map.rec_key', DESCENDING),
-                     ('das_map.api_arg', DESCENDING),
-                     ]
-            create_indexes(col, index)
 
     def delete_db(self):
         """
@@ -321,7 +300,7 @@ class DASMapping(object):
         Remove record in DAS Mapping DB for provided Mongo spec.
         """
         self.col.remove(spec)
-        
+
     def add(self, record):
         """
         Add new record into mapping DB. Example of URI record
@@ -329,8 +308,8 @@ class DASMapping(object):
         .. doctest::
 
             {
-             system:dbs, 
-             urn : listBlocks, 
+             system:dbs,
+             urn : listBlocks,
              url : "http://a.b.com/api"
              params : [{"apiversion":1_2_2, se:"*"}]
              lookup : block
@@ -505,7 +484,7 @@ class DASMapping(object):
         if  pkey.find(',') != -1:
             pkey = pkey.split(',')[0]
         return pkey
-        
+
     def primary_mapkey(self, das_system, urn):
         """
         Return DAS primary map key for provided system and urn. For example,
@@ -522,7 +501,7 @@ class DASMapping(object):
             if  row['das_key'] == lkey:
                 return row['rec_key']
         return mapkey
-        
+
     def find_daskey(self, das_system, map_key, value=None):
         """
         Find das key for given system and map key.
@@ -530,7 +509,7 @@ class DASMapping(object):
         msg   = 'system=%s\n' % das_system
         daskeys = []
         for key, record in self.dasmapscache.iteritems():
-            srv, _urn = key
+            srv, _ = key
             if  das_system != srv:
                 continue
             for row in record['das_map']:
@@ -559,7 +538,7 @@ class DASMapping(object):
         """
         msg   = 'system=%s\n' % das_system
         for key, record in self.dasmapscache.iteritems():
-            srv, _urn = key
+            srv, _ = key
             if  das_system != srv:
                 continue
             for row in record['das_map']:
@@ -672,7 +651,6 @@ class DASMapping(object):
     def check_api_match(self, system, api, icond):
         "Check if given API covers condition parameters"
         entry = self.dasmapscache.get((system, api), None)
-        names = []
         if  not entry:
             return False
         ikeys = [k.split('.')[0] for k in icond.keys()]
@@ -762,7 +740,7 @@ class DASMapping(object):
 
         .. doctest::
 
-            {api: {keys:[list of DAS keys], params: args, 
+            {api: {keys:[list of DAS keys], params: args,
              url:url, format:ext, expire:exp} }
         """
         spec = {'system':system, 'urn':{'$ne':None}}
@@ -781,8 +759,8 @@ class DASMapping(object):
             for entry in row['das_map']:
                 keys.append(entry['das_key'])
             params = dict(row['params'])
-            smap[api] = dict(keys=keys, params=params, url=url, expire=exp,
-                            format=ext, wild_card=wild, ckey=ckey, cert=cert,
+            smap[api] = dict(keys=keys, params=params, url=url, expire=exp,\
+                            format=ext, wild_card=wild, ckey=ckey, cert=cert,\
                             services=services, lookup=lookup)
         return smap
 

@@ -70,7 +70,6 @@ class testDASMapping(unittest.TestCase):
     def test_api(self):
         """test methods for api table"""
         self.mgr.delete_db()
-        self.mgr.init()
 
         system  = 'dbs3'
         url     = 'https://cmsweb.cern.ch/dbs/prod/global/DBSReader'
@@ -161,14 +160,12 @@ class testDASMapping(unittest.TestCase):
 
     def test_presentation(self):
         """test presentation method"""
-        self.mgr.init()
         expect = self.pmap['presentation']['block']
         result = self.mgr.presentation('block')
         self.assertEqual(expect, result)
 
     def test_notations(self):
         """test notations method"""
-        self.mgr.init()
         system = "test"
         rec = {'notations': [
         {"api_output": "site.resource_element.cms_name", "rec_key": "site.name", "api": ""},

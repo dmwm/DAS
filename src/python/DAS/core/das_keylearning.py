@@ -1,6 +1,18 @@
+#!/usr/bin/env python
+#-*- coding: ISO-8859-1 -*-
+#pylint: disable=C0326
+
+"""
+DAS keylearning manager.
+"""
+from __future__ import print_function
+
 # pymongo modules
 from bson.objectid import ObjectId
+from pymongo import ASCENDING
+
 # DAS modules
+from DAS.core.das_son_manipulator import DAS_SONManipulator
 from DAS.core.das_ql import DAS_RECORD_KEYS
 from DAS.utils.das_db import db_connection, create_indexes
 from DAS.utils.logger import PrintManager
@@ -28,6 +40,13 @@ def dict_members(data, prefix):
                 members.add(ckey)
     return list(members)
 
+def stem(member):
+    """
+    Produce an extended set of strings which can be used for text-search.
+    TODO: Use PyStemmer or something more sophisticated here.
+    """
+    return member.lower().split('.')
+
 class DASKeyLearning(object):
     """
     This class manages DAS key-learning DB.
@@ -54,16 +73,22 @@ class DASKeyLearning(object):
         msg = "%s@%s" % (self.dburi, self.dbname)
         self.logger.info(msg)
 
-        self.col = None
-        self.create_db()
-        index_list = [('system', 1), ('urn', 1), ('members', 1), ('stems', 1)]
+        self.das_son_manipulator = DAS_SONManipulator()
+        index_list = [('system', ASCENDING), ('urn', ASCENDING), \
+                ('members', ASCENDING), ('stems', ASCENDING)]
         create_indexes(self.col, index_list)
 
-    def create_db(self):
-        """
-        Establish connection to MongoDB back-end and create DB.
-        """
-        self.col = db_connection(self.dburi)[self.dbname][self.colname]
+    @property
+    def col(self):
+        "col property provides access to DAS keylearning collection"
+        conn = db_connection(self.dburi)
+        mdb  = conn[self.dbname]
+        colnames = mdb.collection_names()
+        if  not colnames or self.colname not in colnames:
+            print("Create", mdb, self.colname)
+            mdb.create_collection(self.colname)
+        mdb.add_son_manipulator(self.das_son_manipulator)
+        return mdb[self.colname]
 
     def add_record(self, dasquery, rec):
         """
@@ -117,15 +142,7 @@ class DASKeyLearning(object):
         for member in members:
             if not self.col.find_one({'member': member}):
                 self.col.insert({'member': member,
-                                 'stems': self.stem(member)})
-
-    def stem(self, member):
-        """
-        Produce an extended set of strings which can be used for text-search.
-        TODO: Use PyStemmer or something more sophisticated here.
-        """
-
-        return member.lower().split('.')
+                                 'stems': stem(member)})
 
     def text_search(self, text):
         """
@@ -136,10 +153,10 @@ class DASKeyLearning(object):
         """
         text = text.lower()
         if '.' in text:
-            possible_members = self.col.find(
+            possible_members = self.col.find(\
                     {'stems': {'$all': text.split('.')}}, fields=['member'])
         else:
-            possible_members = self.col.find({'stems': text},
+            possible_members = self.col.find({'stems': text},\
                                              fields=['member'])
         return [doc['member'] for doc in possible_members]
 
@@ -201,7 +218,7 @@ class DASKeyLearning(object):
             return False
 
     def list_members(self):
+        "Return list of members in keylearning collection"
         return self.col.find({'members': {'$exists': 'True'},
                               'system': {'$exists': 'True'},
                               'urn': {'$exists': 'True'}})
-        #{ urn: {$exists: 1}, system: {$exists: 1}, members: {$exists: 1}}

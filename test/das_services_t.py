@@ -74,9 +74,6 @@ class testCMSFakeDataServices(unittest.TestCase):
         # setup DAS mapper
         self.mgr = DASMapping(config)
 
-        # create fresh DB
-        self.mgr.init()
-
         # mongo parser
         self.mongoparser = ql_manager(config)
         config['mongoparser'] = self.mongoparser
