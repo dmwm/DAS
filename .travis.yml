@@ -41,9 +41,10 @@ script:
 
   
 notifications:
-  email: false
+  email: true
+      on_success: never
+      on_failure: always
   
 # speedup the build slightly
 matrix:
   fast_finish: true
-
