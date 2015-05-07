@@ -5,13 +5,12 @@ PyYAML==3.10
 czjson==1.0.8
 decorator==3.4.0
 jsonpath-rw==1.2.3
-nltk==2.0.4
+nltk==3.0.2
 ply==3.4
 pycurl==7.19.3
-pymongo==2.6.3
+pymongo==2.7.2
 python-cjson==1.0.5
 six==1.5.2
 wsgiref==0.1.2
 yajl==0.3.5
 Whoosh==2.5.6
-
