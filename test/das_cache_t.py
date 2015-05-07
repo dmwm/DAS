@@ -46,7 +46,7 @@ class testDASCache(unittest.TestCase):
             expect  = {"status":"success"}
             result  = json.loads(data)
             self.assertEqual(expect["status"], result["status"])
-        except URLError, exp:
+        except URLError as exp:
             pass
         
         # post request
@@ -58,7 +58,7 @@ class testDASCache(unittest.TestCase):
             expect  = {"status": "requested", "query": query, "expire":expire}
             result  = json.loads(data)
             self.assertEqual(expect["status"], result["status"])
-        except URLError, exp:
+        except URLError as exp:
             pass
 
         # get data
@@ -69,7 +69,7 @@ class testDASCache(unittest.TestCase):
             expect  = {"status": "success"}
             result  = json.loads(data)
             self.assertEqual(expect["status"], result["status"])
-        except URLError, exp:
+        except URLError as exp:
             pass
 
 #

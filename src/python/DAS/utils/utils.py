@@ -5,6 +5,7 @@
 """
 General set of useful utilities used by DAS
 """
+from __future__ import print_function
 
 __author__ = "Valentin Kuznetsov"
 
@@ -141,7 +142,7 @@ def convert2ranges(ilist):
     ilist.sort()
     res = [[t[0][1], t[-1][1]] for t in \
             (tuple(g[1]) for g in \
-                itertools.groupby(enumerate(ilist), lambda (i, x): i - x))]
+                itertools.groupby(enumerate(ilist), lambda i_x: i_x[0] - i_x[1]))]
     return res
 
 def identical_data_records(old, row):
@@ -203,15 +204,15 @@ def http_timestamp(tstamp=None):
 def inspect_module(msg=None):
     "Printout function stack calls"
     if  msg:
-        print msg
+        print(msg)
     for item in inspect.stack():
-        print item # stack item
+        print(item) # stack item
 
 def print_exc(exc, print_traceback=True):
     """Standard way to print exceptions"""
     stack = inspect.stack()[1]
     caller = "%s:%s" % (stack[1], stack[2])
-    print dastimestamp('DAS ERROR '), type(exc), str(exc), caller
+    print(dastimestamp('DAS ERROR '), type(exc), str(exc), caller)
     if  print_traceback:
         _type, _value, exc_traceback = sys.exc_info()
         traceback.print_tb(exc_traceback, file=sys.stdout)
@@ -696,16 +697,16 @@ def dump(ilist, idx=0):
     else:
         reslist = ilist
     if  not reslist:
-        print "dump, no results found"
+        print("dump, no results found")
         return
     idx = 0
     for row in reslist:
-        print "id : %s" % idx
+        print("id : %s" % idx)
         if  isinstance(row, dict):
-            print json.dumps(row)
+            print(json.dumps(row))
         else:
-            print row
-        print
+            print(row)
+        print()
         idx += 1
 
 def cartesian_product(ilist1, ilist2):
@@ -1078,7 +1079,7 @@ def sort_data(data, key, direction='asc'):
 def trace(source):
     """Trace a generator by printing items received"""
     for item in source:
-        print item
+        print(item)
         yield item
 
 def gen_counter(gen, cdict):
@@ -1390,13 +1391,13 @@ def json_parser(source, logger=None):
                 reason = parser.content()
                 jsondict = {'error': err, 'reason': reason}
             except Exception as exc:
-                print exc
+                print(exc)
                 msg  = "json_parser, WARNING: fail to JSON'ify data:"
                 msg += "\n%s\ndata type %s" % (res, type(res))
                 if  logger:
                     logger.warning(msg)
                 else:
-                    print msg
+                    print(msg)
                 jsondict = eval(res, { "__builtins__": None }, {})
     yield jsondict
 
@@ -1482,7 +1483,7 @@ def aggregator_helper(results, expire):
                 api=api, condition_keys=ckeys, ts=tstamp, instance=inst)
         return dict(das=rdict, das_id=das_id)
 
-    record  = results.next()
+    record  = next(results)
     pkey    = record['das']['primary_key']
     ckeys   = record['das']['condition_keys']
     system  = record['das']['system'] # CMS systems, e.g. dbs, phedex
@@ -1755,7 +1756,7 @@ class Event(list):
             try:
                 f(*args, **kwargs)
             except Exception as err:
-                print dastimestamp('DAS ERROR IN EVENT NOTIFY'), str(err)
+                print(dastimestamp('DAS ERROR IN EVENT NOTIFY'), str(err))
 
     def __repr__(self):
         return "Event(%s)" % list.__repr__(self)

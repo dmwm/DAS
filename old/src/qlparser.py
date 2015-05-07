@@ -75,12 +75,12 @@ def mongo_exp(cond_list, lookup=False):
         key  = cond['key']
         val  = cond['value']
         oper = cond['op'].strip()
-        if  type(val) is types.StringType and val.find('%') != -1:
+        if  type(val) is bytes and val.find('%') != -1:
             val = val.replace('%', '*')
-        if  mongo_dict.has_key(key):
+        if  key in mongo_dict:
             existing_value = mongo_dict[key]
-            if  type(existing_value) is types.DictType:
-                if  existing_value.has_key('$in'):
+            if  type(existing_value) is dict:
+                if  '$in' in existing_value:
                     val = existing_value['$in'] + [val]
                     mongo_dict[key] = {'$in' : val}
                 else:
@@ -91,7 +91,7 @@ def mongo_exp(cond_list, lookup=False):
                 mongo_dict[key] = {'$in' : val}
         else:
             if  mongo_operator(oper):
-                if  mongo_dict.has_key(key):
+                if  key in mongo_dict:
                     mongo_value = mongo_dict[key]
                     mongo_value[mongo_operator(oper)] = val
                     mongo_dict[key] = mongo_value
@@ -313,7 +313,7 @@ class MongoParser(object):
         filters   = []
         aggregators = []
         pat = re.compile(r"^([a-z_]+\.?)+$") # match key.attrib
-        if  query and type(query) is types.StringType:
+        if  query and type(query) is bytes:
             if  query.find("|") != -1:
                 split_results = query.split("|")
                 query = split_results[0]
@@ -399,9 +399,9 @@ class MongoParser(object):
                     value = next_word
                 if  prev_word == 'date':
                     if  word != 'last': # we already converted date
-                        if  type(value) is types.StringType:
+                        if  type(value) is bytes:
                             value = [das_dateformat(value), time.time()]
-                        elif type(value) is types.ListType:
+                        elif type(value) is list:
                             try:
                                 value1 = das_dateformat(value[0])
                                 value2 = das_dateformat(value[1])
@@ -463,7 +463,7 @@ class MongoParser(object):
         skeys, cond = self.decompose(query)
         if  not skeys:
             skeys = []
-        if  type(skeys) is types.StringType:
+        if  type(skeys) is bytes:
             skeys = [skeys]
         slist = []
         # look-up services from Mapping DB
@@ -482,7 +482,7 @@ class MongoParser(object):
         skeys, cond = self.decompose(query)
         if  not skeys:
             skeys = []
-        if  type(skeys) is types.StringType:
+        if  type(skeys) is bytes:
             skeys = [skeys]
         adict = {}
         mapkeys = [key for key in cond.keys()]
@@ -493,7 +493,7 @@ class MongoParser(object):
                 daskeys = self.map.api_info(api)['daskeys']
                 maps = [r['map'] for r in daskeys]
                 if  set(mapkeys) & set(maps) == set(mapkeys): 
-                    if  adict.has_key(srv):
+                    if  srv in adict:
                         new_list = adict[srv] + [api]
                         adict[srv] = list( set(new_list) )
                     else:

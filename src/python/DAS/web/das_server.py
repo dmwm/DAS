@@ -5,6 +5,7 @@
 DAS server based on CherryPy web framework. We define Root class and
 pass it into CherryPy web server.
 """
+from __future__ import print_function
 
 __author__ = "Valentin Kuznetsov"
 
@@ -119,18 +120,18 @@ class Root(object):
 
         self.setup_kws_server()
 
-        print "### DAS web server, PID=%s" % self.pid
-        print pformat(tree.apps)
-        print pformat(self.config)
+        print("### DAS web server, PID=%s" % self.pid)
+        print(pformat(tree.apps))
+        print(pformat(self.config))
         pid = PIDFile(engine, self.pid)
         pid.subscribe()
         engine.start()
-        print "### DAS server runs with %s threads" \
-                % threading.active_count()
+        print("### DAS server runs with %s threads" \
+                % threading.active_count())
         threads = threading.enumerate()
         threads.sort()
         for thr in threads:
-            print thr
+            print(thr)
         if  blocking:
             engine.block()
 

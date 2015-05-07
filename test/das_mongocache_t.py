@@ -10,7 +10,7 @@ import re
 import time
 import unittest
 
-from pymongo.connection import Connection
+from pymongo import MongoClient
 
 from DAS.utils.das_config import das_readconfig
 from DAS.utils.logger import PrintManager
@@ -35,7 +35,7 @@ class testDASMongocache(unittest.TestCase):
         config['verbose'] = debug
         dburi    = config['mongodb']['dburi']
 
-        connection = Connection(dburi)
+        connection = MongoClient(dburi)
         connection.drop_database('das') 
         dasmapping = DASMapping(config)
         config['dasmapping'] = dasmapping

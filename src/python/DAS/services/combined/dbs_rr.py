@@ -4,6 +4,7 @@
 DAS DBS/RunRegistry combined service to get luminosity information
 about datasets.
 """
+from __future__ import print_function
 
 # DAS modules
 from   DAS.utils.url_utils import getdata_urllib as getdata
@@ -63,7 +64,7 @@ def test():
     kwds = dict(dbs_url=dbs_url, rr_url=rr_url, ckey=ckey, cert=cert,
             dataset=dataset)
     for row in lumis4dataset(kwds):
-        print row
+        print(row)
 
 if __name__ == '__main__':
     test()

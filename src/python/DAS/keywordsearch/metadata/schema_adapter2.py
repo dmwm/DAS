@@ -8,6 +8,7 @@
 Provide a layer of abstraction between Keyword Search
 and the Data Integration System.
 """
+from __future__ import print_function
 
 import pprint
 import re
@@ -121,10 +122,10 @@ class DasSchemaAdapter(object):
         if ',' in lookup_key:
             self._lookup_keys |= set([lookup_key, ])
             if DEBUG:
-                print '--------'
-                print 'Sys:', sys, 'api:', api
-                print 'PK: ', entity_short, 'primary_mapkey=', entity_long
-                print 'lookup=', lookup_key
+                print('--------')
+                print('Sys:', sys, 'api:', api)
+                print('PK: ', entity_short, 'primary_mapkey=', entity_long)
+                print('lookup=', lookup_key)
 
         # could contain some low level params like API version, default values..
         api_params_lowlev = api_info.get('params', {})
@@ -150,17 +151,17 @@ class DasSchemaAdapter(object):
                          req_inputs_set, api, lookup_key, set())
 
         if DEBUG and api_inputs_wo_api_arg:
-            print 'Sys:', sys, 'api:', api
-            print 'lookup:', lookup_key
-            print 'entity_long:', entity_long
-            print 'req inputs:', req_inputs_set
+            print('Sys:', sys, 'api:', api)
+            print('lookup:', lookup_key)
+            print('entity_long:', entity_long)
+            print('req inputs:', req_inputs_set)
 
-            print 'das_map w/o api_arg:', api_inputs_wo_api_arg
+            print('das_map w/o api_arg:', api_inputs_wo_api_arg)
 
-            print 'other inputs:', api_inputs
-            print 'das map: ', das_map
+            print('other inputs:', api_inputs)
+            print('das map: ', das_map)
 
-            print '-----------'
+            print('-----------')
 
         params_list = []
         for p in api_inputs:
@@ -373,7 +374,7 @@ class DasSchemaAdapter(object):
         for api in matching_apis:
             if api.api_entity is None:
                 if DEBUG:
-                    print 'API RESULT TYPE IS NONE:', api
+                    print('API RESULT TYPE IS NONE:', api)
                 continue
             entities[api.api_entity].append(
                 (api.api_entity, api.api_params_set, api.req_params))
@@ -402,25 +403,25 @@ class DasSchemaAdapter(object):
         return title
 
     def print_debug(self):
-        print "ALL APIS:"
+        print("ALL APIS:")
         #(entity, params, required, api_name, lookup)
-        print '\n'.join("%s(%s) --> %s" %
+        print('\n'.join("%s(%s) --> %s" %
                         (api.api, ','.join(api.api_params_set), api.api_entity)
-                        for api in self.api_input_params)
+                        for api in self.api_input_params))
 
-        print "APIS without required params:"
+        print("APIS without required params:")
         #(entity, params, required, api_name, lookup)
-        print '\n'.join("%s(%s) --> %s" %
+        print('\n'.join("%s(%s) --> %s" %
                         (api.api, ','.join(api.api_params_set), api.api_entity)
                         for api in self.api_input_params
-                        if not api.req_params)
-        print 'entity_names'
+                        if not api.req_params))
+        print('entity_names')
         pprint.pprint(self.entity_names)
-        print 'search_field_names'
+        print('search_field_names')
         pprint.pprint(self._lookup_keys)
         #print 'ENTITY FIELDS (BY LOOKUP):'
         #pprint.pprint(dict(self._fields_dict))
-        print 'ENTITY FIELDS (BY LOOKUP MULTI ENTITY):'
+        print('ENTITY FIELDS (BY LOOKUP MULTI ENTITY):')
         pprint.pprint(["{0}: {1}".format(lookup,
                                        self._fields_dict[lookup].keys())
                       for lookup in self._fields_dict.keys()
@@ -432,55 +433,55 @@ if __name__ == '__main__':
     s = DasSchemaAdapter(DASCore(multitask=False))
     #pprint.pprint(s.list_result_fields())
 
-    print 'validate input params():', \
-        s.validate_input_params(set(), entity='dataset.name')
-    print 'validate input params(dataset.name):', s.validate_input_params(
-        set(['dataset.name']), entity='dataset.name')
-    print 'validate input params run(dataset.name):', s.validate_input_params(
-        set(['dataset.name']), entity='run.run_number', final_step=True)
+    print('validate input params():', \
+        s.validate_input_params(set(), entity='dataset.name'))
+    print('validate input params(dataset.name):', s.validate_input_params(
+        set(['dataset.name']), entity='dataset.name'))
+    print('validate input params run(dataset.name):', s.validate_input_params(
+        set(['dataset.name']), entity='run.run_number', final_step=True))
 
     # non related entity in input
-    print 'validate input params run(dataset.name):', s.validate_input_params(
+    print('validate input params run(dataset.name):', s.validate_input_params(
         set(['dataset.name', 'jobsummary.name']), entity='run.run_number',
-        final_step=True)
+        final_step=True))
 
-    print 'trying to validate Q jobsummary date=20120101: ', \
+    print('trying to validate Q jobsummary date=20120101: ', \
         s.validate_input_params(set(['date']), entity='jobsummary',
                                 final_step=True,
-                                wildcards=None)
+                                wildcards=None))
 
-    print 'trying to validate Q monitor date=20120101: ', \
+    print('trying to validate Q monitor date=20120101: ', \
         s.validate_input_params(set(['date']), entity='monitor',
                                 final_step=True,
-                                wildcards=None)
+                                wildcards=None))
 
     #print 'lookup keys=', s.lookup_keys
 
-    print 'trying to validate Q: file dataset=/HT/Run2011B-v1/RAW ' \
+    print('trying to validate Q: file dataset=/HT/Run2011B-v1/RAW ' \
           'run=176304 lumi=80 &&: ', \
         s.validate_input_params(
             set(['dataset.name', 'run.run_number', 'lumi.number']),
             entity='file.name', final_step=False,
-            wildcards=None)
+            wildcards=None))
 
-    print 'trying to validate Q: file dataset=/HT/Run2011B-v1/RAW ' \
+    print('trying to validate Q: file dataset=/HT/Run2011B-v1/RAW ' \
           'run=176304 lumi=80 &&: ', \
         s.validate_input_params(
             set(['dataset.name', 'run.run_number', 'lumi.number']),
             entity='file.name', final_step=True,
-            wildcards=None)
+            wildcards=None))
 
     from DAS.extensions.fast_recursive_ranker import is_valid_result_py
 
-    print 'trying to validate Q (pyx): file dataset=/HT/Run2011B-v1/RAW ' \
+    print('trying to validate Q (pyx): file dataset=/HT/Run2011B-v1/RAW ' \
           'run=176304 lumi=80 &&: ', \
         is_valid_result_py(
             set(['dataset.name', 'run.run_number', 'lumi.number']),
-            'file', final_step=True, wildcards=None)
+            'file', final_step=True, wildcards=None))
 
 
-    print 'trying to validate Q (pyx): file dataset=/HT/Run2011B-v1/RAW ' \
+    print('trying to validate Q (pyx): file dataset=/HT/Run2011B-v1/RAW ' \
           'run=176304 lumi=80 &&: ', \
         is_valid_result_py(
             set(['dataset.name', 'run.run_number', 'lumi.number']),
-            'file', final_step=True, wildcards=None)
+            'file', final_step=True, wildcards=None))

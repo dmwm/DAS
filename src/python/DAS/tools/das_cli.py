@@ -5,6 +5,7 @@
 """
 DAS command line interface
 """
+from __future__ import print_function
 __author__ = "Valentin Kuznetsov"
 
 import time
@@ -82,7 +83,7 @@ def iterate(input_results):
 
 def kws_js(dascore, query, idx, limit, jsfile, verbose=False):
     "Write result of a given query into KWS js file"
-    print "Create: %s" % jsfile
+    print("Create: %s" % jsfile)
     results = dascore.result(query, idx, limit)
     tstamp = long(time.time())
     with open(jsfile, 'a') as stream:
@@ -94,7 +95,7 @@ def kws_js(dascore, query, idx, limit, jsfile, verbose=False):
                 continue
             jsrow = json.dumps(dict(value=value, ts=tstamp))
             if  verbose:
-                print jsrow
+                print(jsrow)
             stream.write(jsrow)
             stream.write('\n')
 
@@ -134,13 +135,13 @@ def recursive_walk(doc, prefix):
 
 def keylearning_js(dascore, query, kfile, verbose=False):
     "Create keylearning js file from series of given query"
-    print "Create: %s" % kfile
+    print("Create: %s" % kfile)
     with open(kfile, 'a') as stream:
         dasquery = DASQuery(query)
         result   = [r for r in dascore.result(dasquery, 0, 1)][0] # get one record only
         if  verbose:
-            print dasquery
-            print result
+            print(dasquery)
+            print(result)
         mongo_q  = dasquery.mongo_query
         skip     = ['das_id', 'cache_id', 'qhash', 'error', 'reason', 'das']
         keys     = [k for k in mongo_q['fields'] if k not in skip]
@@ -151,7 +152,7 @@ def keylearning_js(dascore, query, kfile, verbose=False):
         members  = process_document(result)
         jsrow = json.dumps(dict(keys=keys, members=members, system=system, urn=urn))
         if  verbose:
-            print jsrow
+            print(jsrow)
         stream.write(jsrow)
         stream.write('\n')
         for member in members:
@@ -169,12 +170,12 @@ def run(dascore, query, idx, limit, nooutput, plain):
         results = dascore.result(query, idx, limit)
         if  plain:
             for item in results:
-                print item
+                print(item)
         else:
             dump(results, idx)
     else:
         results = dascore.call(query)
-        print "\n### DAS.call returns", results
+        print("\n### DAS.call returns", results)
 
 def main():
     "Main function"
@@ -192,32 +193,32 @@ def main():
         mongo_query = dasquery.mongo_query
         service_map = dasquery.service_apis_map()
         str_query   = dasquery.storage_query
-        print "---------------"
-        print "DAS-QL query  :", query
-        print "DAS query     :", dasquery
-        print "Mongo query   :", mongo_query
-        print "Storage query :", str_query
-        print "Services      :\n"
+        print("---------------")
+        print("DAS-QL query  :", query)
+        print("DAS query     :", dasquery)
+        print("Mongo query   :", mongo_query)
+        print("Storage query :", str_query)
+        print("Services      :\n")
         for srv, val in service_map.items():
-            print "%s : %s\n" % (srv, ', '.join(val))
+            print("%s : %s\n" % (srv, ', '.join(val)))
         sys.exit(0)
     sdict = dascore.keys()
     if  opts.services:
         msg = "DAS services:"
-        print msg
-        print "-"*len(msg)
+        print(msg)
+        print("-"*len(msg))
         keys = sdict.keys()
         keys.sort()
         for key in keys:
-            print key
+            print(key)
     elif  opts.service:
         msg = "DAS service %s:" % opts.service
-        print msg
-        print "-"*len(msg)
+        print(msg)
+        print("-"*len(msg))
         keys = sdict[opts.service]
         keys.sort()
         for key in keys:
-            print key
+            print(key)
     elif opts.jsfile:
         kws_js(dascore, query, opts.idx, opts.limit, opts.jsfile, debug)
         sys.exit(0)
@@ -242,14 +243,14 @@ def main():
         else:
             run(dascore, query, idx, limit, output, plain)
     elif opts.dasconfig:
-        print pformat(dascore.dasconfig)
+        print(pformat(dascore.dasconfig))
     else:
-        print
-        print "DAS CLI interface, no actions found,"
-        print "please use --help for more options."
+        print()
+        print("DAS CLI interface, no actions found,")
+        print("please use --help for more options.")
     timestamp = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime())
     timer = get_das_timer()
-    print "\nDAS execution time:\n"
+    print("\nDAS execution time:\n")
     if  debug:
         timelist = []
         for _, timerdict in timer.items():
@@ -259,8 +260,8 @@ def main():
             timelist.append((counter, tag, exetime))
         timelist.sort()
         for _, tag, exetime in timelist:
-            print "%s %s sec" % (tag, round(exetime, 2))
-    print "Total %s sec, %s" % (round(time.time()-t0, 2), timestamp)
+            print("%s %s sec" % (tag, round(exetime, 2)))
+    print("Total %s sec, %s" % (round(time.time()-t0, 2), timestamp))
 #
 # main
 #

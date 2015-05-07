@@ -5,6 +5,7 @@
 Handles the simple case of query rewriting which can be accomplished
 through one nested query which retrieves entity by it's PK.
 """
+from __future__ import print_function
 
 from pprint import pprint
 
@@ -160,7 +161,7 @@ class CMSQueryRewrite(object):
             if query_rewritable and q_fields_missing:
                 result = self._do_query_rewrite(dasquery, fields_available, pk)
                 if result:
-                    print 'Rewrite OK'
+                    print('Rewrite OK')
                     return result
 
         return False

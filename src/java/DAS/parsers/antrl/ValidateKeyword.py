@@ -1,3 +1,4 @@
+from __future__ import print_function
 ents = ['ads' , 'config' , 'dataset' , 'release' , 'tier' , 'site' , 'block' , 'file' , 'primds' , 'procds' , 'run' , 'lumi' , 'dq' , 'ilumi' , 'phygrp' , 'group', 'pset', 'algo' , 'datatype' , 'mcdesc' , 'trigdesc' , 'branch']
 attr = ['createdate' , 'moddate' , 'starttime' , 'endtime' , 'createby' , 'modby' , 'name' , 'dataset' , 'version' , 'number' , 'startevnum' , 'endevnum' , 'numevents' , 'numfiles' , 'numlss' , 'totlumi' , 'store' , 'size' , 'release' , 'count' , 'status' , 'type' , 'id' , 'parent' , 'child' , 'tier' , 'def' , 'evnum' , 'era' , 'tag' , 'xsection' , 'hash' , 'content' , 'family', 'exe' , 'annotation' , 'checksum']
 funcs = ['count', 'sum']
@@ -5,7 +6,7 @@ funcs = ['count', 'sum']
 class InvalidKeywordException:
 	def __init__(self, message):
 		self.msg = message
-		print message
+		print(message)
 
 def validateEntity(entity):
 	if entity not in ents: raise InvalidKeywordException('\nEntity ' + entity + ' not allowed\n. Allowed values are ' + str(ents))

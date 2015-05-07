@@ -8,6 +8,7 @@ PrintManager class is based on the following work
 http://stackoverflow.com/questions/245304/how-do-i-get-the-name-of-a-function-or-method-from-within-a-python-function-or-m
 http://stackoverflow.com/questions/251464/how-to-get-the-function-name-as-string-in-python
 """
+from __future__ import print_function
 
 __author__ = "Valentin Kuznetsov"
 
@@ -24,7 +25,7 @@ def print_msg(msg, cls, prefix=''):
     """
     Print message in a form cls::caller msg, suitable for class usage
     """
-    print "%s %s:%s %s" % (prefix, cls, inspect.stack()[2][3], msg)
+    print("%s %s:%s %s" % (prefix, cls, inspect.stack()[2][3], msg))
 
 class PrintManager(object):
     """PrintManager class"""

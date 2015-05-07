@@ -8,6 +8,7 @@ to clean     : python setup.py clean
 to build doc : python setup.py doc
 to run tests : python setup.py test
 """
+from __future__ import print_function
 __author__ = "Valentin Kuznetsov"
 
 import sys
@@ -68,16 +69,16 @@ class TestCommand(Command):
         testfiles.sort()
         try:
             tests = TestLoader().loadTestsFromNames(testfiles)
-        except Exception, exc:
-            print "\nFail to load unit tests", testfiles
+        except Exception as exc:
+            print("\nFail to load unit tests", testfiles)
             # check which tests are failing to get imported
             for test in testfiles:
                 try:
-                    print "trying to import:",  test
+                    print("trying to import:",  test)
                     __import__(test)
-                except Exception, import_err:
-                    print "failed importing: ", test, import_err
-            print exc
+                except Exception as import_err:
+                    print("failed importing: ", test, import_err)
+            print(exc)
             raise exc
         t = TextTestRunner(verbosity = 2)
         result = t.run(tests)
@@ -130,7 +131,7 @@ class DocCommand(Command):
         """Run method"""
         cdir = os.getcwd()
         os.chdir(os.path.join(cdir, 'doc'))
-        if  os.environ.has_key('PYTHONPATH'):
+        if  'PYTHONPATH' in os.environ:
             os.environ['PYTHONPATH'] = os.path.join(cdir, 'src/python') \
                 + ':' + os.environ['PYTHONPATH']
         else:
@@ -157,19 +158,19 @@ although they do result in significant speed improvements.
     def run(self):
         try:
             build_ext.run(self)
-        except DistutilsPlatformError, e:
-            print e
-            print self.warning_message % ("Extension modules",
+        except DistutilsPlatformError as e:
+            print(e)
+            print(self.warning_message % ("Extension modules",
                                           "There was an issue with your "
-                                          "platform configuration - see above.")
+                                          "platform configuration - see above."))
 
     def build_extension(self, ext):
         try:
             build_ext.build_extension(self, ext)
         except build_errors:
-            print self.warning_message % ("The %s extension module" % ext.name,
+            print(self.warning_message % ("The %s extension module" % ext.name,
                                           "Above is the ouput showing how "
-                                          "the compilation failed.")
+                                          "the compilation failed."))
 
 def dirwalk(relativedir):
     """
@@ -258,7 +259,7 @@ classifiers  = [
 def main():
     if sys.version < required_python_version:
         s = "I'm sorry, but %s %s requires Python %s or later."
-        print s % (name, version, required_python_version)
+        print(s % (name, version, required_python_version))
         sys.exit(1)
 
     # set default location for "data_files" to

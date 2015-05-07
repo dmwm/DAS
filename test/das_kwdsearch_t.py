@@ -10,6 +10,7 @@
 """
 tests for keyword search
 """
+from __future__ import print_function
 # system modules
 
 import unittest
@@ -74,8 +75,8 @@ class KwsTesterMetaClass(type):
         if hasattr(cls, 'global_dbs_inst') and cls.global_dbs_inst:
             return
 
-        print 'setUp in metaclass: getting dbs manager ' \
-              '(and fetching datasets if needed)'
+        print('setUp in metaclass: getting dbs manager ' \
+              '(and fetching datasets if needed)')
         cls.global_dbs_mngr = initialize_global_dbs_mngr(update_required=False)
         cls.global_dbs_inst = get_global_dbs_inst()
         cls.kws = KeywordSearch(dascore=DASCore(multitask=False))
@@ -106,16 +107,16 @@ class KeywordSearchAbstractTester(unittest.TestCase):
 
     def print_details(self, expected, first_result, qstatus, query):
         if PRINT_QUERY_RES_DICT:
-            print 'Query: ', query
-            print 'Result: ', self.is_correct(first_result, expected)
-            print 'Queries so far:', N_QUERIES, \
+            print('Query: ', query)
+            print('Result: ', self.is_correct(first_result, expected))
+            print('Queries so far:', N_QUERIES, \
                 'Passed at #1: ', N_PASSED_AT_1, \
-                'Passed at i-th:', pformat(N_PASSED_AT)
-            print 'Running times:', TIMES
-            print 'Query statuses:', qstatus
-            print 'Queries passed up to i=4', pformat(PASSED_AT[:4])
-            print 'Queries NOT passed up to i=4', \
-                pformat(NOT_PASSED_AT[:4])
+                'Passed at i-th:', pformat(N_PASSED_AT))
+            print('Running times:', TIMES)
+            print('Query statuses:', qstatus)
+            print('Queries passed up to i=4', pformat(PASSED_AT[:4]))
+            print('Queries NOT passed up to i=4', \
+                pformat(NOT_PASSED_AT[:4]))
 
     def assert_query_result(self, query, expected=None, bad=None,
                             not_implemented=False):

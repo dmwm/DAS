@@ -4,6 +4,7 @@
 """
 DAS Query Language parser.
 """
+from __future__ import print_function
 
 __author__ = "Valentin Kuznetsov"
 
@@ -64,7 +65,7 @@ def ply_parse_query(query, keys, services, pdir='/tmp', verbose=False):
         except Exception as exc:
             msg = "Fail to parse query=%s, trial=%s, exception=%s" \
                     % (query, trial, str(exc))
-            print dastimestamp('DAS WARNING ') + ' ' + msg
+            print(dastimestamp('DAS WARNING ') + ' ' + msg)
             error = exc
         time.sleep(trial/10.)
     raise error
@@ -75,7 +76,7 @@ def ply_output(query, keys, services, pdir='/tmp', verbose=False):
     if  verbose:
         dasply = DASPLY(pdir, keys, services, verbose=verbose)
         dasply.build()
-        print "input query='%s'" % query
+        print("input query='%s'" % query)
         dasply.test_lexer(query)
 
 class QLManager(object):
@@ -149,7 +150,7 @@ class QLManager(object):
                     except Exception as exc:
                         msg = "Fail in ply2mongo, query=%s, ply_query=%s" \
                                 % (query, ply_query)
-                        print msg
+                        print(msg)
                     try:
                         self.parserdb.insert_valid_query(query, mongo_query)
                     except Exception as exc:

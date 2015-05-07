@@ -20,6 +20,7 @@ Sample schemas:
                    'stems': [basestring, ]}))
 
 """
+from __future__ import print_function
 
 import json
 import pprint
@@ -57,19 +58,19 @@ def validate_verbose(rules, item, print_success=False):
         try:
             rule.validate(item)
             if print_success:
-                print 'OK:', item
+                print('OK:', item)
             break
         except SchemaError as err:
             errors.append(('rule %s failed:' % rule_name, err))
     else:
-        print 'can not validate the record:'
+        print('can not validate the record:')
         pprint.pprint(item)
 
         for err, details in errors:
-            print err
+            print(err)
             #pprint.pprint(details)
-            print details
-            print '------------'
+            print(details)
+            print('------------')
 
         return False
     return True

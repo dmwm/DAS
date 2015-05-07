@@ -3,6 +3,7 @@
 Matches keywords into fields in service outputs.
 This currently works using whoosh, an information retrieval library.
 """
+from __future__ import print_function
 from collections import defaultdict
 import pprint
 
@@ -16,6 +17,7 @@ from DAS.keywordsearch.nlp import filter_stopwords
 from DAS.keywordsearch.metadata.schema_adapter_factory import get_schema
 from DAS.keywordsearch.entity_matchers.kwd_chunks.ir_entity_attributes import \
     SimpleIREntityAttributeMatcher
+from functools import reduce
 
 
 def check_validity(field_rec, fields_by_entity):
@@ -172,8 +174,8 @@ class MultiKwdAttributeMatcher(object):
                 if any(test_operator_containment(kw) for kw in chunk[:-1]):
                     continue
                 if DEBUG:
-                    print 'chunk:', chunk
-                    print 'len=', length, '; start=', start, 'chunk:', chunk
+                    print('chunk:', chunk)
+                    print('len=', length, '; start=', start, 'chunk:', chunk)
 
                 s_chunk = ' '.join(get_keyword_without_operator(kw)
                                    for kw in chunk)
@@ -197,9 +199,9 @@ def print_debug(matches):
     """ prints out the debug if needed """
     if not MINIMAL_DEBUG:
         return
-    print "chunks"
+    print("chunks")
     for result_type, match in matches.items():
-        print 'result_type:', result_type
+        print('result_type:', result_type)
         pprint.pprint([
             '{0:.2f} {1:s} for: {2:s}'.format(
                 item['score'], item['field_name'], str(item['tokens_required']))
@@ -217,7 +219,7 @@ def normalize_scores(matches):
     max_score = reduce(max, (get_max_score(m)
                              for m in matches.values()), 0)
     if DEBUG:
-        print 'max_score', max_score
+        print('max_score', max_score)
 
     fsmoothing = lambda x: (x / max(20.0, max_score))
     #if USE_IR_SCORE_SMOOTHING:

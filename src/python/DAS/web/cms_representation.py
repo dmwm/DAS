@@ -6,6 +6,7 @@ File: cms_representation.py
 Author: Valentin Kuznetsov <vkuznet@gmail.com>
 Description: CMS DAS records representation
 """
+from __future__ import print_function
 
 # system modules
 import time
@@ -348,7 +349,7 @@ class CMSRepresentation(DASRepresentation):
                 except Exception as exc:
                     # TODO: pkey.split fail only if called on non-string
                     msg = "Fail to pkey.split('.') for pkey=%s" % pkey
-                    print msg
+                    print(msg)
                     print_exc(exc)
         return rowkeys
 
@@ -409,7 +410,7 @@ class CMSRepresentation(DASRepresentation):
             except Exception as exc:
                 fltpage = 'N/A, please check DAS record for errors'
                 msg = 'Fail to apply filter to query=%s' % dasquery.query
-                print msg
+                print(msg)
                 print_exc(exc)
         else:
             fltpage = ''
@@ -487,7 +488,7 @@ class CMSRepresentation(DASRepresentation):
                     msg  = "Fail to extract pval for pkey='%s', lkey='%s'" \
                             % (pkey, lkey)
                     msg += "\npval='%s', type(pval)='%s'" % (pval, type(pval))
-                    print msg
+                    print(msg)
                     print_exc(exc)
                     pval = 'N/A'
                 try:
@@ -579,8 +580,8 @@ class CMSRepresentation(DASRepresentation):
                     systems = self.systems(row['das']['system'])
                 else:
                     systems = "" # no das record
-                    print dastimestamp('DAS ERROR '), \
-                            'record without DAS key', row
+                    print(dastimestamp('DAS ERROR '), \
+                            'record without DAS key', row)
             except KeyError as exc:
                 print_exc(exc)
                 systems = "" # we don't store systems for aggregated records

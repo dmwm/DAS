@@ -5,6 +5,7 @@
 """
 DAS benchmark tool
 """
+from __future__ import print_function
 import multiprocessing
 
 import os
@@ -28,7 +29,7 @@ from itertools import chain, ifilter
 try:
     import matplotlib.pyplot as plt
 except Exception as e:
-    print e
+    print(e)
 
 
 class NClientsOptionParser:
@@ -156,7 +157,7 @@ class UrlRequest(urllib2.Request):
 def urlrequest(stream, url, headers, write_lock, debug=0):
     """URL request function"""
     if debug:
-        print "Input for urlrequest", url, headers, debug
+        print("Input for urlrequest", url, headers, debug)
     req = UrlRequest('GET', url=url, headers=headers)
     if debug:
         hdlr = urllib2.HTTPHandler(debuglevel=1)
@@ -258,8 +259,8 @@ def avg_std(input_file):
             try:
                 data = eval(line.replace('\n', ''))
             except:
-                print "In file '%s' fail to process line='%s'" \
-                      % (input_file, line)
+                print("In file '%s' fail to process line='%s'" \
+                      % (input_file, line))
                 traceback.print_exc()
                 continue
             if 'ctime' in data:
@@ -351,7 +352,7 @@ def main():
             runjob(nclients, host, method, params, headers, idx, limit,
                    debug, logname, dasquery)
             sys.stdout.write('.')
-        print ''
+        print('')
 
     # analyze results
     file_list = []
@@ -374,10 +375,10 @@ def main():
     try:
         make_plot(xxx, yyy, std, opts.filename, title=dasquery)
     except Exception as e:
-        print e
-        print "xxx =", xxx
-        print "yyy =", yyy
-        print "std =", std
+        print(e)
+        print("xxx =", xxx)
+        print("yyy =", yyy)
+        print("std =", std)
 
 
 if __name__ == '__main__':

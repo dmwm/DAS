@@ -6,6 +6,7 @@ File: dbs_daemon.py
 Author: Valentin Kuznetsov <vkuznet@gmail.com>
 Description: DBS daemon, which update DAS cache with DBS datasets
 """
+from __future__ import print_function
 
 # system modules
 import re
@@ -86,8 +87,8 @@ class DBSDaemon(object):
 
         dbc = self.col
         if  not dbc:
-            print "%s DBSDaemon %s, no connection to DB" \
-                % (dastimestamp(), self.dbcoll)
+            print("%s DBSDaemon %s, no connection to DB" \
+                % (dastimestamp(), self.dbcoll))
             return
 
         try:
@@ -121,12 +122,12 @@ class DBSDaemon(object):
 
             if  find_one(dbc, cdict):
                 dbc.update(cdict, udict)
-            print "%s DBSDaemon %s, %s %s records in %s sec" \
+            print("%s DBSDaemon %s, %s %s records in %s sec" \
             % (dastimestamp(), self.dbcoll, msg, dbc.count(),
-                    round(time.time()-time0))
+                    round(time.time()-time0)))
         except Exception as exc:
-            print "%s DBSDaemon %s, fail to update, reason %s" \
-                % (dastimestamp(), self.dbcoll, str(exc))
+            print("%s DBSDaemon %s, fail to update, reason %s" \
+                % (dastimestamp(), self.dbcoll, str(exc)))
 
     def find(self, pattern, idx=0, limit=10):
         """
@@ -220,12 +221,12 @@ def test(dbs_url):
     idx = 0
     limit = 10
     for row in mgr.find('zee*summer', idx, limit):
-        print row
+        print(row)
 
 def test_find_static():
     """ Test the standalone find() """
     for row in find_datasets('*Zmm*', dbs_instance='prod/global'):
-        print row
+        print(row)
 
 def test_dbs():
     "Test dbs3 service"
@@ -250,7 +251,7 @@ def initialize_global_dbs_mngr(update_required=False):
 
     # if we have no datasets (fresh DB, fetch them)
     if update_required or not next(dbsmgr.find('*Zmm*'), False):
-        print 'fetching datasets from global DBS...'
+        print('fetching datasets from global DBS...')
         dbsmgr.update()
     return dbsmgr
 

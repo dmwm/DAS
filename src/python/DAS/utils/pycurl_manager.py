@@ -16,6 +16,7 @@ datasets and filesummaries which provides details about
 given dataset. So we invoke 1 request to datasets API
 followed by N requests to filesummaries API.
 """
+from __future__ import print_function
 
 # system modules
 import time
@@ -41,7 +42,7 @@ def parse_body(data):
 def get_expire(data, error_expire=300, verbose=0):
     """Parser header part of URL request and return expires timestamp"""
     if  verbose > 1:
-        print data
+        print(data)
     for item in data.split('\n'):
         if  item.find('Expires') != -1:
             try:
@@ -84,7 +85,7 @@ class RequestHandler(object):
         else:
             url = url + '?' + encoded_data
         if  verbose > 1:
-            print '\nDEBUG: pycurl call', url
+            print('\nDEBUG: pycurl call', url)
         if  isinstance(url, str):
             curl.setopt(pycurl.URL, url)
         elif isinstance(url, unicode):
@@ -112,7 +113,7 @@ class RequestHandler(object):
 
     def debug(self, debug_type, debug_msg):
         """Debug callback implementation"""
-        print "debug(%d): %s" % (debug_type, debug_msg)
+        print("debug(%d): %s" % (debug_type, debug_msg))
 
     def getdata(self, url, params, headers=None, expire=3600, post=False,
                 error_expire=300, verbose=0, ckey=None, cert=None, doseq=True):
@@ -239,7 +240,7 @@ def test():
     url  = 'https://cmsweb.cern.ch/dbs/prod/global/DBSReader/datasets'
     pat  = '/RelVal*'
     data = [r for r in datasets(url, cert, ckey, pat)]
-    print data
+    print(data)
 
 if __name__ == '__main__':
     test()

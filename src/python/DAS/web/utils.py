@@ -4,6 +4,7 @@
 """
 Set of useful utilities used by DAS web applications
 """
+from __future__ import print_function
 
 __author__ = "Valentin Kuznetsov"
 
@@ -235,10 +236,10 @@ def dascore_monitor(cdict, func, sleep=5):
             except:
                 das = False
             if  conn:
-                print "### dascore_monitor, re-established connection \
-                        %s, mapping.db records %s" % (conn, das)
+                print("### dascore_monitor, re-established connection \
+                        %s, mapping.db records %s" % (conn, das))
             else:
-                print "### dascore_monitor, lost connection"
+                print("### dascore_monitor, lost connection")
 
 def quote(data):
     """
@@ -263,7 +264,7 @@ def quote(data):
                 res = ""
         except Exception as exc:
             print_exc(exc)
-            print "Unable to cgi.escape(%s, quote=True)" % data
+            print("Unable to cgi.escape(%s, quote=True)" % data)
             res = ""
     return res
 
@@ -645,7 +646,7 @@ def ajax_response_orig(msg, tag="response", element="object"):
     page  = """<ajax-response><response type="%s" id="%s">""" % (element, tag)
     page += msg
     page += "</response></ajax-response>"
-    print page
+    print(page)
     return page
 
 def ajax_response(msg):

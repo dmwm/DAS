@@ -4,6 +4,7 @@
 """
 Unit test for ANTLR parser
 """
+from __future__ import absolute_import
 
 import unittest
 
@@ -16,7 +17,7 @@ def antrlparser(uinput):
      'ORDER_BY_KEYWORDS': [], 
      'WHERE_CONSTRAINTS': [{'value': 'T2', 'key': 'site', 'op': '='}, {'bracket': 'T2'}]}
     """
-    from Wrapper import Wrapper
+    from .Wrapper import Wrapper
     parserobj = Wrapper()
     tokens = parserobj.parseQuery(uinput)
     return tokens

@@ -3,6 +3,7 @@
 """
 DAS DBS/Phedex combined service to fetch dataset/site information.
 """
+from __future__ import print_function
 
 # system modules
 import re
@@ -162,7 +163,7 @@ def update_db(urls, uri, db_name, coll_name):
         coll.remove({'ts': {'$lt': tst}})
     else:
         raise ConnectionFailure('could not establish connection')
-    print "%s update dbs_phedex DB %s sec" % (dastimestamp(), time.time()-tst)
+    print("%s update dbs_phedex DB %s sec" % (dastimestamp(), time.time()-tst))
 
 def find_dataset(coll, site, operation="mapreduce"):
     """
@@ -248,7 +249,7 @@ def worker(urls, uri, db_name, coll_name, interval=3600):
     """
     conn_interval = 3 # default connection failure sleep interval
     threshold = 60 # 1 minute is threashold to check connections
-    print "### Start dbs_phedex worker"
+    print("### Start dbs_phedex worker")
     while True:
         if  conn_interval > threshold:
             conn_interval = threshold
@@ -310,9 +311,9 @@ class DBSPhedexService(object):
                      (self.urls, which_dbs, self.uri, \
                      self.dbname, self.collname, self.expire))
             msg = "### DBSPhedexService:init started"
-            print msg
+            print(msg)
         except Exception as exc:
-            print "### Fail DBSPhedexService:init\n", str(exc)
+            print("### Fail DBSPhedexService:init\n", str(exc))
             self.urls       = None
             self.expire     = 60
             self.wthr       = None
@@ -373,7 +374,7 @@ def test_dbs():
     }
     gen = datasets_dbs(urls)
     for row in gen:
-        print "\n### row", row
+        print("\n### row", row)
 
 if __name__ == '__main__':
 #    test()

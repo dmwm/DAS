@@ -8,6 +8,7 @@ Description: Set of utilities to fetch given URLs via proxy servers
              If no proxy servers is available fall back to sequential
              method via getdata
 """
+from __future__ import print_function
 
 # system modules
 import urllib
@@ -63,6 +64,6 @@ def test():
     url2 = "https://cmsweb.cern.ch/dbs/prod/global/DBSReader/datatiers"
     urls = [url1, url2]
     for row in proxy_getdata(urls):
-        print row
+        print(row)
 if __name__ == '__main__':
     test()

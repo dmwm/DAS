@@ -5,6 +5,7 @@
 """
 DAS Robot
 """
+from __future__ import print_function
 __revision__ = "$Id: das_robot.py,v 1.2 2009/09/18 14:35:54 valya Exp $"
 __version__ = "$Revision: 1.2 $"
 __author__ = "Valentin Kuznetsov"
@@ -63,7 +64,7 @@ def main():
         robot.status()
         sys.exit(0)
     else:
-        print "Unknown operation, please use --start|stop|restart|status options"
+        print("Unknown operation, please use --start|stop|restart|status options")
 
 #
 # main

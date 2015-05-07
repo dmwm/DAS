@@ -8,6 +8,7 @@ Module description:
     * compound query terms in brackets (e.g. "number of events")
     * phrases: "terms operator value" (e.g. nevent > 1, "number of events"=100)
 """
+from __future__ import print_function
 
 import re
 try:
@@ -225,11 +226,11 @@ def tokenize(query):
     return tokens
 
 if __name__ == '__main__':
-    print tokenize('file dataset=/Zmm*/*/raw-reco lumi=20853 nevents>10 '
-                   '"number of events">10 /Zmm*/*/raw-reco')
-    print tokenize('file dataset=/Zmm*/*/raw-reco lumi=20853 dataset.nevents>10'
-                   ' "number of events">10 /Zmm*/*/raw-reco')
-    print tokenize("file dataset=/Zmm*/*/raw-reco lumi=20853 dataset.nevents>10"
-                   " 'number of events'>10 /Zmm*/*/raw-reco")
+    print(tokenize('file dataset=/Zmm*/*/raw-reco lumi=20853 nevents>10 '
+                   '"number of events">10 /Zmm*/*/raw-reco'))
+    print(tokenize('file dataset=/Zmm*/*/raw-reco lumi=20853 dataset.nevents>10'
+                   ' "number of events">10 /Zmm*/*/raw-reco'))
+    print(tokenize("file dataset=/Zmm*/*/raw-reco lumi=20853 dataset.nevents>10"
+                   " 'number of events'>10 /Zmm*/*/raw-reco"))
     import doctest
     doctest.testmod()

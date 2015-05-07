@@ -22,6 +22,7 @@ We use the following definitions for dataset presence:
 See discussion on
 https://hypernews.cern.ch/HyperNews/CMS/get/comp-ops/1057/1/1/2/1/1.html
 """
+from __future__ import print_function
 __author__ = "Valentin Kuznetsov"
 
 # system modules
@@ -58,7 +59,7 @@ def parse_data(data):
     except Exception as exc:
         jsondata = []
         msg = 'Unable to apply json.load to "%s"' % data
-        print msg
+        print(msg)
     if  isinstance(jsondata, dict):
         yield jsondata
     elif isinstance(jsondata, list):

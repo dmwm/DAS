@@ -4,6 +4,7 @@
 """
 DAS command line interface to get results from CouchDB
 """
+from __future__ import print_function
 __revision__ = "$Id"
 __version__ = "$Revision"
 __author__ = "Valentin Kuznetsov"
@@ -61,7 +62,7 @@ if __name__ == '__main__':
     (opts, args) = optManager.getOpt()
 
     if  not len([val for val in opts.__dict__.values() if val]):
-        print "Run with --help for more options"
+        print("Run with --help for more options")
         sys.exit(0)
 
     t0 = time.time()
@@ -73,9 +74,9 @@ if __name__ == '__main__':
     DAS = DASCouchDB(MGR)
     if  opts.listviews:
         for viewname, viewmap in DAS.views.items():
-            print
-            print "DAS view:", viewname
-            print viewmap['map']
+            print()
+            print("DAS view:", viewname)
+            print(viewmap['map'])
         sys.exit(0)
         
     if  opts.delete:
@@ -86,7 +87,7 @@ if __name__ == '__main__':
         else:
             msg = "Delete '%s' couch DB" % opts.delete
             DAS.delete(opts.delete)
-        print msg,
+        print(msg, end=' ')
         sys.exit(0)
         
     t1 = 0
@@ -123,11 +124,11 @@ if __name__ == '__main__':
         view = 'timer'
         design = 'dasadmin'
     results = DAS.get_view(design, view, options)
-    if type(results) is types.ListType:
+    if type(results) is list:
         for row in results:
-            print row
-        print "Found %s documents" % len(results)
+            print(row)
+        print("Found %s documents" % len(results))
     else:
-        print results
+        print(results)
     timestamp = time.strftime("%a, %d %b %Y %H:%M:%S GMT",time.gmtime())
-    print "DAS execution time %s sec, %s" % ((time.time()-t0), timestamp)
+    print("DAS execution time %s sec, %s" % ((time.time()-t0), timestamp))

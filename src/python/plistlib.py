@@ -249,7 +249,7 @@ class PlistWriter(DumbXMLWriter):
             self.simpleElement("integer", "%d" % value)
         elif isinstance(value, float):
             self.simpleElement("real", repr(value))
-        elif isinstance(value, types.NoneType):
+        elif isinstance(value, type(None)):
             self.simpleElement("empty")
         elif isinstance(value, dict):
             self.writeDict(value)
@@ -301,7 +301,7 @@ class _InternalDict(dict):
         try:
             value = self[attr]
         except KeyError:
-            raise AttributeError, attr
+            raise AttributeError(attr)
         from warnings import warn
         warn("Attribute access from plist dicts is deprecated, use d[key] "
              "notation instead", PendingDeprecationWarning, 2)
@@ -317,7 +317,7 @@ class _InternalDict(dict):
         try:
             del self[attr]
         except KeyError:
-            raise AttributeError, attr
+            raise AttributeError(attr)
         from warnings import warn
         warn("Attribute access from plist dicts is deprecated, use d[key] "
              "notation instead", PendingDeprecationWarning, 2)

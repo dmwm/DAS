@@ -115,13 +115,13 @@ class DASViewManager(object):
         else: # sqlite case
             if  not os.path.isfile(dbfile):
                 self.create_db()
-        if  config.has_key('sum_views'):
+        if  'sum_views' in config:
             login = 'dascore'
             fullname = 'DAS'
             group = 'admin'
             existing_views = self.all()
             for viewname, viewdef in config['sum_views'].items():
-                if  not existing_views.has_key(viewname):
+                if  viewname not in existing_views:
                     self.create(viewname, viewdef, login, fullname, group)
 
     def create_db(self):
@@ -134,7 +134,7 @@ class DASViewManager(object):
         """
         create new view for given name and a query
         """
-        if  self.map.has_key(viewname):
+        if  viewname in self.map:
             msg = "View '%s' already exists" % viewname
             raise Exception(msg)
         squery   = strip_query(query)

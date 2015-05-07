@@ -9,8 +9,6 @@ import json
 import plistlib
 import unittest
 
-from pymongo.connection import Connection
-
 from DAS.web.utils import wrap2dasxml, wrap2dasjson, json2html, quote
 from DAS.web.utils import free_text_parser, choose_select_key
 

@@ -4,6 +4,7 @@
 """
 DAS web interface, based on WMCore/WebTools
 """
+from __future__ import print_function
 
 __revision__ = "$Id: DASSearch.py,v 1.1 2010/03/18 17:52:25 valya Exp $"
 __version__ = "$Revision: 1.1 $"
@@ -55,7 +56,7 @@ def ajax_response_orig(msg, tag="_response", element="object"):
     page  = """<ajax-response><response type="%s" id="%s">""" % (element, tag)
     page += msg
     page += "</response></ajax-response>"
-    print page
+    print(page)
     return page
 
 def ajax_response(msg):
@@ -90,7 +91,7 @@ class DASSearch(DASWebManager):
         self.pageviews  = ['xml', 'list', 'json', 'yuijson'] 
         msg = "DASSearch::init is started with base=%s" % self.base
         self.daslogger.debug(msg)
-        print msg
+        print(msg)
 
     def top(self):
         """
@@ -308,7 +309,7 @@ class DASSearch(DASWebManager):
                 query = dict(fields=fields, spec=spec)
                 if  len(args) == 2:
                     format = args[1]
-            elif  kwargs and kwargs.has_key('_id'):
+            elif  kwargs and '_id' in kwargs:
                 spec = {'_id': kwargs['_id']}
                 fields = None
                 query = dict(fields=fields, spec=spec)
@@ -356,7 +357,7 @@ class DASSearch(DASWebManager):
                         res += self.templatepage('das_record', **record)
             else:
                 res = result['status']
-                if  res.has_key('reason'):
+                if  'reason' in res:
                     return self.error(res['reason'])
                 else:
                     msg = 'Uknown error, kwargs=' % kwargs
@@ -440,7 +441,7 @@ class DASSearch(DASWebManager):
         """
         result  = self.send_request('GET', kwargs)
         res = []
-        if  type(result) is types.StringType:
+        if  type(result) is bytes:
             data = json.loads(result)
         else:
             data = result
@@ -575,7 +576,7 @@ class DASSearch(DASWebManager):
         id = 0
         for row in rows:
             das = row['das']
-            if  type(das) is types.DictType:
+            if  type(das) is dict:
                 das = [das]
             resdict = {}
             for jdx in range(0, len(das)):
@@ -586,28 +587,28 @@ class DASSearch(DASWebManager):
                     system = item['system'][idx]
                     key    = item['selection_keys'][idx]
                     data   = row[key]
-                    if  type(data) is types.ListType:
+                    if  type(data) is list:
                         data = data[jdx]
-                    if  type(data) is types.ListType:
+                    if  type(data) is list:
                         data = data[idx]
                     # I need to extract from DAS object the values for UI keys
                     for item in self.dasmapping.presentation(key):
                         daskey = item['das']
                         uiname = item['ui']
-                        if  not resdict.has_key(uiname):
+                        if  uiname not in resdict:
                             resdict[uiname] = ""
                         # look at key attributes, which may be compound as well
                         # e.g. block.replica.se
-                        if  type(data) is types.DictType:
+                        if  type(data) is dict:
                             result = dict(data)
-                        elif type(data) is types.ListType:
+                        elif type(data) is list:
                             result = list(data)
                         else:
                             result = data
                         res = ""
                         try:
                             for elem in daskey.split('.')[1:]:
-                                if  result.has_key(elem):
+                                if  elem in result:
                                     res  = result[elem]
                                     resdict[uiname] = res
                         except:

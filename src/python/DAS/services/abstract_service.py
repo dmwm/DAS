@@ -5,6 +5,7 @@
 """
 Abstract interface for DAS service
 """
+from __future__ import print_function
 __revision__ = "$Id: abstract_service.py,v 1.94 2010/04/30 16:39:50 valya Exp $"
 __version__ = "$Revision: 1.94 $"
 __author__ = "Valentin Kuznetsov"
@@ -349,7 +350,7 @@ class DASAbstractService(object):
         genrows = parse2gridfs(self.gfs, map_key, genrows, self.logger)
 
         spec  = dasquery.mongo_query['spec']
-        row   = genrows.next()
+        row   = next(genrows)
         ddict = DotDict(row)
         keys2adjust = []
         for key in spec.keys():
@@ -462,7 +463,7 @@ class DASAbstractService(object):
         except Exception as exc:
             msg  = 'Fail to process: url=%s, api=%s, args=%s' \
                     % (url, api, args)
-            print msg
+            print(msg)
             print_exc(exc)
         close(datastream)
 

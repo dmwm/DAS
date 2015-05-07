@@ -4,6 +4,7 @@
 """
 Unit test for DAS PLY parser/lexer
 """
+from __future__ import print_function
 
 import time
 import ply.yacc
@@ -259,7 +260,7 @@ class testDASPLY(unittest.TestCase):
         """Test DAS PLY lexer"""
         for query, expect in self.queries.items():
             if  self.debug:
-                print "\n%s" % query
+                print("\n%s" % query)
             self.dasply.test_lexer(query)
 
     def test_parser(self):
@@ -269,12 +270,12 @@ class testDASPLY(unittest.TestCase):
                 ply_query = self.dasply.parser.parse(query)
             except:
                 self.dasply.parser.parse(query, debug=1)
-                print "Input query:", query
+                print("Input query:", query)
                 raise
             if  self.debug:
-                print
-                print "input query", query
-                print "ply query  ", ply_query
+                print()
+                print("input query", query)
+                print("ply query  ", ply_query)
             result = ply2mongo(ply_query)
             self.assertEqual(expect, result)
 

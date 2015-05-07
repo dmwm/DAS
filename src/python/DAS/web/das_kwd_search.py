@@ -78,7 +78,7 @@ class KeywordSearchHandler(object):
                                            best_scores.get(r['entity']))
 
         best_scores = sorted(best_scores.items(),
-                             key=lambda (g, score): score, reverse=True)
+                             key=lambda g_score: g_score[1], reverse=True)
         hi_score_result_types = [g for (g, _) in best_scores[:top_k]]
 
         if len(hi_score_result_types) < 2:

@@ -6,6 +6,7 @@ Author: Valentin Kuznetsov <vkuznet@gmail.com>
 Description: DAS populator responsibles for cache population
 with given pre-defined set of DAS queries.
 """
+from __future__ import print_function
 
 # system modules
 import time
@@ -35,6 +36,6 @@ def das_populator_helper(dasmgr, query, expire):
         dasmgr.call(dasquery)
         # update DAS expire timestamp
         dasmgr.rawcache.update_das_expire(dasquery, newts)
-        print "\n### DAS populator", query, dasquery, expire, newts
+        print("\n### DAS populator", query, dasquery, expire, newts)
     except Exception as exc:
         print_exc(exc)

@@ -4,6 +4,7 @@
 """
 DAS command line interface to read files in DAS cache
 """
+from __future__ import print_function
 __revision__ = "$Id: das_file.py,v 1.1 2010/01/19 19:02:58 valya Exp $"
 __version__ = "$Revision: 1.1 $"
 __author__ = "Valentin Kuznetsov"
@@ -43,9 +44,9 @@ if __name__ == '__main__':
         while 1:
             try:
                 res = marshal.load(fdr)
-                print res
-            except EOFError, err:
+                print(res)
+            except EOFError as err:
                 break
         fdr.close()
     else:
-        print "No such file %s" % filename
+        print("No such file %s" % filename)

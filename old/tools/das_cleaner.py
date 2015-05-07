@@ -4,6 +4,7 @@
 """
 DAS command line interface to clean-up records in DAS cache
 """
+from __future__ import print_function
 __revision__ = "$Id"
 __version__ = "$Revision"
 __author__ = "Valentin Kuznetsov"
@@ -61,19 +62,19 @@ if __name__ == '__main__':
     DAS = DASCache(config)
     if  opts.listcaches:
         for name, obj in DAS.servers.items():
-            print name, obj
+            print(name, obj)
             if  name == 'memcache':
-                print "cache lifetime: %s" % obj.limit
-                print "cache servers : %s" % obj.servers
+                print("cache lifetime: %s" % obj.limit)
+                print("cache servers : %s" % obj.servers)
             elif  name == 'couchcache':
-                print "cache lifetime: %s" % obj.limit
-                print "cache servers : %s" % obj.uri
+                print("cache lifetime: %s" % obj.limit)
+                print("cache servers : %s" % obj.uri)
             elif  name == 'filecache':
-                print "cache lifetime: %s" % obj.limit
-                print "cache dir     : %s" % obj.dir
+                print("cache lifetime: %s" % obj.limit)
+                print("cache dir     : %s" % obj.dir)
     elif  opts.delete:
         DAS.delete_cache(dbname=opts.delete, cache=opts.cache)
     else:
         DAS.clean_cache(cache=opts.cache)
     timestamp = time.strftime("%a, %d %b %Y %H:%M:%S GMT",time.gmtime())
-    print "DAS execution time %s sec, %s" % ((time.time()-t0), timestamp)
+    print("DAS execution time %s sec, %s" % ((time.time()-t0), timestamp))

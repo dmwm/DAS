@@ -1,9 +1,10 @@
+from __future__ import absolute_import
 import sys
 import antlr3
 
-from SqlDASLexer import SqlDASLexer
-from SqlDASParser import SqlDASParser
-from SqlDASParser import kws, okws, constraints, orderingkw
+from .SqlDASLexer import SqlDASLexer
+from .SqlDASParser import SqlDASParser
+from .SqlDASParser import kws, okws, constraints, orderingkw
 
 class Wrapper:
 	def parseQuery(self, query):
@@ -18,7 +19,7 @@ class Wrapper:
 			toReturn['ORDER_BY_KEYWORDS'] = okws
 			toReturn['ORDERING'] = orderingkw
 			return toReturn
-		except antlr3.exceptions.NoViableAltException,expObj:
+		except antlr3.exceptions.NoViableAltException as expObj:
 			#print 'error ',expObj
 			t = expObj.token
 			msg = "Invalid Token " + str(t.getText()) + " on line " + str(t.getLine()) + " at column " + str(t.getCharPositionInLine()) + "\n"

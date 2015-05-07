@@ -5,6 +5,7 @@
 """
 Unit test for jsonwrapper
 """
+from __future__ import print_function
 
 import sys
 import unittest
@@ -33,8 +34,8 @@ class TestUtils(unittest.TestCase):
         try:
             test_func()
         except ImportError:
-            print '\n' + '-' * 70
-            print 'A test failed, but this might be recoverable:'
+            print('\n' + '-' * 70)
+            print('A test failed, but this might be recoverable:')
             traceback.print_exc(file=sys.stdout)
         else:
             return True

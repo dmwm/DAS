@@ -4,6 +4,7 @@
 """
 DAS couchdb cache. Communitate with DAS core and couchdb server(s)
 """
+from __future__ import print_function
 
 __revision__ = "$Id: das_couchcache.py,v 1.1 2010/01/19 19:02:57 valya Exp $"
 __version__ = "$Revision: 1.1 $"
@@ -114,10 +115,10 @@ function(keys, values) {
         cdb  = self.couchdb(dbname)
         # check provided view_dict that it has all keys
         for view, definition in view_dict.items():
-            if  type(definition) is not types.DictType:
+            if  type(definition) is not dict:
                 msg = 'View "%s" has improper definition' % view
                 raise Exception(msg)
-            if  not definition.has_key('map'):
+            if  'map' not in definition:
                 msg = 'View "%s" does not have map'
                 raise Exception(msg)
         view = dict(_id='_design/%s' % design, language='javascript', 
@@ -128,7 +129,7 @@ function(keys, values) {
         """
         Delete given view in couch db
         """
-        print "Delete view", dbname, design, view_name
+        print("Delete view", dbname, design, view_name)
 
     def dbinfo(self, dbname='das'):
         """
@@ -262,14 +263,14 @@ function(keys, values) {
         cdb = self.couchdb(dbname)
         self.clean_cache()
         if  not cdb:
-            if  type(results) is types.ListType or \
+            if  type(results) is list or \
                 type(results) is types.GeneratorType:
                 for row in results:
                     yield row
             else:
                 yield results
             return
-        if  type(results) is types.ListType or \
+        if  type(results) is list or \
             type(results) is types.GeneratorType:
             for row in results:
                 res = results2couch(query, row, expire)
@@ -406,7 +407,7 @@ function(keys, values) {
             for view_name, view_dict in rdict['views'].items():
 #                print "  view:", view_name
 #                print "   map:", view_dict['map']
-                if  view_dict.has_key('reduce'):
+                if  'reduce' in view_dict:
 #                    print "reduce:", view_dict['reduce']
                     rdef = view_dict['reduce']
                     defrow = dict(map=view_dict['map'], 

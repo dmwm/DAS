@@ -7,6 +7,7 @@ the value terms in the underlying data integration system.
 Also some CMS specific functions are used:
 - dataset name matching
 """
+from __future__ import print_function
 
 from cherrypy import request
 from DAS.utils.regex import RE_3SLASHES
@@ -34,7 +35,7 @@ def match_value_dataset(kwd, dbs_inst=None):
     match = find_datasets(kwd, dbs_inst, limit=1)
     if next(match, False):
         if DEBUG:
-            print 'Dataset matched by keyword %s' % kwd
+            print('Dataset matched by keyword %s' % kwd)
         # if kw contains wildcards the score shall be a bit lower
         if '*' in kwd and not '/' in kwd:
             dataset_score = 0.8

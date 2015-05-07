@@ -4,6 +4,7 @@
 """
 DAS web interface, based on WMCore/WebTools
 """
+from __future__ import print_function
 #from DAS.keywordsearch.metadata import das_schema_adapter
 
 __author__ = "Valentin Kuznetsov"
@@ -134,9 +135,9 @@ class DASWebService(DASWebManager):
         try:
             main_dbs_url = self.dbs_url
             dbs_urls = []
-            print "### DBS URL:", self.dbs_url
-            print "### DBS global instance:", self.dbs_global
-            print "### DBS instances:", self.dbs_instances
+            print("### DBS URL:", self.dbs_url)
+            print("### DBS global instance:", self.dbs_global)
+            print("### DBS instances:", self.dbs_instances)
             if  not self.dbs_url or not self.dbs_instances:
                 return # just quit
             for inst in self.dbs_instances:
@@ -159,7 +160,7 @@ class DASWebService(DASWebManager):
                             except:
                                 pass
                             time.sleep(interval)
-                    print "### Start DBSDaemon for %s" % dbs_url
+                    print("### Start DBSDaemon for %s" % dbs_url)
                     thname = 'dbs_updater:%s' % dbs_url
                     start_new_thread(thname, dbs_updater, (dbsmgr, interval, ))
         except Exception as exc:
@@ -195,8 +196,8 @@ class DASWebService(DASWebManager):
         except ConnectionFailure as _err:
             tstamp = dastimestamp('')
             mythr  = threading.current_thread()
-            print "### MongoDB connection failure thread=%s, id=%s, time=%s" \
-                    % (mythr.name, mythr.ident, tstamp)
+            print("### MongoDB connection failure thread=%s, id=%s, time=%s" \
+                    % (mythr.name, mythr.ident, tstamp))
         except Exception as exc:
             print_exc(exc)
             self.dasmgr  = None
@@ -525,7 +526,7 @@ class DASWebService(DASWebManager):
                 service_map = dasquery.service_apis_map()
             except Exception as exc:
                 msg = 'Fail to obtain service API map for this DASQuery'
-                print msg
+                print(msg)
                 print_exc(exc)
                 return 1, error_msg(msg)
             if not service_map:
@@ -733,7 +734,7 @@ class DASWebService(DASWebManager):
             if  nres and not len(data):
                 for retry in xrange(1, 3, 5):
                     msg = 'retry in %s sec' % retry
-                    print dastimestamp('DAS WARNING '), msg, dasquery
+                    print(dastimestamp('DAS WARNING '), msg, dasquery)
                     time.sleep(retry) # retry one more time
                     data = \
                         self.dasmgr.get_from_cache(dasquery, idx, limit)
@@ -743,7 +744,7 @@ class DASWebService(DASWebManager):
             if  nres and not len(data):
                 msg = 'fail to get all data for %s, nres=%s, len(data)=%s' \
                         % (dasquery, nres, len(data))
-                print dastimestamp('DAS WARNING '), msg
+                print(dastimestamp('DAS WARNING '), msg)
                 status = 'fail'
                 reason = 'Fail to retrieve data from DAS cache, please retry'
 
@@ -807,7 +808,7 @@ class DASWebService(DASWebManager):
         if  (nrequests - self.taskmgr.nworkers()) > self.queue_limit:
             msg = '#request=%s, queue_limit=%s, #workers=%s' \
                     % (nrequests, self.taskmgr.nworkers(), self.queue_limit)
-            print dastimestamp('DAS WEB SERVER IS BUSY '), msg
+            print(dastimestamp('DAS WEB SERVER IS BUSY '), msg)
             return True
         return False
 
@@ -1095,10 +1096,10 @@ class DASWebService(DASWebManager):
                     else:
                         msg  = 'No referer in cherrypy.request.headers'
                         msg += '\nHeaders: %s' % cherrypy.request.headers
-                        print dastimestamp('DAS WEB ERROR '), msg
+                        print(dastimestamp('DAS WEB ERROR '), msg)
         except Exception as err:
             msg = 'check_pid fails for pid=%s' % pid
-            print dastimestamp('DAS WEB ERROR '), msg
+            print(dastimestamp('DAS WEB ERROR '), msg)
             print_exc(err)
             self.reqmgr.remove(pid)
             self.taskmgr.remove(pid)
@@ -1143,7 +1144,7 @@ class DASWebService(DASWebManager):
             prefix = ''
             if ' ' in query:
                 prefix = '  '.join(query.split()[:-1]) + ' '
-                print 'prefix=', prefix
+                print('prefix=', prefix)
                 query = query.split()[-1]
             if  query.find('dataset=') != -1:
                 query = query.replace('dataset=', '')

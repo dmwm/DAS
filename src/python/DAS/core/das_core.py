@@ -11,6 +11,7 @@ It performs the following tasks:
 - merge results based on common keys
 - pass results to presentation layer (CLI or WEB)
 """
+from __future__ import print_function
 
 __author__ = "Valentin Kuznetsov"
 
@@ -286,7 +287,7 @@ class DASCore(object):
             msg  = 'No data-services for query %s' % dasquery
             msg += 'mongo_query: %s' % dasquery.mongo_query
             msg += 'params: %s' % dasquery.params()
-            print dastimestamp('DAS WARNING '), msg
+            print(dastimestamp('DAS WARNING '), msg)
 
         # get list of URI which can answer this query
         ack_services = []
@@ -348,7 +349,7 @@ class DASCore(object):
                         break
                     msg = 'qhash %s, das.status=%s, status=%s, wait for update' \
                             % (dasquery.qhash, dbstatus, status)
-                    print dastimestamp('DAS WARNING'), msg
+                    print(dastimestamp('DAS WARNING'), msg)
                 time.sleep(idx*idx)
                 self.rawcache.update_query_record(dasquery, status, reason=reason)
 
@@ -376,7 +377,7 @@ class DASCore(object):
             msg = 'found query %s in cache, status=%s\n' \
                         % (record['query'], status)
             self.logger.info(msg)
-            print dastimestamp('DAS INFO'), msg
+            print(dastimestamp('DAS INFO'), msg)
             return status
 
         self.logger.info(dasquery)
@@ -385,7 +386,7 @@ class DASCore(object):
         if  not services:
             msg = 'unable to locate data-services to fulfill this request'
             msg += ', will iterate over all registered services'
-            print dastimestamp('DAS WARNING '), dasquery, msg
+            print(dastimestamp('DAS WARNING '), dasquery, msg)
             services = dasquery.services if dasquery.services else self.systems
         try:
             if  self.multitask:
@@ -415,7 +416,7 @@ class DASCore(object):
             else:
                 reason = 'no data records found in DAS cache'
                 status = 'fail'
-                print dastimestamp('DAS ERROR '), dasquery, reason
+                print(dastimestamp('DAS ERROR '), dasquery, reason)
         update_das_query(dasquery, status, reason)
         das_timer('DASCore::call', self.verbose)
         return status
@@ -472,7 +473,7 @@ class DASCore(object):
             # extract das information from rawcache
             rows  = self.rawcache.get_from_cache(\
                     dasquery, collection=collection)
-            first = rows.next()
+            first = next(rows)
             sinfo = das_sinfo(first)
             # to perform aggregation we need:
             # - loop over all aggregator functions

@@ -15,6 +15,7 @@ NOTE: DBS3 APIs provide flat namespace JSON records. It means
       nested dicts and therefore it is better to re-map DBS3 data-records
       directly in a code.
 """
+from __future__ import print_function
 
 __author__ = "Valentin Kuznetsov"
 
@@ -103,7 +104,7 @@ def dbs_find(entity, url, kwds, verbose=0):
         for rec in row:
             try:
                 if  isinstance(rec, basestring):
-                    print dastimestamp('DBS3 ERROR:'), row
+                    print(dastimestamp('DBS3 ERROR:'), row)
                 elif  entity == 'file':
                     yield rec['logical_file_name']
                 elif  entity == 'block':
@@ -131,8 +132,8 @@ def block_run_lumis(url, blocks, runs=None, verbose=0):
     if  not urls:
         return
     if  verbose > 1:
-        print "\nDEBUG: block_run_lumis"
-        print urls
+        print("\nDEBUG: block_run_lumis")
+        print(urls)
     gen = urlfetch_getdata(urls, CKEY, CERT, headers)
     odict = {} # output dict
     for rec in gen:
@@ -170,8 +171,8 @@ def file_run_lumis(url, blocks, runs=None, valid=None, verbose=0):
     if  not urls:
         return
     if  verbose > 1:
-        print "\nDEBUG: file_run_lumis"
-        print urls
+        print("\nDEBUG: file_run_lumis")
+        print(urls)
     gen = urlfetch_getdata(urls, CKEY, CERT, headers)
     odict = {} # output dict
     for rec in gen:
@@ -302,7 +303,7 @@ def process(gen):
         if  'error' in row:
             error = row.get('error')
             reason = row.get('reason', '')
-            print dastimestamp('DAS ERROR'), error, reason
+            print(dastimestamp('DAS ERROR'), error, reason)
             yield row
             continue
         if  'data' in row:
@@ -317,8 +318,8 @@ def blocks4tier_date(dbs, tier, min_cdate, max_cdate, verbose=0):
                'max_cdate':max_cdate}
     urls    = ['%s?%s' % (url, urllib.urlencode(params))]
     if  verbose > 1:
-        print "\nblocks4tier_date"
-        print urls
+        print("\nblocks4tier_date")
+        print(urls)
     res     = process(urlfetch_getdata(urls, CKEY, CERT, headers))
     err     = 'Unable to get blocks for tier=%s, mindate=%s, maxdate=%s' \
                 % (tier, min_cdate, max_cdate)

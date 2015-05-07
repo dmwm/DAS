@@ -1,10 +1,11 @@
+from __future__ import absolute_import
 # $ANTLR 3.1.3 Mar 17, 2009 19:23:44 SqlDAS.g 2009-05-14 13:46:34
 
 import sys
 from antlr3 import *
 from antlr3.compat import set, frozenset
           
-from ValidateKeyword import *
+from .ValidateKeyword import *
 
 
 kws = []

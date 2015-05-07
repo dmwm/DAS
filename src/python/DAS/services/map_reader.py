@@ -21,6 +21,7 @@ Each map should provide the following fields:
         for inputs of low arity, e.g. in CMS that's release, primary_dataset)
 
 """
+from __future__ import print_function
 __author__ = "Valentin Kuznetsov"
 
 import yaml
@@ -75,7 +76,7 @@ def read_service_map(filename, field="uri"):
                     record['das_map'] = metric['das_map']
                 else:
                     msg = "map doesn't provide das_map"
-                    print metric
+                    print(metric)
                     raise Exception(msg)
                 if  validator(record):
                     yield record
