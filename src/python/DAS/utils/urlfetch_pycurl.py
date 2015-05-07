@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: iso-8859-1 -*-
+#pylint: disable=E1101
 
 """
 File: url_utils.py
@@ -92,7 +93,7 @@ def getdata(urls, ckey, cert, headers=None, num_conn=100):
             curl.url = url
         # Run the internal curl state machine for the multi stack
         while 1:
-            ret, _num_handles = mcurl.perform()
+            ret, _ = mcurl.perform()
             if  ret != pycurl.E_CALL_MULTI_PERFORM:
                 break
         # Check for curl objects which have terminated, and add them to the
@@ -122,7 +123,7 @@ def getdata(urls, ckey, cert, headers=None, num_conn=100):
                 curl.bbuf = None
                 mcurl.remove_handle(curl)
                 freelist.append(curl)
-                yield {'url': url, 'data': None, 'headers': hdrs,
+                yield {'url': url, 'data': None, 'headers': hdrs,\
                         'error': errmsg, 'code': errno}
             num_processed = num_processed + len(ok_list) + len(err_list)
             if num_q == 0:

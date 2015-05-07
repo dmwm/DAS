@@ -27,47 +27,47 @@ class DASOptionParser(object):
     """
     def __init__(self):
         self.parser = OptionParser()
-        self.parser.add_option("-v", "--verbose", action="store",
-                                          type="int", default=0,
-                                          dest="verbose",
+        self.parser.add_option("-v", "--verbose", action="store",\
+                                          type="int", default=0,\
+                                          dest="verbose",\
              help="verbose output")
-        self.parser.add_option("--profile", action="store_true",
-                                          dest="profile",
+        self.parser.add_option("--profile", action="store_true",\
+                                          dest="profile",\
              help="profile output")
-        self.parser.add_option("-q", "--query", action="store", type="string",
-                                          default="", dest="query",
+        self.parser.add_option("-q", "--query", action="store", type="string",\
+                                          default="", dest="query",\
              help="specify query for your request.")
-        self.parser.add_option("--hash", action="store_true", dest="hash",
+        self.parser.add_option("--hash", action="store_true", dest="hash",\
              help="look-up MongoDB-QL query and its hash")
-        self.parser.add_option("--services", action="store_true",
-                                          dest="services",
+        self.parser.add_option("--services", action="store_true",\
+                                          dest="services",\
              help="return a list of supported data services")
-        self.parser.add_option("--keys", action="store",
-                                          dest="service",
+        self.parser.add_option("--keys", action="store",\
+                                          dest="service",\
              help="return set of keys for given data service")
-        self.parser.add_option("--print-config", action="store_true",
-                                          dest="dasconfig",
+        self.parser.add_option("--print-config", action="store_true",\
+                                          dest="dasconfig",\
              help="print current DAS configuration")
-        self.parser.add_option("--no-format", action="store_true",
-                                          dest="plain",
+        self.parser.add_option("--no-format", action="store_true",\
+                                          dest="plain",\
              help="return unformatted output, useful for scripting")
-        self.parser.add_option("--idx", action="store", type="int",
-                                          default=0, dest="idx",
+        self.parser.add_option("--idx", action="store", type="int",\
+                                          default=0, dest="idx",\
              help="start index for returned result set, aka pagination, use w/ limit")
-        self.parser.add_option("--limit", action="store", type="int",
-                                          default=0, dest="limit",
+        self.parser.add_option("--limit", action="store", type="int",\
+                                          default=0, dest="limit",\
              help="limit number of returned results")
-        self.parser.add_option("--no-output", action="store_true",
-                                          dest="nooutput",
+        self.parser.add_option("--no-output", action="store_true",\
+                                          dest="nooutput",\
              help="run DAS workflow but don't print results")
-        self.parser.add_option("--no-results", action="store_true",
-                                          dest="noresults",
+        self.parser.add_option("--no-results", action="store_true",\
+                                          dest="noresults",\
              help="run DAS workflow but don't write results into the cache")
-        self.parser.add_option("--js-file", action="store", type="string",
-                      default="", dest="jsfile",
+        self.parser.add_option("--js-file", action="store", type="string",\
+                      default="", dest="jsfile",\
              help="create/update KWS js file for given query")
-        self.parser.add_option("--keylearning-file", action="store", type="string",
-                      default="", dest="kfile",
+        self.parser.add_option("--keylearning-file", action="store", type="string",\
+                      default="", dest="kfile",\
              help="create/update KWS keylearning file for given query")
     def getOpt(self):
         """
@@ -98,7 +98,7 @@ def kws_js(dascore, query, idx, limit, jsfile, verbose=False):
             stream.write(jsrow)
             stream.write('\n')
 
-def process_document(system, urn, doc):
+def process_document(doc):
     """
     Process a rawcache document record coming from one API of a service.
     Find all the unique output fields and insert them into the cache.
@@ -148,7 +148,7 @@ def keylearning_js(dascore, query, kfile, verbose=False):
         keys     = list(set(keys))
         system   = result['das']['system'][0]
         urn      = result['das']['api'][0]
-        members  = process_document(system, urn, result)
+        members  = process_document(result)
         jsrow = json.dumps(dict(keys=keys, members=members, system=system, urn=urn))
         if  verbose:
             print jsrow

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
-#pylint: disable=R0913,W0702,R0914,R0912,R0201
+#pylint: disable=R0913,W0702,R0914,R0912,R0201,E1101
 """
 File: pycurl_manager.py
 Author: Valentin Kuznetsov <vkuznet@gmail.com>
@@ -130,7 +130,7 @@ class RequestHandler(object):
             cache[thread] = curl
 #        print "\n+++ getdata curl gcache", self.gcache.keys()
 #        print "+++ getdata curl pcache", self.pcache.keys()
-        bbuf, hbuf = self.set_opts(curl, url, params, headers,
+        bbuf, hbuf = self.set_opts(curl, url, params, headers,\
                 ckey, cert, verbose, post, doseq)
         curl.perform()
 
@@ -167,7 +167,7 @@ class RequestHandler(object):
                     http_header, data)
         return data, expire
 
-    def multirequest(self, url, parray, headers=None,
+    def multirequest(self, url, parray, headers=None,\
                 ckey=None, cert=None, verbose=None, decoder='json'):
         """Fetch data for given set of parameters"""
         multi = pycurl.CurlMulti()
@@ -188,8 +188,8 @@ class RequestHandler(object):
                     ret, num_handles = multi.perform()
                     if  ret != pycurl.E_CALL_MULTI_PERFORM:
                         break
-            _numq, response, _err = multi.info_read()
-            for _cobj in response:
+            _, response, _ = multi.info_read()
+            for _ in response:
                 if  decoder == 'json':
                     data = json.loads(bbuf.getvalue())
                     if  isinstance(data, dict):
@@ -219,7 +219,7 @@ def datasets(url, cert, ckey, pattern, verbose=None):
     params  = {'dataset':pattern, 'dataset_access_type': 'VALID'}
     headers = {'Accept':'text/json;application/json', 'User-Agent': DAS_SERVER}
     reqmgr  = RequestHandler()
-    data, _expire = reqmgr.getdata(url, params, headers, \
+    data, _ = reqmgr.getdata(url, params, headers, \
                 ckey=ckey, cert=cert, verbose=verbose)
     params = json.load(data)
     furl = url.replace('datasets', 'filesummaries')

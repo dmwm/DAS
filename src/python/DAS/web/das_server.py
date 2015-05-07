@@ -63,19 +63,19 @@ class Root(object):
         log.error_log.setLevel(config.get("error_log_level", logging.DEBUG))
         log.access_log.setLevel(config.get("access_log_level", logging.DEBUG))
 
-        cpconfig.update ({
-                          'tools.expires.on': True,
-                          'tools.response_headers.on':True,
-                          'tools.etags.on':True,
-                          'tools.etags.autotags':True,
-                          'tools.encode.on': True,
-                          'tools.proxy.on': True,
-                          'tools.gzip.on': True,
+        cpconfig.update ({\
+                          'tools.expires.on': True,\
+                          'tools.response_headers.on':True,\
+                          'tools.etags.on':True,\
+                          'tools.etags.autotags':True,\
+                          'tools.encode.on': True,\
+                          'tools.proxy.on': True,\
+                          'tools.gzip.on': True,\
                           })
 
-        log("loading config: %s" % cpconfig,
-                                   context='web',
-                                   severity=logging.DEBUG,
+        log("loading config: %s" % cpconfig,\
+                                   context='web',\
+                                   severity=logging.DEBUG,\
                                    traceback=False)
 
     def setup_kws_server(self):
@@ -139,7 +139,7 @@ def main():
     Start-up web server.
     """
     parser  = OptionParser()
-    parser.add_option("-c", "--config", dest="config", default=False,
+    parser.add_option("-c", "--config", dest="config", default=False,\
         help="provide cherrypy configuration file")
     opts, _ = parser.parse_args()
 

@@ -25,8 +25,7 @@ AGGR_OPERATORS = [
     {'type': 'aggregator',
      'op': 'count(%(field)s)',
      'name': 'count',
-     'synonyms': ['how many', ]
-     },
+     'synonyms': ['how many', ]},
 
     {'type': 'aggregator',
      'op': 'min(%(field)s)',
@@ -47,9 +46,7 @@ AGGR_OPERATORS = [
      'name': 'median',
      'synonyms': ['median']},
 
-    {'synonyms':
-     # largest *Zmm* dataset -> largest dataset Zmm
-        ['order by', 'sort by', ],
+    {'synonyms': ['order by', 'sort by', ], # largest *Zmm* dataset -> largest dataset Zmm
      'op': 'sort %(field)s',
      'name': 'sort',
      'type': 'sort'}

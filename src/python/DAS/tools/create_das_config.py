@@ -19,10 +19,10 @@ class ConfigOptionParser(object):
     "option parser"
     def __init__(self):
         self.parser = OptionParser()
-        self.parser.add_option("-i", "--in", action="store", type="string",
-        default="", dest="uinput", help="input file, default $DAS_CONFIG")
-        self.parser.add_option("-o", "--out", action="store", type="string",
-        default="", dest="output", help="output file")
+        self.parser.add_option("-i", "--in", action="store", type="string", \
+            default="", dest="uinput", help="input file, default $DAS_CONFIG")
+        self.parser.add_option("-o", "--out", action="store", type="string", \
+            default="", dest="output", help="output file")
 
     def get_opt(self):
         "Returns parse list of options"

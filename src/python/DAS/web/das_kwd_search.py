@@ -5,8 +5,6 @@
 """
 handles the keyword search and presentation of its results in Web UI
 """
-import cherrypy
-import urllib
 import cgi
 import math
 
@@ -81,7 +79,7 @@ class KeywordSearchHandler(object):
 
         best_scores = sorted(best_scores.items(),
                              key=lambda (g, score): score, reverse=True)
-        hi_score_result_types = [g for (g, score) in best_scores[:top_k]]
+        hi_score_result_types = [g for (g, _) in best_scores[:top_k]]
 
         if len(hi_score_result_types) < 2:
             return []

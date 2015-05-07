@@ -15,21 +15,25 @@ PYMVER = pymongo_version.split('.')[0]
 if  PYMVER == '2':
     PYMONGO_OPTS = {'exhaust': True}
     PYMONGO_NOEXHAUST = {'exhaust': False}
-    class MongoOpts():
+    class MongoOpts(object):
+        """Class which holds MongoClient options"""
         def __init__(self, **kwds):
-            self.w = kwds.get('w', 1)
+            self.write = kwds.get('w', 1)
             self.psize = kwds.get('psize', 300)
         def opts(self):
-            return dict(w=self.w, max_pool_size=self.psize)
+            "Return MongoClient options"
+            return dict(w=self.write, max_pool_size=self.psize)
 elif  PYMVER == '3':
     from pymongo.cursor import CursorType
     PYMONGO_OPTS = {'cursor_type': CursorType.EXHAUST}
     PYMONGO_NOEXHAUST = {'cursor_type': CursorType.NON_TAILABLE}
-    class MongoOpts():
+    class MongoOpts(object):
+        """Class which holds MongoClient options"""
         def __init__(self, **kwds):
-            self.w = kwds.get('w', 1)
+            self.write = kwds.get('w', 1)
             self.psize = kwds.get('psize', 300)
         def opts(self):
-            return dict(w=self.w, maxPoolSize=self.psize)
+            "Return MongoClient options"
+            return dict(w=self.write, maxPoolSize=self.psize)
 else:
     raise Exception('Unsupported pymongo version, %s' % pymongo_version)

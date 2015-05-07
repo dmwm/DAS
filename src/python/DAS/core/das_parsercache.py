@@ -29,10 +29,8 @@ class DASParserDB(object):
         self.dbname   = config['parserdb']['dbname']
         self.sizecap  = config['parserdb'].get('sizecap', 5*1024*1024)
         self.colname  = config['parserdb']['collname']
-        
         msg = "DASParserCache::__init__ %s@%s" % (self.dburi, self.dbname)
         self.logger.info(msg)
-        
         self.create_db()
 
     def create_db(self):
@@ -59,20 +57,18 @@ class DASParserDB(object):
         """
         Check the parser cache for a given rawtext query.
         Search is done with the qhash of this string.
-        
         Returns a tuple (status, value) for the cases
         (PARSERCACHE_VALID, mongo_query) - valid query found
         (PARSERCACHE_INVALID, error) - error message for invalid query
         (PARSERCACHE_NOTFOUND, None) - not in the cache
         """
-        result = find_one(self.col, {'qhash':genkey(rawtext)},
+        result = find_one(self.col, {'qhash':genkey(rawtext)}, \
                         fields=['query', 'error'])
 
         if result and result['query']:
             if self.verbose:
                 self.logger.debug("DASParserCache: found valid %s->%s" %\
                                   (rawtext, result['query']))
-            
             query = decode_mongo_query(result['query'])
             return (PARSERCACHE_VALID, query)
         elif result and result['error']:

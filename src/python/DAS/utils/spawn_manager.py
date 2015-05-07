@@ -13,7 +13,7 @@ import os
 import multiprocessing
 try:
     import cPickle as pickle
-except:
+except ImportError:
     import pickle
 
 def proc_worker(output, func, *args, **kwargs):
@@ -37,8 +37,8 @@ def spawn(func, *args, **kwargs):
     kwargs['pickled'] = True
     queue = multiprocessing.Queue()
     name  = 'process_pid%s_ppid%s' % (os.getpid(), os.getppid())
-    proc  = multiprocessing.Process(target=proc_worker, name=name,
-                    args=tuple([queue, func] + list(args)),
+    proc  = multiprocessing.Process(target=proc_worker, name=name,\
+                    args=tuple([queue, func] + list(args)),\
                     kwargs=kwargs)
     proc.start()
     proc.join()
@@ -52,8 +52,8 @@ def spawn_queue(queue, func, *args, **kwargs):
     pickleable, e.g. simple types, lists, dicts.
     """
     name  = 'process_pid%s_ppid%s' % (os.getpid(), os.getppid())
-    proc  = multiprocessing.Process(target=proc_worker, name=name,
-                    args=tuple([queue, func] + list(args)),
+    proc  = multiprocessing.Process(target=proc_worker, name=name,\
+                    args=tuple([queue, func] + list(args)),\
                     kwargs=kwargs)
     proc.start()
     return proc

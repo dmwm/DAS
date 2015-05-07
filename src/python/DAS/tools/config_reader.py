@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 #-*- coding: ISO-8859-1 -*-
+"""
+Helper script to read sections from DAS config
+"""
 
 import getopt
 import sys
@@ -14,11 +17,11 @@ def get_mongo_uri():
     host, port = parsed_uri['nodelist'][0]
     return dict(mongo_host=host, mongo_port=port)
 
-
-if __name__ == '__main__':
-    OPTS = ['mongo_host', 'mongo_port']
+def main():
+    """Read mongo options from DAS config"""
+    mongo_opts = ['mongo_host', 'mongo_port']
     try:
-        optlist, _ = getopt.getopt(sys.argv[1:], '', OPTS)
+        optlist, _ = getopt.getopt(sys.argv[1:], '', mongo_opts)
     except getopt.GetoptError, err:
         print str(err)
         exit(1)
@@ -28,3 +31,6 @@ if __name__ == '__main__':
             print get_mongo_uri()['mongo_host']
         elif '--mongo_port' in opts:
             print get_mongo_uri()['mongo_port']
+
+if __name__ == '__main__':
+    main()

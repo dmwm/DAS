@@ -18,7 +18,7 @@ def timestamp():
 
 class HTTPSClientAuthHandler(urllib2.HTTPSHandler):
     """
-    Simple HTTPS client authentication class based on provided 
+    Simple HTTPS client authentication class based on provided
     key/ca information
     """
     def __init__(self, key=None, cert=None, level=0):
@@ -36,7 +36,7 @@ class HTTPSClientAuthHandler(urllib2.HTTPSHandler):
     def get_connection(self, host, timeout=300):
         """Connection method"""
         if  self.key:
-            return httplib.HTTPSConnection(host, key_file=self.key, 
+            return httplib.HTTPSConnection(host, key_file=self.key,\
                                                 cert_file=self.cert)
         return httplib.HTTPSConnection(host)
 
@@ -51,7 +51,7 @@ def get_data(url, key, cert, debug=0):
     opener = urllib2.build_opener(cookie_handler, https_handler)
     urllib2.install_opener(opener)
 
-    # send request to RunSummary, it set the _shibstate_ cookie which 
+    # send request to RunSummary, it set the _shibstate_ cookie which
     # will be used for redirection
     fdesc  = opener.open(url)
     data   = fdesc.read()

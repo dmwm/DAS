@@ -27,17 +27,17 @@ class DASOptionParser(object):
     """
     def __init__(self):
         self.parser = OptionParser()
-        self.parser.add_option("--host", action="store", type="string",
-             default="localhost", dest="host",
+        self.parser.add_option("--host", action="store", type="string",\
+             default="localhost", dest="host",\
              help="specify MongoDB hostname")
-        self.parser.add_option("--port", action="store", type="int",
-             default="27017", dest="port",
+        self.parser.add_option("--port", action="store", type="int",\
+             default="27017", dest="port",\
              help="specify MongoDB port")
-        self.parser.add_option("--list", action="store", dest="list",
-             default="", type="string",
+        self.parser.add_option("--list", action="store", dest="list",\
+             default="", type="string",\
              help="list map/reduce functions in DAS, accept alias name")
-        self.parser.add_option("--delete", action="store", dest="delete",
-             default="", type="string",
+        self.parser.add_option("--delete", action="store", dest="delete",\
+             default="", type="string",\
              help="delete map/reduce functions in DAS, accept alias name")
 
     def get_opt(self):

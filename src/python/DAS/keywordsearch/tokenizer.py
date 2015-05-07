@@ -12,7 +12,7 @@ Module description:
 import re
 try:
     from nltk.internals import convert_regexp_to_nongrouping
-except:
+except ImportError:
     from DAS.keywordsearch.nltk_legacy import convert_regexp_to_nongrouping
 from DAS.keywordsearch.metadata import das_ql
 

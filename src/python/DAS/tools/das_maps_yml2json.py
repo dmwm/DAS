@@ -18,15 +18,15 @@ class DASOptionParser(object):
     """
     def __init__(self):
         self.parser = OptionParser()
-        self.parser.add_option("--uri-map", action="store", type="string",
+        self.parser.add_option("--uri-map", action="store", type="string",\
              default=None , dest="umap", help="specify uri map file")
-        self.parser.add_option("--notation-map", action="store", type="string",
+        self.parser.add_option("--notation-map", action="store", type="string",\
              default=None , dest="nmap", help="specify notation map file")
-        self.parser.add_option("--presentation-map", action="store",
-             type="string",
+        self.parser.add_option("--presentation-map", action="store",\
+             type="string",\
              default=None , dest="pmap", help="specify presentation map file")
-        self.parser.add_option("--get-verification-token-for", action="store",
-             type="string", default=None , dest="get_verification_token_for",
+        self.parser.add_option("--get-verification-token-for", action="store",\
+             type="string", default=None , dest="get_verification_token_for",\
              help="generate a verification token for given dasmaps file")
     def get_opt(self):
         """

@@ -106,47 +106,47 @@ def print_dict(idict):
             sys.stdout.write("")
     sys.stdout.write(PM.red("}"))
 
-class DASOptionParser: 
+class DASOptionParser:
     """
      DAS cli option parser
     """
     def __init__(self):
         self.parser = OptionParser()
-        self.parser.add_option("--host", action="store", type="string", 
-             default="localhost", dest="host",
+        self.parser.add_option("--host", action="store", type="string",\
+             default="localhost", dest="host",\
              help="specify MongoDB hostname")
-        self.parser.add_option("--port", action="store", type="int", 
-             default="27017", dest="port",
+        self.parser.add_option("--port", action="store", type="int",\
+             default="27017", dest="port",\
              help="specify MongoDB port")
-        self.parser.add_option("--db", action="store", dest="db",
-             default="das.cache", type="string",
+        self.parser.add_option("--db", action="store", dest="db",\
+             default="das.cache", type="string",\
              help="specify db to use, supported: das.cache, mapping.db")
-        self.parser.add_option("--system", action="store", dest="system",
-             default="", type="string",
+        self.parser.add_option("--system", action="store", dest="system",\
+             default="", type="string",\
              help="provide information about specific DAS system, e.g. dbs")
-        self.parser.add_option("--stats", action="store_true", dest="stats",
+        self.parser.add_option("--stats", action="store_true", dest="stats",\
              help="provide information about DAS records in MongoDB")
-        self.parser.add_option("--records", action="store_true", dest="records",
+        self.parser.add_option("--records", action="store_true", dest="records",\
              help="fetch and print DAS records, can be applied together with --system")
-        self.parser.add_option("--spec", action="store", dest="spec",
-             default="{}", type="string",
+        self.parser.add_option("--spec", action="store", dest="spec",\
+             default="{}", type="string",\
              help="specify conditions, using MongoDB syntax")
-        self.parser.add_option("--fields", action="store", dest="fields",
-             default="[]", type="string",
+        self.parser.add_option("--fields", action="store", dest="fields",\
+             default="[]", type="string",\
              help="specify selection fields, using MongoDB syntax")
-        self.parser.add_option("--delete-expired", action="store_true", dest="delete",
+        self.parser.add_option("--delete-expired", action="store_true", dest="delete",\
              help="delete expired records")
-        self.parser.add_option("--renew-expired", action="store_true", dest="renew",
+        self.parser.add_option("--renew-expired", action="store_true", dest="renew",\
              help="renew expired records")
-        self.parser.add_option("--clear", action="store_true", dest="clear",
+        self.parser.add_option("--clear", action="store_true", dest="clear", \
              help="clean up DAS, remove entries from parser.db, das.cache, das.merge")
-        self.parser.add_option("--clean", action="store", dest="clean",
-             default=None, type="string",
+        self.parser.add_option("--clean", action="store", dest="clean",\
+             default=None, type="string",\
              help="clean up DAS db.collection")
-        self.parser.add_option("--interval", action="store", dest="interval",
-             default="0", type="int",
+        self.parser.add_option("--interval", action="store", dest="interval",\
+             default="0", type="int",\
              help="specify interval in seconds for renewal process")
-        self.parser.add_option("--pretty-print", action="store_true", dest="pretty",
+        self.parser.add_option("--pretty-print", action="store_true", dest="pretty",\
              help="invoke pretty print function to colorize record output")
 
     def get_opt(self):
@@ -269,7 +269,7 @@ class DASMongoDB(object):
             systems = [isystem]
 
         print self.line
-        print "DB report, cache,", timestamp 
+        print "DB report, cache,", timestamp
         print "total number of records:", nrecords
         print "total number of expired records:", nexpire
         for system in systems:
@@ -292,7 +292,7 @@ class DASMongoDB(object):
         if  not isystem:
             nrecords   = self.conn.mapping.db.count()
             print self.line
-            print "DB report, mapping,", timestamp 
+            print "DB report, mapping,", timestamp
             print "total number of records:", nrecords
             # get info about indexes
             print "Existing indexes:"
@@ -307,7 +307,7 @@ if __name__ == '__main__':
     (opts, args) = OMGR.get_opt()
 
     DASMONGO = DASMongoDB(opts.host, opts.port)
-   
+
     if  opts.stats:
         DASMONGO.stats(opts.system)
 

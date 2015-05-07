@@ -22,17 +22,17 @@ class DASOptionParser:
     """
     def __init__(self):
         self.parser = OptionParser()
-        self.parser.add_option("--host", action="store", type="string", 
-                                          default="localhost", dest="host",
+        self.parser.add_option("--host", action="store", type="string",\
+                                          default="localhost", dest="host",\
              help="specify hostname")
-        self.parser.add_option("--port", action="store", type="int", 
-                                          default=8230, dest="port",
+        self.parser.add_option("--port", action="store", type="int",\
+                                          default=8230, dest="port",\
              help="specify port")
-        self.parser.add_option("--date", action="store", type="string", 
-                                          default=None, dest="date",
+        self.parser.add_option("--date", action="store", type="string",\
+                                          default=None, dest="date",\
              help="specify date or date range, default is today")
-        self.parser.add_option("--plot", action="store_true", 
-                                          default=False, dest="plot",
+        self.parser.add_option("--plot", action="store_true",\
+                                          default=False, dest="plot",\
              help="create plots")
     def get_opt(self):
         "Returns parse list of options"
@@ -215,9 +215,8 @@ def plot_stat(rows, cache):
     req_in  = [r[name_in] for r in rows]
     req_out = [r[name_out] for r in rows]
 
-    plt.plot(date_range, req_in , 'ro-',
-             date_range, req_out, 'gv-',
-    )
+    plt.plot(date_range, req_in , 'ro-',\
+             date_range, req_out, 'gv-',)
     plt.grid(True)
     plt.axis([min(date_range), max(date_range), \
                 0, max([max(req_in), max(req_out)])])

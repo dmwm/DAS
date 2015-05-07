@@ -65,11 +65,10 @@ def read_service_map(filename, field="uri"):
                 params = metric['params']
                 urn    = metric['urn']
                 expire = metric.get('expire', 600) # default 10 minutes
-                record = dict(url=url, system=system, expire=expire,
-                                urn=urn, params=params,
-                                format=frmt, wild_card=wild, lookup=lookup,
-                                services=services,
-                                ts=tstamp)
+                record = dict(url=url, system=system, expire=expire, \
+                                urn=urn, params=params, \
+                                format=frmt, wild_card=wild, lookup=lookup, \
+                                services=services, ts=tstamp)
                 if  instances:
                     record.update({'instances':instances})
                 if  'das_map' in metric:
@@ -82,18 +81,15 @@ def read_service_map(filename, field="uri"):
                     yield record
             if  field == 'notations' and 'notations' in metric:
                 notations = metric['notations']
-                record = dict(notations=notations,
-                                system=system, ts=tstamp)
+                record = dict(notations=notations, system=system, ts=tstamp)
                 if  validator(record):
                     yield record
             if  field == 'presentation' and 'presentation' in metric:
-                record = dict(presentation=metric['presentation'],
-                                ts=tstamp)
+                record = dict(presentation=metric['presentation'], ts=tstamp)
                 if  validator(record):
                     yield record
             if field == 'input_values' and 'input_values' in metric:
-                record = dict(input_values=metric['input_values'],
-                              system=system)
+                record = dict(input_values=metric['input_values'], system=system)
                 if validator(record):
                     yield record
         if  field == 'notations' and not notations and system: # no notations
@@ -126,7 +122,7 @@ def validator(record):
     elif 'input_values' in record:
         must_have_keys += ['input_values']
     else:
-        must_have_keys += ['system', 'format', 'urn', 'url', 'expire',
+        must_have_keys += ['system', 'format', 'urn', 'url', 'expire', \
                             'params', 'das_map', 'ts', 'hash']
     if  set(record.keys()) & set(must_have_keys) != set(must_have_keys):
         return False

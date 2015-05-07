@@ -10,8 +10,8 @@ class SchemaError(Exception):
     """Error during Schema validation."""
 
     def __init__(self, autos, errors):
-        self.autos = autos if type(autos) is list else [autos]
-        self.errors = errors if type(errors) is list else [errors]
+        self.autos = autos if isinstance(autos, list) else [autos]
+        self.errors = errors if isinstance(errors, list) else [errors]
         Exception.__init__(self, self.code)
 
     @property
@@ -77,17 +77,18 @@ class Use(object):
             raise SchemaError('%s(%r) raised %r' % (f, data, x), self._error)
 
 
-def priority(s):
+def priority(obj):
     """Return priority for a give object."""
-    if type(s) in (list, tuple, set, frozenset):
+    if isinstance(obj, list) or isinstance(obj, tuple) or\
+       isinstance(obj, set) or isinstance(obj, frozenset):
         return 6
-    if type(s) is dict:
+    if isinstance(obj, dict):
         return 5
-    if hasattr(s, 'validate'):
+    if hasattr(obj, 'validate'):
         return 4
-    if type(s) is type:
+    if type(obj) is type:
         return 3
-    if callable(s):
+    if callable(obj):
         return 2
     else:
         return 1
@@ -105,10 +106,11 @@ class Schema(object):
     def validate(self, data):
         s = self._schema
         e = self._error
-        if type(s) in (list, tuple, set, frozenset):
+        if isinstance(s, list) or isinstance(s, tuple) or\
+           isinstance(s, set) or isinstance(s, frozenset):
             data = Schema(type(s), error=e).validate(data)
             return type(s)(Or(*s, error=e).validate(d) for d in data)
-        if type(s) is dict:
+        if isinstance(s, dict):
             data = Schema(dict, error=e).validate(data)
             new = type(data)()  # new - is a dict of the validated values
             x = None

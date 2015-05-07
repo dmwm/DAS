@@ -9,8 +9,6 @@ The validator checks:
  * correct naming/typing of known fields
  * validity of hash value, if one present
 """
-import hashlib
-import json
 import sys
 
 from DAS.tools.schema_validators.schema import Schema, And, Or, Optional
@@ -45,14 +43,14 @@ MAP_RECORD = And(
         'urn': _str,
         'ts': Or(float, int, long),
         'system': _str,
-        'das_map': [{
-                        'rec_key': _str,
-                        'das_key': _str,
-                        Optional('api_arg'): _str,
-                        Optional('pattern'): _str}],
-        'services': Or({_str: _str},
+        'das_map': [{\
+                        'rec_key': _str,\
+                        'das_key': _str,\
+                        Optional('api_arg'): _str,\
+                        Optional('pattern'): _str}],\
+        'services': Or({_str: _str},\
                        # it can also be empty value
-                       lambda v: not v),
+                       lambda v: not v),\
         'expire': int,
         'lookup': _str,
         'wild_card': _str,
@@ -64,25 +62,22 @@ MAP_RECORD = And(
 
 # schema of presentation_map record
 PRESENTATION_RECORD = And(
-    {
-    'presentation': dict,
-    'ts': Or(float, int, long),
-    'hash': _str,
-    'type': 'presentation'},
+    {\
+    'presentation': dict,\
+    'ts': Or(float, int, long),\
+    'hash': _str,\
+    'type': 'presentation'},\
     check_hash)
 
 # schema of notation_map record
-NOTATION_RECORD = And(
+NOTATION_RECORD = And(\
     {'notations': [{'rec_key': _str,
                     'api': _str,
                     'api_output': _str}],
      'system': _str,
      'ts': Or(float, int, long),
      'hash': _str,
-     'type': 'notation'
-     # TODO: allow optional str:str, as in original validator
-     # Optional(_str): _str
-     },
+     'type': 'notation'},
     check_hash)
 
 # schema of "arecord"

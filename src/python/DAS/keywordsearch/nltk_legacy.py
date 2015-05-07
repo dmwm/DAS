@@ -22,15 +22,15 @@ def convert_regexp_to_nongrouping(pattern):
     :rtype: str
     """
     # Sanity check: back-references are not allowed!
-    for s in re.findall(r'\\.|\(\?P=', pattern):
-        if s[1] in '0123456789' or s == '(?P=':
+    for item in re.findall(r'\\.|\(\?P=', pattern):
+        if item[1] in '0123456789' or item == '(?P=':
             raise ValueError('Regular expressions with back-references '
                              'are not supported: %r' % pattern)
 
-    # This regexp substitution function replaces the string '('
-    # with the string '(?:', but otherwise makes no changes.
-    def subfunc(m):
-        return re.sub('^\((\?P<[^>]*>)?$', '(?:', m.group())
+    def subfunc(pat):
+        """This regexp substitution function replaces the string '('
+           with the string '(?:', but otherwise makes no changes."""
+        return re.sub(r'^\((\?P<[^>]*>)?$', r'(?:', pat.group())
 
     # Scan through the regular expression.  If we see any backslashed
     # characters, ignore them.  If we see a named group, then

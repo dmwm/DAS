@@ -28,7 +28,7 @@ RED=$(tput setaf 1)
 GREEN=$(tput setaf 2)
 NO_COLOUR=$(tput sgr0)
 
-files=`find $root -name "*.py" | grep -v ipy_profile_mongo | grep -v sample_config | grep -v parsetab.py`
+files=`find $root -name "*.py" | grep -v ipy_profile_mongo | grep -v sample_config | grep -v parsetab.py | grep -v jsonwrapper`
 fail_files=0
 for f in $files
 do
@@ -37,6 +37,9 @@ do
     fname=`echo $f | awk '{z=split($1,a,"/"); print a[z]}'`
     if [ $fname == "das_stress_test.py" ]; then
         continue
+    fi
+    if [ $fname == "das_config.py" ]; then
+        continue # this is special file
     fi
     echo
     echo $f
