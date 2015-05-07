@@ -7,6 +7,7 @@ This release series is targeted to DAS production stability and quality.
 
 - 2.13.X
 
+  - futurize stage1 changes in place
   - adjust code to use both pymongo version branches, version 2.X and version
     3.X. Developers of pymongo driver changed significantly naming convention
     for both MongoClient and find APIs, therefore we wrap our code into
