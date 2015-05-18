@@ -381,8 +381,7 @@ def files4site(phedex_url, files, site):
     gen = urlfetch_getdata(urls, CKEY, CERT)
     for rec in gen:
         if  'error' in rec.keys():
-            # TODO: should handle the error
-            pass
+            yield rec
         else:
             # convert record string into StringIO for xml_parser
             source = StringIO.StringIO(rec['data'])
