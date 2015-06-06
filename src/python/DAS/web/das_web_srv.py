@@ -16,7 +16,7 @@ import time
 import cherrypy
 import threading
 import pprint
-
+from collections import deque
 
 from datetime import date
 from urlparse import urlparse, parse_qsl
@@ -63,6 +63,8 @@ import DAS.utils.jsonwrapper as json
 
 from DAS.core.das_query import WildcardMatchingException
 
+from DAS.core.das_coroutine import das_scheduler, das_core, collector
+
 # do not require any of KWS prerequisities (e.g. nltk), in case it's disabled
 try:
     # nested query generation by PK
@@ -95,24 +97,13 @@ class DASWebService(DASWebManager):
         self.hot_thr     = config.get('hot_threshold', 3000)
         self.dasconfig   = dasconfig
         self.dburi       = self.dasconfig['mongodb']['dburi']
-        self.lifetime    = self.dasconfig['mongodb']['lifetime']
         self.queue_limit = config.get('queue_limit', 50)
         qtype            = config.get('qtype', 'Queue')
         if  qtype not in ['Queue', 'PriorityQueue']:
             msg = 'Wrong queue type, qtype=%s' % qtype
             raise Exception(msg)
-        if  self.engine:
-            thr_name = 'DASWebService:PluginTaskManager'
-            self.taskmgr = PluginTaskManager(bus=self.engine, \
-                    nworkers=nworkers, name=thr_name, qtype=qtype)
-            self.taskmgr.subscribe()
-        else:
-            thr_name = 'DASWebService:TaskManager'
-            self.taskmgr = TaskManager(nworkers=nworkers, name=thr_name, \
-                    qtype=qtype)
         self.adjust      = config.get('adjust_input', False)
         self.dasmgr      = None # defined at run-time via self.init()
-        self.reqmgr      = None # defined at run-time via self.init()
         self.daskeys     = []   # defined at run-time via self.init()
         self.colors      = {}   # defined at run-time via self.init()
         self.dbs_url     = None # defined at run-time via self.init()
@@ -124,6 +115,13 @@ class DASWebService(DASWebManager):
         self.dbsmgr      = {} # dbs_urls vs dbs_daemons, defined at run-time
         self.daskeyslist = [] # list of DAS keys
         self.init()
+        self.input_pool = deque() # deque for storing DAS queries
+        self.output_pool = {} # dict[pid] = status
+
+        # start DAS scheduler and sink to process requests
+        start_new_thread('scheduler', das_scheduler, \
+                (self.input_pool, das_core(self.dasmgr, collector(self.output_pool))))
+        print("DAS scheduler thread is started")
 
         # Monitoring thread which performs auto-reconnection
         thname = 'dascore_monitor'
@@ -169,7 +167,6 @@ class DASWebService(DASWebManager):
     def init(self):
         """Init DAS web server, connect to DAS Core"""
         try:
-            self.reqmgr     = RequestManager(lifetime=self.lifetime)
             self.dasmgr     = DASCore(engine=self.engine)
             self.repmgr     = CMSRepresentation(self.dasconfig, self.dasmgr)
             self.daskeys    = self.dasmgr.das_keys()
@@ -201,7 +198,6 @@ class DASWebService(DASWebManager):
         except Exception as exc:
             print_exc(exc)
             self.dasmgr  = None
-            self.reqmgr  = None
             self.dbs_url = None
             self.dbs_global = None
             self.dbs_instances = []
@@ -792,9 +788,7 @@ class DASWebService(DASWebManager):
 
     def info(self):
         "Return status of DAS server"
-        info = {'nrequests': self.reqmgr.size(),
-                'nworkers': self.taskmgr.nworkers(),
-                'dasweb': self.reqmgr.status()}
+        info = {'nrequests': len(self.input_pool)}
         if  self.dasmgr and self.dasmgr.taskmgr:
             info.update({'dascore': self.dasmgr.taskmgr.status()})
         return dict(das_server=info)
@@ -804,10 +798,9 @@ class DASWebService(DASWebManager):
         Check server load and report busy status if
         nrequests - nworkers > queue limit
         """
-        nrequests = self.reqmgr.size()
-        if  (nrequests - self.taskmgr.nworkers()) > self.queue_limit:
-            msg = '#request=%s, queue_limit=%s, #workers=%s' \
-                    % (nrequests, self.taskmgr.nworkers(), self.queue_limit)
+        nrequests = len(self.input_pool)
+        if  nrequests > self.queue_limit:
+            msg = '#request=%s, queue_limit=%s' % (nrequests, self.queue_limit)
             print(dastimestamp('DAS WEB SERVER IS BUSY '), msg)
             return True
         return False
@@ -855,11 +848,7 @@ class DASWebService(DASWebManager):
 
         # if busy return right away
         if  self.busy():
-            nrequests = self.reqmgr.size()
-            level   = nrequests - self.taskmgr.nworkers() - self.queue_limit
             reason  = 'DAS server is busy'
-            reason += ', #requests=%s, #workers=%s, queue size=%s' \
-                % (self.reqmgr.size(), self.taskmgr.nworkds(), self.queue_limit)
             head = dict(timestamp=time.time())
             head.update({'status': 'busy', 'reason': reason, 'ctime':0})
             data = []
@@ -897,28 +886,29 @@ class DASWebService(DASWebManager):
         kwargs.update({'status':status, 'error':error, 'reason':reason})
         if  not pid:
             pid = dasquery.qhash
-        if  status == None and not self.reqmgr.has_pid(pid): # submit new request
-            addr = cherrypy.request.headers.get('Remote-Addr')
-            _evt, pid = self.taskmgr.spawn(\
-                self.dasmgr.call, dasquery, uid=addr, pid=dasquery.qhash)
-            self.reqmgr.add(pid, kwargs)
+        if  status == None:
+            # put dasquery into input pool
+            self.input_pool.append(dasquery)
             return pid
         if  status == 'ok':
-            self.reqmgr.remove(pid)
+            if  pid in self.output_pool:
+                del self.output_pool[pid]
             kwargs['dasquery'] = dasquery
             head, data = self.get_data(kwargs)
             return self.datastream(dict(head=head, data=data))
         kwargs['dasquery'] = dasquery.storage_query
         if  not self.pid_pat.match(str(pid)) or len(str(pid)) != 32:
-            self.reqmgr.remove(pid)
+            if  pid in self.output_pool:
+                del self.output_pool[pid]
             head = {'status': 'fail', 'reason': 'Invalid pid',
                     'args': kwargs, 'ctime': 0, 'input': uinput}
             data = []
             return self.datastream(dict(head=head, data=data))
-        elif self.taskmgr.is_alive(pid):
+        elif pid not in self.output_pool:
             return pid
         else: # process is done, get data
-            self.reqmgr.remove(pid)
+            if  pid in self.output_pool:
+                del self.output_pool[pid]
             head, data = self.get_data(kwargs)
             return self.datastream(dict(head=head, data=data))
 
@@ -1021,18 +1011,15 @@ class DASWebService(DASWebManager):
             else:
                 return content
         dasquery = content # returned content is valid DAS query
+
         status, error, reason = self.dasmgr.get_status(dasquery)
         kwargs.update({'status':status, 'error':error, 'reason':reason})
         pid = dasquery.qhash
         if  status is None: # process new request
             kwargs['dasquery'] = dasquery.storage_query
-            addr = cherrypy.request.headers.get('Remote-Addr')
-            _evt, pid = self.taskmgr.spawn(self.dasmgr.call, dasquery,
-                    uid=addr, pid=dasquery.qhash)
-            self.reqmgr.add(pid, kwargs)
+            # put dasquery into input pool
+            self.input_pool.append(dasquery)
         elif status == 'ok' or status == 'fail':
-            self.reqmgr.remove(pid)
-
             # check if query can be rewritten via nested PK query
             rew_msg = self.q_rewriter and self.q_rewriter.check_fields(dasquery)
             if rew_msg:
@@ -1046,20 +1033,21 @@ class DASWebService(DASWebManager):
                 return self.page(form + page, ctime=ctime)
 
             return page
-        if  self.taskmgr.is_alive(pid):
+        if  pid in self.output_pool:
+            status = self.output_pool[pid]
+            del self.output_pool[pid]
+            page = self.get_page_content(kwargs)
+        else:
             page = self.templatepage('das_check_pid', method='check_pid',
                     uinput=uinput, view=view,
                     base=self.base, pid=pid, interval=self.interval)
-        else:
-            self.reqmgr.remove(pid)
-            page = self.get_page_content(kwargs)
         ctime = (time.time()-time0)
         return self.page(form + page, ctime=ctime)
 
     @expose
     def status(self):
         """Return list of all current requests in DAS queue"""
-        requests = [r for r in self.reqmgr.items()]
+        requests = [r.query for r in self.input_pool] # pool contains DAS queries
         page = self.templatepage('das_status', requests=requests)
         return self.page(page)
 
@@ -1075,34 +1063,37 @@ class DASWebService(DASWebManager):
 
         img  = '<img src="%s/images/loading.gif" alt="loading"/>' % self.base
         page = ''
+        print("### output_pool", self.output_pool)
         try:
-            if  self.taskmgr.is_alive(pid):
+            if  pid not in self.output_pool:
                 page = img + " processing PID=%s" % pid
             else:
+                page  = 'Request PID=%s is completed' % pid
+                page += ', please wait for results to load'
+                del self.output_pool[pid]
                 # at this point we don't know if request arrived to this host
                 # or it was processed. To distinguish the case we'll ask
                 # request manager for that pid
-                if  self.reqmgr.has_pid(pid):
-                    self.reqmgr.remove(pid)
-                    page  = 'Request PID=%s is completed' % pid
-                    page += ', please wait for results to load'
-                else:
+#                if  self.reqmgr.has_pid(pid):
+#                    self.reqmgr.remove(pid)
+#                    page  = 'Request PID=%s is completed' % pid
+#                    page += ', please wait for results to load'
+#                else:
                     # there're no request on this server, re-initiate it
-                    ref = cherrypy.request.headers.get('Referer', None)
-                    if  ref:
-                        url = urlparse(ref)
-                        params = dict(parse_qsl(url.query))
-                        return self.request(**params)
-                    else:
-                        msg  = 'No referer in cherrypy.request.headers'
-                        msg += '\nHeaders: %s' % cherrypy.request.headers
-                        print(dastimestamp('DAS WEB ERROR '), msg)
+#                    ref = cherrypy.request.headers.get('Referer', None)
+#                    if  ref:
+#                        url = urlparse(ref)
+#                        params = dict(parse_qsl(url.query))
+#                        return self.request(**params)
+#                    else:
+#                        msg  = 'No referer in cherrypy.request.headers'
+#                        msg += '\nHeaders: %s' % cherrypy.request.headers
+#                        print(dastimestamp('DAS WEB ERROR '), msg)
         except Exception as err:
             msg = 'check_pid fails for pid=%s' % pid
             print(dastimestamp('DAS WEB ERROR '), msg)
             print_exc(err)
-            self.reqmgr.remove(pid)
-            self.taskmgr.remove(pid)
+            del self.output_pool[pid]
             return self.error(gen_error_msg({'pid':pid}), wrap=False)
         return page
 
