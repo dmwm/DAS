@@ -120,7 +120,7 @@ class DASWebService(DASWebManager):
 
         # start DAS scheduler and sink to process requests
         start_new_thread('scheduler', das_scheduler, \
-                (self.input_pool, das_core(self.dasmgr, collector(self.output_pool))))
+                (self.input_pool, das_core(collector(self.output_pool))))
         print("DAS scheduler thread is started")
 
         # Monitoring thread which performs auto-reconnection
@@ -1033,8 +1033,7 @@ class DASWebService(DASWebManager):
                 return self.page(form + page, ctime=ctime)
 
             return page
-        if  pid in self.output_pool:
-            status = self.output_pool[pid]
+        if  pid in self.output_pool and not self.output_pool[pid].is_alive():
             del self.output_pool[pid]
             page = self.get_page_content(kwargs)
         else:
@@ -1063,9 +1062,8 @@ class DASWebService(DASWebManager):
 
         img  = '<img src="%s/images/loading.gif" alt="loading"/>' % self.base
         page = ''
-        print("### output_pool", self.output_pool)
         try:
-            if  pid not in self.output_pool:
+            if  pid not in self.output_pool or self.output_pool[pid].is_alive():
                 page = img + " processing PID=%s" % pid
             else:
                 page  = 'Request PID=%s is completed' % pid
