@@ -852,6 +852,7 @@ class DASWebService(DASWebManager):
             head = dict(timestamp=time.time())
             head.update({'status': 'busy', 'reason': reason, 'ctime':0})
             data = []
+            print("### busy")
             return self.datastream(dict(head=head, data=data))
 
         uinput = kwargs.get('input', '').strip()
@@ -859,6 +860,7 @@ class DASWebService(DASWebManager):
             head = {'status': 'fail', 'reason': 'No input found',
                     'args': kwargs, 'ctime': 0, 'input': uinput}
             data = []
+            print("### no input")
             return self.datastream(dict(head=head, data=data))
         self.adjust_input(kwargs)
         pid    = kwargs.get('pid', '')
@@ -879,22 +881,28 @@ class DASWebService(DASWebManager):
             if not self._is_web_request(view):
                 head['error_details'] = content
                 head['reason'] = head['reason'] + '\n\n' + content
+            print("### fail check query")
             return self.datastream(dict(head=head, data=data))
 
         dasquery = content # returned content is valid DAS query
         status, error, reason = self.dasmgr.get_status(dasquery)
         kwargs.update({'status':status, 'error':error, 'reason':reason})
+        first = False
         if  not pid:
             pid = dasquery.qhash
-        if  status == None:
+            first = True
+        print("\n### das cache", status, pid, self.output_pool)
+        if  status == None and first and pid not in self.output_pool:
             # put dasquery into input pool
             self.input_pool.append(dasquery)
+            print("### put das query into pool")
             return pid
-        if  status == 'ok':
+        if  status == 'ok' or status == 'fail':
             if  pid in self.output_pool:
                 del self.output_pool[pid]
             kwargs['dasquery'] = dasquery
             head, data = self.get_data(kwargs)
+            print("### get data")
             return self.datastream(dict(head=head, data=data))
         kwargs['dasquery'] = dasquery.storage_query
         if  not self.pid_pat.match(str(pid)) or len(str(pid)) != 32:
@@ -903,14 +911,16 @@ class DASWebService(DASWebManager):
             head = {'status': 'fail', 'reason': 'Invalid pid',
                     'args': kwargs, 'ctime': 0, 'input': uinput}
             data = []
+            print("### wrong pid")
             return self.datastream(dict(head=head, data=data))
-        elif pid not in self.output_pool:
-            return pid
-        else: # process is done, get data
+        if  pid in self.output_pool and not self.output_pool[pid].is_alive():
             if  pid in self.output_pool:
                 del self.output_pool[pid]
+            print("### pricess is stopped get data")
             head, data = self.get_data(kwargs)
             return self.datastream(dict(head=head, data=data))
+        print("### return pid")
+        return pid # request in process
 
     def get_page_content(self, kwargs, complete_msg=True):
         """Retrieve page content for provided set of parameters"""
@@ -1015,11 +1025,13 @@ class DASWebService(DASWebManager):
         status, error, reason = self.dasmgr.get_status(dasquery)
         kwargs.update({'status':status, 'error':error, 'reason':reason})
         pid = dasquery.qhash
-        if  status is None: # process new request
+        if  status is None and pid not in self.output_pool: # process new request
             kwargs['dasquery'] = dasquery.storage_query
             # put dasquery into input pool
             self.input_pool.append(dasquery)
         elif status == 'ok' or status == 'fail':
+            if  pid in self.output_pool:
+                del self.output_pool[pid]
             # check if query can be rewritten via nested PK query
             rew_msg = self.q_rewriter and self.q_rewriter.check_fields(dasquery)
             if rew_msg:
@@ -1068,7 +1080,8 @@ class DASWebService(DASWebManager):
             else:
                 page  = 'Request PID=%s is completed' % pid
                 page += ', please wait for results to load'
-                del self.output_pool[pid]
+                if  pid in self.output_pool:
+                    del self.output_pool[pid]
                 # at this point we don't know if request arrived to this host
                 # or it was processed. To distinguish the case we'll ask
                 # request manager for that pid
