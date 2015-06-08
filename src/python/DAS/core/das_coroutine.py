@@ -59,7 +59,8 @@ def das_core(target):
     """
     while True:
         dasquery = yield
-        proc = Process(target=das_request, args=(dasquery,))
+        name = 'dasquery-%s' % dasquery.qhash
+        proc = Process(target=das_request, args=(dasquery,), name=name)
         proc.start()
         target.send((dasquery.qhash, proc))
 #        status = dasmgr.call(dasquery)
