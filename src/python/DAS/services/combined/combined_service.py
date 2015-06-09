@@ -40,7 +40,6 @@ from DAS.utils.utils import map_validator, xml_parser, qlxml_parser
 from DAS.utils.utils import json_parser, dastimestamp, get_key_cert
 from DAS.utils.utils import print_exc
 from DAS.utils.ddict import DotDict
-from DAS.utils.global_scope import SERVICES
 from DAS.utils.url_utils import getdata
 from DAS.utils.regex import phedex_node_pattern, se_pattern, int_number_pattern
 from DAS.utils.urlfetch_pycurl import getdata as urlfetch_getdata
