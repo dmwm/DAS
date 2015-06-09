@@ -119,8 +119,10 @@ class DASWebService(DASWebManager):
         self.output_pool = {} # dict[pid] = status
 
         # start DAS scheduler and sink to process requests
+#        start_new_thread('scheduler', das_scheduler, \
+#                (self.input_pool, das_core(collector(self.output_pool))))
         start_new_thread('scheduler', das_scheduler, \
-                (self.input_pool, das_core(collector(self.output_pool))))
+                (self.input_pool, das_core(self.dasmgr, collector(self.output_pool))))
         print("DAS scheduler thread is started")
 
         # Monitoring thread which performs auto-reconnection
@@ -852,7 +854,6 @@ class DASWebService(DASWebManager):
             head = dict(timestamp=time.time())
             head.update({'status': 'busy', 'reason': reason, 'ctime':0})
             data = []
-            print("### busy")
             return self.datastream(dict(head=head, data=data))
 
         uinput = kwargs.get('input', '').strip()
@@ -860,7 +861,6 @@ class DASWebService(DASWebManager):
             head = {'status': 'fail', 'reason': 'No input found',
                     'args': kwargs, 'ctime': 0, 'input': uinput}
             data = []
-            print("### no input")
             return self.datastream(dict(head=head, data=data))
         self.adjust_input(kwargs)
         pid    = kwargs.get('pid', '')
@@ -881,7 +881,6 @@ class DASWebService(DASWebManager):
             if not self._is_web_request(view):
                 head['error_details'] = content
                 head['reason'] = head['reason'] + '\n\n' + content
-            print("### fail check query")
             return self.datastream(dict(head=head, data=data))
 
         dasquery = content # returned content is valid DAS query
@@ -891,18 +890,15 @@ class DASWebService(DASWebManager):
         if  not pid:
             pid = dasquery.qhash
             first = True
-        print("\n### das cache", status, pid, self.output_pool)
         if  status == None and first and pid not in self.output_pool:
             # put dasquery into input pool
             self.input_pool.append(dasquery)
-            print("### put das query into pool")
             return pid
         if  status == 'ok' or status == 'fail':
             if  pid in self.output_pool:
                 del self.output_pool[pid]
             kwargs['dasquery'] = dasquery
             head, data = self.get_data(kwargs)
-            print("### get data")
             return self.datastream(dict(head=head, data=data))
         kwargs['dasquery'] = dasquery.storage_query
         if  not self.pid_pat.match(str(pid)) or len(str(pid)) != 32:
@@ -911,15 +907,13 @@ class DASWebService(DASWebManager):
             head = {'status': 'fail', 'reason': 'Invalid pid',
                     'args': kwargs, 'ctime': 0, 'input': uinput}
             data = []
-            print("### wrong pid")
             return self.datastream(dict(head=head, data=data))
-        if  pid in self.output_pool and not self.output_pool[pid].is_alive():
+#        if  pid in self.output_pool and not self.output_pool[pid].is_alive():
+        if  pid in self.output_pool:
             if  pid in self.output_pool:
                 del self.output_pool[pid]
-            print("### pricess is stopped get data")
             head, data = self.get_data(kwargs)
             return self.datastream(dict(head=head, data=data))
-        print("### return pid")
         return pid # request in process
 
     def get_page_content(self, kwargs, complete_msg=True):
@@ -1045,7 +1039,8 @@ class DASWebService(DASWebManager):
                 return self.page(form + page, ctime=ctime)
 
             return page
-        if  pid in self.output_pool and not self.output_pool[pid].is_alive():
+#        if  pid in self.output_pool and not self.output_pool[pid].is_alive():
+        if  pid in self.output_pool:
             del self.output_pool[pid]
             page = self.get_page_content(kwargs)
         else:
@@ -1075,7 +1070,8 @@ class DASWebService(DASWebManager):
         img  = '<img src="%s/images/loading.gif" alt="loading"/>' % self.base
         page = ''
         try:
-            if  pid not in self.output_pool or self.output_pool[pid].is_alive():
+#            if  pid not in self.output_pool or self.output_pool[pid].is_alive():
+            if  pid not in self.output_pool:
                 page = img + " processing PID=%s" % pid
             else:
                 page  = 'Request PID=%s is completed' % pid
