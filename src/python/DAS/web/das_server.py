@@ -57,6 +57,8 @@ class Root(object):
         cpconfig["server.socket_queue_size"] = \
                 int(config.get("socket_queue_size", 100))
         cpconfig["tools.expires.secs"] = int(config.get("expires", 300))
+        cpconfig["tools.sessions.timeout"] = int(config.get("session_timeout", 60))
+
         cpconfig["log.screen"] = bool(config.get("log_screen", True))
         cpconfig["log.access_file"] = config.get("access_log_file", None)
         cpconfig["log.error_file"] = config.get("error_log_file", None)
