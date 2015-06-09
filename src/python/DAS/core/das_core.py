@@ -33,7 +33,6 @@ from DAS.utils.utils import expire_timestamp, print_exc, fix_times
 from DAS.utils.utils import api_rows, das_sinfo, regen, dastimestamp
 from DAS.utils.task_manager import TaskManager, PluginTaskManager
 from DAS.utils.das_timer import das_timer, get_das_timer
-from DAS.utils.global_scope import SERVICES
 
 # DAS imports
 import DAS.core.das_aggregators as das_aggregator
@@ -158,7 +157,6 @@ class DASCore(object):
                 module = __import__(mname, fromlist=[klass])
                 obj = getattr(module, klass)(dasconfig)
                 setattr(self, name, obj)
-                SERVICES[name] = obj
             except IOError as err:
                 if  debug > 1:
                     # we have virtual services, so IOError can be correct
