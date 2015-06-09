@@ -57,7 +57,6 @@ from DAS.web.cms_representation import CMSRepresentation
 from DAS.web.cms_adjust_input import identify_apparent_query_patterns
 from DAS.web.cms_query_hints import hint_dataset_in_other_insts, \
     hint_dataset_case_insensitive
-from DAS.utils.global_scope import SERVICES
 from DAS.core.das_exceptions import WildcardMultipleMatchesException
 import DAS.utils.jsonwrapper as json
 
@@ -183,8 +182,6 @@ class DASWebService(DASWebManager):
             self.colors = {'das':gen_color('das')}
             for system in self.dasmgr.systems:
                 self.colors[system] = gen_color(system)
-            # get SiteDB from global scope
-            self.sitedbmgr = SERVICES.get('sitedb2', None)
             # Start DBS daemon
             if  self.dataset_daemon:
                 self.dbs_daemon(self.dasconfig['web_server'])
@@ -898,10 +895,9 @@ class DASWebService(DASWebManager):
         dasquery = content # returned content is valid DAS query
         status, error, reason = self.dasmgr.get_status(dasquery)
         kwargs.update({'status':status, 'error':error, 'reason':reason})
-        new_request = False if 'pid' in kwargs else True
         if  not pid:
             pid = dasquery.qhash
-        if  status == None and not self.reqmgr.has_pid(pid) and new_request: # submit new request
+        if  status == None and not self.reqmgr.has_pid(pid): # submit new request
             addr = cherrypy.request.headers.get('Remote-Addr')
             _evt, pid = self.taskmgr.spawn(\
                 self.dasmgr.call, dasquery, uid=addr, pid=dasquery.qhash)
@@ -920,6 +916,11 @@ class DASWebService(DASWebManager):
             data = []
             return self.datastream(dict(head=head, data=data))
         elif self.taskmgr.is_alive(pid):
+            return pid
+        elif status == None:
+            if  not self.taskmgr.is_alive(pid) and self.reqmgr.has_pid(pid):
+                self.reqmgr.remove(pid) # DAS was busy and query expired since status==None
+                print(dastimestamp('DAS INFO '), 'resubmit', dasquery)
             return pid
         else: # process is done, get data
             self.reqmgr.remove(pid)
@@ -1027,9 +1028,8 @@ class DASWebService(DASWebManager):
         dasquery = content # returned content is valid DAS query
         status, error, reason = self.dasmgr.get_status(dasquery)
         kwargs.update({'status':status, 'error':error, 'reason':reason})
-        new_request = False if 'pid' in kwargs else True
         pid = dasquery.qhash
-        if  status is None and new_request: # process new request
+        if  status is None: # process new request
             kwargs['dasquery'] = dasquery.storage_query
             addr = cherrypy.request.headers.get('Remote-Addr')
             _evt, pid = self.taskmgr.spawn(self.dasmgr.call, dasquery,
@@ -1052,6 +1052,13 @@ class DASWebService(DASWebManager):
 
             return page
         if  self.taskmgr.is_alive(pid):
+            page = self.templatepage('das_check_pid', method='check_pid',
+                    uinput=uinput, view=view,
+                    base=self.base, pid=pid, interval=self.interval)
+        elif status == None:
+            if  not self.taskmgr.is_alive(pid) and self.reqmgr.has_pid(pid):
+                self.reqmgr.remove(pid) # DAS was busy and query expired since status==None
+                print(dastimestamp('DAS INFO '), 'resubmit', dasquery)
             page = self.templatepage('das_check_pid', method='check_pid',
                     uinput=uinput, view=view,
                     base=self.base, pid=pid, interval=self.interval)
