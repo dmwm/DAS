@@ -202,7 +202,7 @@ DASOption('das', 'api_workers', 'int', 2),
 # weights for API worker threads (some srvs need more threads then others)
 # list contains service_name:weight pairs as a single strings
 # we use this format due to option parser constains
-DASOption('das', 'thread_weights', 'list', ['dbs:5', 'phedex:5', 'dbs3:5']),
+DASOption('das', 'thread_weights', 'list', []),
 
 #
 # Keyword Search options
