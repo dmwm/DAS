@@ -36,7 +36,7 @@ from DAS.core.das_query import DASQuery
 from DAS.utils.utils import getarg
 from DAS.utils.url_utils import disable_urllib2Proxy
 from DAS.utils.ddict import DotDict
-from DAS.utils.utils import genkey, print_exc, dastimestamp
+from DAS.utils.utils import genkey, print_exc, dastimestamp, dasprint
 from DAS.utils.thread import start_new_thread
 from DAS.utils.das_db import db_gridfs
 from DAS.utils.task_manager import TaskManager, PluginTaskManager
@@ -734,7 +734,7 @@ class DASWebService(DASWebManager):
             if  nres and not len(data):
                 for retry in xrange(1, 3, 5):
                     msg = 'retry in %s sec' % retry
-                    print(dastimestamp('DAS WARNING '), msg, dasquery)
+                    dasprint(dastimestamp('DAS WARNING '), msg, dasquery)
                     time.sleep(retry) # retry one more time
                     data = \
                         self.dasmgr.get_from_cache(dasquery, idx, limit)
@@ -744,7 +744,7 @@ class DASWebService(DASWebManager):
             if  nres and not len(data):
                 msg = 'fail to get all data for %s, nres=%s, len(data)=%s' \
                         % (dasquery, nres, len(data))
-                print(dastimestamp('DAS WARNING '), msg)
+                dasprint(dastimestamp('DAS WARNING '), msg)
                 status = 'fail'
                 reason = 'Fail to retrieve data from DAS cache, please retry'
 
@@ -808,7 +808,7 @@ class DASWebService(DASWebManager):
         if  (nrequests - self.taskmgr.nworkers()) > self.queue_limit:
             msg = '#request=%s, queue_limit=%s, #workers=%s' \
                     % (nrequests, self.taskmgr.nworkers(), self.queue_limit)
-            print(dastimestamp('DAS WEB SERVER IS BUSY '), msg)
+            dasprint(dastimestamp('DAS WEB SERVER IS BUSY '), msg)
             return True
         return False
 
@@ -920,7 +920,7 @@ class DASWebService(DASWebManager):
         elif status == None:
             if  not self.taskmgr.is_alive(pid) and self.reqmgr.has_pid(pid):
                 self.reqmgr.remove(pid) # DAS was busy and query expired since status==None
-                print(dastimestamp('DAS INFO '), 'resubmit', dasquery)
+                dasprint(dastimestamp('DAS INFO '), 'resubmit', dasquery)
             return pid
         else: # process is done, get data
             self.reqmgr.remove(pid)
@@ -1058,7 +1058,7 @@ class DASWebService(DASWebManager):
         elif status == None:
             if  not self.taskmgr.is_alive(pid) and self.reqmgr.has_pid(pid):
                 self.reqmgr.remove(pid) # DAS was busy and query expired since status==None
-                print(dastimestamp('DAS INFO '), 'resubmit', dasquery)
+                dasprint(dastimestamp('DAS INFO '), 'resubmit', dasquery)
             page = self.templatepage('das_check_pid', method='check_pid',
                     uinput=uinput, view=view,
                     base=self.base, pid=pid, interval=self.interval)
@@ -1108,10 +1108,10 @@ class DASWebService(DASWebManager):
                     else:
                         msg  = 'No referer in cherrypy.request.headers'
                         msg += '\nHeaders: %s' % cherrypy.request.headers
-                        print(dastimestamp('DAS WEB ERROR '), msg)
+                        dasprint(dastimestamp('DAS WEB ERROR '), msg)
         except Exception as err:
             msg = 'check_pid fails for pid=%s' % pid
-            print(dastimestamp('DAS WEB ERROR '), msg)
+            dasprint(dastimestamp('DAS WEB ERROR '), msg)
             print_exc(err)
             self.reqmgr.remove(pid)
             self.taskmgr.remove(pid)
