@@ -220,6 +220,9 @@ class DASWebService(DASWebManager):
             print_exc(exc)
             self.q_rewriter = None
 
+        # parse one DAS query to init ql_manager, etc.
+        _dasquery = DASQuery('dataset=/ZMM*/*/*')
+
     @expose
     @checkargs(DAS_WEB_INPUTS)
     def redirect(self, **kwargs):
@@ -895,9 +898,10 @@ class DASWebService(DASWebManager):
         dasquery = content # returned content is valid DAS query
         status, error, reason = self.dasmgr.get_status(dasquery)
         kwargs.update({'status':status, 'error':error, 'reason':reason})
+        new_request = False if 'pid' in kwargs else True
         if  not pid:
             pid = dasquery.qhash
-        if  status == None and not self.reqmgr.has_pid(pid): # submit new request
+        if  status == None and not self.reqmgr.has_pid(pid) and new_request: # submit new request
             addr = cherrypy.request.headers.get('Remote-Addr')
             _evt, pid = self.taskmgr.spawn(\
                 self.dasmgr.call, dasquery, uid=addr, pid=dasquery.qhash)
@@ -1023,8 +1027,9 @@ class DASWebService(DASWebManager):
         dasquery = content # returned content is valid DAS query
         status, error, reason = self.dasmgr.get_status(dasquery)
         kwargs.update({'status':status, 'error':error, 'reason':reason})
+        new_request = False if 'pid' in kwargs else True
         pid = dasquery.qhash
-        if  status is None: # process new request
+        if  status is None and new_request: # process new request
             kwargs['dasquery'] = dasquery.storage_query
             addr = cherrypy.request.headers.get('Remote-Addr')
             _evt, pid = self.taskmgr.spawn(self.dasmgr.call, dasquery,
