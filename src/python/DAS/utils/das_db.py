@@ -31,14 +31,15 @@ MONGODB_LIMIT = 4*1024*1024
 
 def find_one(col, spec, fields=None):
     "Custom implementation of find_one function for given MongoDB parameters"
-    res = None
-    try:
-        res = [r for r in col.find(spec, fields, **PYMONGO_OPTS)]
-    except StopIteration:
-        return None
-    if  res:
-        return res[0]
-    return None
+    return col.find_one(spec, fields)
+#    res = None
+#    try:
+#        gen = (r for r in col.find(spec, fields, **PYMONGO_OPTS))
+#        res = gen.next()
+#        return res
+#    except StopIteration:
+#        return None
+#    return None
 
 def make_uri(pairs):
     """Return MongoDB URI for provided set of dbhost,dbport pairs"""
