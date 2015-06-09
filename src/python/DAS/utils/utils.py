@@ -181,6 +181,12 @@ def deepcopy(obj):
         newobj = copy.deepcopy(obj)
     return newobj
 
+def dasprint(*args):
+    "Invoke normal print function and flush stdout/stderr"
+    print(args)
+    sys.__stdout__.flush()
+    sys.__stderr__.flush()
+
 def dastimestamp(msg='DAS'):
     """
     Return timestamp in pre-defined format. For simplicity we match
