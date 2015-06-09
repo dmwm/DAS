@@ -52,19 +52,19 @@ def das_request(dasquery):
     dasmgr.call(dasquery)
 
 @coroutine
-def das_core(target):
+def das_core(dasmgr, target):
     """
     DAS core coroutine to process DAS queries. It process request offline via
     python multiprocessing.Process module. Results are sent to given target (sink)
     """
     while True:
         dasquery = yield
-        name = 'dasquery-%s' % dasquery.qhash
-        proc = Process(target=das_request, args=(dasquery,), name=name)
-        proc.start()
-        target.send((dasquery.qhash, proc))
-#        status = dasmgr.call(dasquery)
-#        target.send((dasquery.qhash, status))
+#        name = 'dasquery-%s' % dasquery.qhash
+#        proc = Process(target=das_request, args=(dasquery,), name=name)
+#        proc.start()
+#        target.send((dasquery.qhash, proc))
+        status = dasmgr.call(dasquery)
+        target.send((dasquery.qhash, status))
 
 @coroutine
 def collector(output_pool):
