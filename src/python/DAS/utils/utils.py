@@ -183,7 +183,8 @@ def deepcopy(obj):
 
 def dasprint(*args):
     "Invoke normal print function and flush stdout/stderr"
-    print(args)
+    out = ' '.join([str(a) for a in args])
+    print(out)
     sys.__stdout__.flush()
     sys.__stderr__.flush()
 
