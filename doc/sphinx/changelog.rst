@@ -5,6 +5,10 @@ Release notes
 
 This release series is targeted to DAS production stability and quality.
 
+- 2.14.X
+
+  - work on IB issue, 4234 and DAS server timeouts
+
 - 2.13.X
 
   - futurize stage1 changes in place
