@@ -8,6 +8,9 @@ This release series is targeted to DAS production stability and quality.
 - 2.14.X
 
   - work on IB issue, 4234 and DAS server timeouts
+  - Add Singleton class
+  - Add MongoConnection singleton class and use it in DBConnection
+  - adjust code to work with pymongo2/pymongo3 drivers
 
 - 2.13.X
 
