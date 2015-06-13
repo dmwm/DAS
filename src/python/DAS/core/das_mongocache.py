@@ -546,15 +546,15 @@ class DASMongocache(object):
         if  dasquery.unique_filter:
             skeys = self.mongo_sort_keys(collection, dasquery)
             if  skeys:
-                gen = col.find(spec=spec, **PYMONGO_OPTS).sort(skeys)
+                gen = col.find(spec, **PYMONGO_OPTS).sort(skeys)
             else:
-                gen = col.find(spec=spec, **PYMONGO_OPTS)
+                gen = col.find(spec, **PYMONGO_OPTS)
             res = len([r for r in unique_filter(gen)])
         else:
-            res = col.find(spec=spec, **PYMONGO_OPTS).count()
+            res = col.find(spec, **PYMONGO_OPTS).count()
             if  not res: # double check that this is really the case
                 time.sleep(1)
-                res = col.find(spec=spec, **PYMONGO_OPTS).count()
+                res = col.find(spec, **PYMONGO_OPTS).count()
         msg = "%s" % res
         self.logger.info(msg)
         return res
