@@ -573,8 +573,8 @@ def ply2mongo(query):
             'group', 'release', 'primary_dataset', 'era']
     if  len(spec.keys()) == 1 and spec.values() == ['*'] and \
             spec.keys()[0] not in allowed_single_keys:
-        msg = 'Single DAS key with no conditions, mongodict=%s' \
-            % mongodict
+        msg = 'Single DAS key with no conditions, input query=%s, mongodict=%s' \
+            % (query, mongodict)
         raise Exception(msg)
     return mongodict
 
