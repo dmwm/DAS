@@ -217,9 +217,6 @@ class DASWebService(DASWebManager):
             print_exc(exc)
             self.q_rewriter = None
 
-        # parse one DAS query to init ql_manager, etc.
-        _dasquery = DASQuery('dataset=/ZMM*/*/*')
-
     @expose
     @checkargs(DAS_WEB_INPUTS)
     def redirect(self, **kwargs):
