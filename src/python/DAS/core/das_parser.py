@@ -15,12 +15,12 @@ from DAS.utils.das_config import das_readconfig
 from DAS.core.das_mapping_db import DASMapping
 from DAS.core.das_ql import das_special_keys, das_operators
 from DAS.core.das_ply import DASPLY, ply2mongo
+from DAS.core.das_ql_parser import DASQueryParser
 from DAS.utils.utils import print_exc, genkey, dastimestamp
 from DAS.utils.regex import last_key_pattern
 from DAS.utils.logger import PrintManager
 from DAS.core.das_parsercache import DASParserDB
 from DAS.core.das_parsercache import PARSERCACHE_VALID, PARSERCACHE_INVALID
-#from DAS.utils.spawn_manager import spawn
 
 def decompose(query):
     """Extract selection keys and conditions from input query"""
@@ -50,34 +50,10 @@ def ambiguos_val_msg(query, key, val):
     msg += 'query and choose either value'
     return msg
 
-def ply_parse_query(query, keys, services, pdir='/tmp', verbose=False):
+def ply_parse_query(query, keys, services, verbose=False):
     """Get ply object for given query."""
-    dasply = DASPLY(pdir, keys, services, verbose=verbose)
-    dasply.build()
-#    ply_query = dasply.parser.parse(query)
-#    ply_query = spawn(dasply.parser.parse, query)
-#    return ply_query
-    error = None
-    for trial in xrange(1, 3):
-        try:
-            ply_query = dasply.parser.parse(query)
-            return ply_query
-        except Exception as exc:
-            msg = "Fail to parse query=%s, trial=%s, exception=%s" \
-                    % (query, trial, str(exc))
-            print(dastimestamp('DAS WARNING ') + ' ' + msg)
-            error = exc
-        time.sleep(trial/10.)
-    raise error
-
-
-def ply_output(query, keys, services, pdir='/tmp', verbose=False):
-    """Print PLY/lexer output"""
-    if  verbose:
-        dasply = DASPLY(pdir, keys, services, verbose=verbose)
-        dasply.build()
-        print("input query='%s'" % query)
-        dasply.test_lexer(query)
+    mgr = DASQueryParser(keys, services, verbose=verbose)
+    return mgr.parse(query)
 
 class QLManager(object):
     """
@@ -99,8 +75,6 @@ class QLManager(object):
         for val in self.daskeysmap.values():
             for item in val:
                 self.daskeys.append(item)
-        parserdir   = config['das']['parserdir']
-        self.parserdir = parserdir
 
         self.enabledb = config['parserdb']['enable']
         if  self.enabledb:
@@ -120,7 +94,7 @@ class QLManager(object):
         fail under the load we use couple of trials.
         """
         ply_query = ply_parse_query(query, self.daskeys, self.dasservices,
-                    self.parserdir, self.verbose)
+                    self.verbose)
         return ply_query
 
     def mongo_query(self, query):
@@ -128,9 +102,6 @@ class QLManager(object):
         Return mongo query for provided input query
         """
         mongo_query = None
-        if  self.verbose:
-            ply_output(query, self.daskeys, self.dasservices,
-                    self.parserdir, self.verbose)
         parse_again = True
         if  self.enabledb:
             status, value = self.parserdb.lookup_query(query)

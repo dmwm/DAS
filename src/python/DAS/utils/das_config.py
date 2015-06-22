@@ -176,8 +176,6 @@ DASOption('test_server', 'socket_queue_size', 'int', 100),
 #
 # DAS core options
 #
-# location of parser.out file used by PLY
-DASOption('das', 'parserdir', 'string', '/tmp'),
 # verbosity level
 DASOption('das', 'verbose', 'int', 0, destination='verbose'),
 # flag to turn on/off the multitasking (thread based) support in DAS
