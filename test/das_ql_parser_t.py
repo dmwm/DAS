@@ -12,7 +12,6 @@ import unittest
 import traceback
 from DAS.core.das_ql_parser import DASQueryParser, relax, parse_array
 from DAS.core.das_ql_parser import parse_curle_brackets
-from DAS.core.das_ply import ply2mongo
 
 class testDASQueryParser(unittest.TestCase):
     """
@@ -29,10 +28,10 @@ class testDASQueryParser(unittest.TestCase):
                    'latitude', 'longitude', 'city', 'ip', 'date', 'system', 'zip']
         parserdir = '/tmp'
 
-        self.dasply = DASQueryParser(daskeys, dassystems, verbose=self.debug)
+        self.dasqlparser = DASQueryParser(daskeys, dassystems, verbose=self.debug)
         self.queries = {}
 
-        query = "queries"
+        query = "queries=*"
         mongo = {'fields': ['queries'], 'spec': {'queries': '*'}}
         self.queries[query] = mongo
 
@@ -40,7 +39,7 @@ class testDASQueryParser(unittest.TestCase):
         mongo = {'fields': ['queries'], 'spec': {'date': '24h'}}
         self.queries[query] = mongo
 
-        query = "records"
+        query = "records=*"
         mongo = {'fields': ['records'], 'spec': {'records': '*'}}
         self.queries[query] = mongo
 
@@ -112,6 +111,10 @@ class testDASQueryParser(unittest.TestCase):
         mongo = {'fields': ['run'], 'spec': {'run': {'$gte': 20853, '$lte': 20859}}}
         self.queries[query] = mongo
 
+        query = "run in [1,2,3]"
+        mongo = {'fields': ['run'], 'spec': {'run': {'$in': [1,2,3]}}}
+        self.queries[query] = mongo
+
         query = "file block=123 | grep file.size | sum(file.size)"
         mongo = {'fields': ['file'], 'spec': {'block': 123},
                  'filters': {'grep': ['file.size']},
@@ -158,11 +161,6 @@ class testDASQueryParser(unittest.TestCase):
         query = 'city = "two words"'
         mongo = {'fields': ['city'], 'spec':{'city': 'two words'}}
         self.queries[query] = mongo
-        
-        #query=DASKEY
-#        query = 'city = dataset'
-#        mongo = {'fields': ['city'], 'spec':{'city': 'dataset'}}
-#        self.queries[query] = mongo
         
         #query=DASKEYtext
         query = 'city = datasetPostfix'
@@ -264,15 +262,15 @@ class testDASQueryParser(unittest.TestCase):
         """Test appearance of instance in a DAS query"""
         query = 'dataset=/a/b/c instance=global'
         mongo = {'fields': ['dataset'], 'spec': {'dataset':'/a/b/c'}, 'instance':'global'}
-        ply_query = self.dasply.parse(query)
-        result = ply2mongo(ply_query)
+        result = self.dasqlparser.parse(query)
         self.assertEqual(mongo, result)
 
     def test_parser(self):
         """Test DAS parser"""
+        print("\nChecking the DAS queries")
         for query, expect in self.queries.items():
-            ply_query = self.dasply.parse(query)
-            result = ply2mongo(ply_query)
+            print(query)
+            result = self.dasqlparser.parse(query)
             self.assertEqual(expect, result)
 
     def test_parser_negate(self):
@@ -283,35 +281,37 @@ class testDASQueryParser(unittest.TestCase):
 #        query = 'run last 24h'
 #        queries[query] = mongo
 
-        query = 'run last dataset'
+        query = 'run last dataset' # daskey operator daskey
         queries[query] = mongo
 
-        query = 'dataset in 2010'
+        query = 'dataset in 2010' # in operator expects array
         queries[query] = mongo
 
 #        query = 'date in 24h'
 #        queries[query] = mongo
 
-#        query = 'date last [20101010,20101012]'
-#        queries[query] = mongo
-
-        query = 'dataset in [/a/b/c,/c/d/e]'
+        query = 'date last [20101010,20101012]'
         queries[query] = mongo
 
-        query = 'dataset = /a/b/c dataset.size'
+        query = 'dataset in [/a/b/c,/c/d/e]' # wrong value in array, should be int
+        queries[query] = mongo
+
+        query = 'dataset = /a/b/c dataset.size' # select is not DAS keyword
         queries[query] = mongo
 
         query = """dataset date in [20110124,2011]""" # wrong date value
         queries[query] = mongo
 
-#        query = "run in [20853,20859]"
-#        self.queries[query] = mongo
+        query = "run in [abs,20859]" # wrong value in array, should be int
+        queries[query] = mongo
 
         query = "dataset" # prevent usage of single keys
-        self.queries[query] = mongo
+        queries[query] = mongo
 
+        print("\nChecking negate DAS queries")
         for query, expect in queries.items():
-            self.assertRaises(Exception, self.dasply.parse, query)
+            print(query)
+            self.assertRaises(Exception, self.dasqlparser.parse, query)
 
 #
 # main
