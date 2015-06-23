@@ -5,6 +5,11 @@ Release notes
 
 This release series is targeted to DAS production stability and quality.
 
+- 2.15.X
+
+  - replace DASPLY/DASParserDB with DASQueryParser. It parses input DAS
+    query into MongoDB spec and provides thread-safe code.
+
 - 2.14.X
 
   - work on IB issue, 4234 and DAS server timeouts
