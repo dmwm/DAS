@@ -14,13 +14,10 @@ import time
 from DAS.utils.das_config import das_readconfig
 from DAS.core.das_mapping_db import DASMapping
 from DAS.core.das_ql import das_special_keys, das_operators
-from DAS.core.das_ply import DASPLY, ply2mongo
 from DAS.core.das_ql_parser import DASQueryParser
 from DAS.utils.utils import print_exc, genkey, dastimestamp
 from DAS.utils.regex import last_key_pattern
 from DAS.utils.logger import PrintManager
-from DAS.core.das_parsercache import DASParserDB
-from DAS.core.das_parsercache import PARSERCACHE_VALID, PARSERCACHE_INVALID
 
 def decompose(query):
     """Extract selection keys and conditions from input query"""
@@ -50,7 +47,7 @@ def ambiguos_val_msg(query, key, val):
     msg += 'query and choose either value'
     return msg
 
-def ply_parse_query(query, keys, services, verbose=False):
+def parse_query(query, keys, services, verbose=False):
     """Get ply object for given query."""
     mgr = DASQueryParser(keys, services, verbose=verbose)
     return mgr.parse(query)
@@ -76,10 +73,6 @@ class QLManager(object):
             for item in val:
                 self.daskeys.append(item)
 
-        self.enabledb = config['parserdb']['enable']
-        if  self.enabledb:
-            self.parserdb = DASParserDB(config)
-
     def parse(self, query):
         """
         Parse input query and return query in MongoDB form.
@@ -88,54 +81,11 @@ class QLManager(object):
         self.convert2skeys(mongo_query)
         return mongo_query
 
-    def get_ply_query(self, query):
-        """
-        Get ply object for given query. Since we rely on PLY package and it may
-        fail under the load we use couple of trials.
-        """
-        ply_query = ply_parse_query(query, self.daskeys, self.dasservices,
-                    self.verbose)
-        return ply_query
-
     def mongo_query(self, query):
         """
         Return mongo query for provided input query
         """
-        mongo_query = None
-        parse_again = True
-        if  self.enabledb:
-            status, value = self.parserdb.lookup_query(query)
-            if status == PARSERCACHE_VALID and \
-                len(last_key_pattern.findall(query)) == 0:
-                mongo_query = value
-                parse_again = False
-            elif status == PARSERCACHE_INVALID:
-                # we unable to find query in parserdb, so will parse again
-                parse_again = True
-            else:
-                ply_query = self.get_ply_query(query)
-                if  ply_query:
-                    try:
-                        mongo_query = ply2mongo(ply_query)
-                        parse_again = False
-                    except Exception as exc:
-                        msg = "Fail in ply2mongo, query=%s, ply_query=%s" \
-                                % (query, ply_query)
-                        print(msg)
-                    try:
-                        self.parserdb.insert_valid_query(query, mongo_query)
-                    except Exception as exc:
-                        msg = "Fail to insert into parserdb, exception=%s" \
-                                % str(exc)
-                        print_exc(msg, print_traceback=True)
-        if  parse_again:
-            try:
-                ply_query   = self.get_ply_query(query)
-                mongo_query = ply2mongo(ply_query)
-            except Exception as exc:
-                msg = "Fail to parse query='%s'" % query
-                print_exc(msg, print_traceback=False)
-                raise exc
+        mongo_query = parse_query(query, self.daskeys, self.dasservices, self.verbose)
         if  set(mongo_query.keys()) & set(['fields', 'spec']) != \
                 set(['fields', 'spec']):
             raise Exception('Invalid MongoDB query %s' % mongo_query)
