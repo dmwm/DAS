@@ -26,6 +26,10 @@ class OptionParser(object):
         self.parser = argparse.ArgumentParser(prog='PROG')
         self.parser.add_argument("--query", action="store", \
             dest="query", default="", help="DAS query")
+        self.parser.add_argument("--verbose", action="store", \
+            dest="verbose", default=0, help="verbosity level")
+        self.parser.add_argument("--timeit", action="store", \
+            dest="timeit", default=0, help="timeit with provided number of iterations")
 
 def adjust_value(val):
     "Adjust value to DAS patterns"
@@ -81,7 +85,7 @@ def parse_quotes(query, quote):
         error(query, idx, 'Fail to extract value from quotes')
     return val, jdx+1
 
-def parse_curle_brackets(query, agg):
+def parse_curle_brackets(query):
     """
     Parse curle bracket boundaries in query and return array and new index
     Return [('array', begin, end), shift]
@@ -91,7 +95,7 @@ def parse_curle_brackets(query, agg):
     val = query[idx+1:jdx]
     if  len(val) != 1:
         error(query, idx, 'Fail to extract value from curle brackets')
-    return ('aggregator', agg, val[0]), jdx+1
+    return val[0], jdx+1
 
 def parse_array(query, oper, daskey):
     """
@@ -105,9 +109,9 @@ def parse_array(query, oper, daskey):
     except Exception as exc:
         error(query, idx, 'Fail to extract value from square brackets, '+str(exc))
     if  oper == 'in':
-        out = tuple(['array']+val)
+        out = val
     elif oper == 'between':
-        out = ('array', min(val), max(val))
+        out = [min(val), max(val)]
     else:
         error(query, idx, 'Fail to extract value from square brackets')
     if  daskey == 'date':
@@ -125,6 +129,37 @@ def error(query, idx, msg='Parsing failure'):
     where += '^'
     msg += '\n' + out + '\n' + where
     raise Exception(msg)
+
+def spec_entry(key, oper, val):
+    "Convert key oper val triplet into MongoDB spec entry"
+    spec = {}
+    if  oper == '=' or oper == 'last':
+        spec[key] = val
+        if  key == 'date' and date_yyyymmdd_pattern.match(val):
+            spec[key] = das_dateformat(val)
+    elif oper == 'in' and isinstance(val, list):
+        spec[key] = {'$in': val}
+        if  key == 'date':
+            out = [das_dateformat(d) for d in val]
+            spec[key] = {'$in': out}
+    elif oper == 'between' and isinstance(val, list):
+        spec[key] = {'$gte': min(val), '$lte': max(val)}
+        if  key == 'date':
+            spec[key] = {'$gte': das_dateformat(str(min(val))),
+                         '$lte': das_dateformat(str(max(val)))}
+    else:
+        Exception('Not implemented spec entry')
+    return spec
+
+def daskeyvalue_check(query, value, daskeys):
+    "Check that value to start with DAS key"
+    val = value.split('.')[0].split('=')[0].split('<')[0].split('>')[0].strip()
+    if  val not in daskeys:
+        iii = 0
+        for iii in range(0, len(query)):
+            if  query[iii].startswith(val):
+                break
+        error(query, iii, 'Filter value does not start with DAS key')
 
 class DASQueryParser(object):
     """docstring for DASQueryParser"""
@@ -151,7 +186,10 @@ class DASQueryParser(object):
 
     def parse(self, query):
         "Parse input query"
-        skeys = []
+        spec = {}
+        filters = {}
+        aggregators = []
+        fields = []
         keys = []
         pipe = []
         relaxed_query = relax(query, self.operators).split()
@@ -164,9 +202,7 @@ class DASQueryParser(object):
             if  self.verbose > 1:
                 print("parse item", item)
             if  item == '|':
-                val, step = self.parse_pipe(relaxed_query[idx:])
-                if  val:
-                    pipe.append(val)
+                step = self.parse_pipe(relaxed_query[idx:], filters, aggregators)
                 idx += step
             if  item == ',':
                 idx += 1
@@ -177,7 +213,7 @@ class DASQueryParser(object):
                 print("### parse items", item, next_elem, next_next_elem)
             if  next_elem and (next_elem == ',' or next_elem in self.daskeys):
                 if  item in self.daskeys:
-                    skeys.append(item)
+                    fields.append(item)
                 idx += 1
                 continue
             elif next_elem in self.operators:
@@ -186,7 +222,7 @@ class DASQueryParser(object):
                     error(relaxed_query, idx, 'Wrong DAS key')
                 if  next_next_elem.startswith('['):
                     val, step = parse_array(relaxed_query[idx:], next_elem, item)
-                    keys.append(('keyop', item, next_elem, val))
+                    spec.update(spec_entry(item, next_elem, val))
                     idx += step
                 elif next_elem in ['in', 'beetween'] and \
                      not next_next_elem.startswith('['):
@@ -195,11 +231,11 @@ class DASQueryParser(object):
                     error(relaxed_query, idx, msg)
                 elif next_next_elem.startswith('"'):
                     val, step = parse_quotes(relaxed_query[idx:], '"')
-                    keys.append(('keyop', item, next_elem, val))
+                    spec.update(spec_entry(item, next_elem, val))
                     idx += step
                 elif next_next_elem.startswith("'"):
                     val, step = parse_quotes(relaxed_query[idx:], "'")
-                    keys.append(('keyop', item, next_elem, val))
+                    spec.update(spec_entry(item, next_elem, val))
                     idx += step
                 else:
                     if  float_number_pattern.match(next_next_elem):
@@ -210,36 +246,56 @@ class DASQueryParser(object):
                     elif next_next_elem in self.daskeys:
                         msg = 'daskey operator daskey structure is not allowed'
                         error(relaxed_query, idx, msg)
-                    keys.append(('keyop', item, next_elem, next_next_elem))
+                    spec.update(spec_entry(item, next_elem, next_next_elem))
                     idx += 3
                 continue
             elif item == '|':
-                val, step = self.parse_pipe(relaxed_query[idx:])
-                if  val:
-                    pipe.append(val)
+                step = self.parse_pipe(relaxed_query[idx:], filters, aggregators)
                 idx += step
             elif not next_elem and not next_next_elem:
                 if  item in self.daskeys:
-                    keys.append(('keyop', item, next_elem, next_next_elem))
+                    fields.append(item)
                     idx += 1
                 else:
                     error(relaxed_query, idx, 'Not a DAS key')
             else:
                 error(relaxed_query, idx)
-        for skey in skeys:
-            keys.append(('keyop', skey, None, None))
-        out = {'keys': keys, 'pipe': pipe}
-        if  self.verbose > 1:
-            print("Parsed outcome: %s" % out)
+        out = {}
+        for word in ['instance', 'system']:
+            if  word in spec:
+                out[word] = spec.pop(word)
+        if  not fields:
+            fields = [k for k in spec.keys() if k in self.daskeys]
+            if  len(fields) > 1:
+                fields = None # ambiguous spec, we don't know which field to look-up
+        if  fields and not spec:
+            error(relaxed_query, 0, 'No conditition specified')
+        out['fields'] = fields
+        out['spec'] = spec
+        # perform cross-check of filter values
+        for key, item in filters.items():
+            if  key not in ['grep', 'sort']:
+                continue
+            for val in item:
+                daskeyvalue_check(query, val, self.daskeys)
+        # perform cross-check of aggregator values
+        for _, val in aggregators:
+            daskeyvalue_check(query, val, self.daskeys)
+        if  filters:
+            out['filters'] = filters
+        if  aggregators:
+            out['aggregators'] = aggregators
+
+        if  self.verbose:
+            print("MongoDB query: %s" % out)
         return out
 
-    def parse_pipe(self, query):
+    def parse_pipe(self, query, filters, aggregators):
         "Parse DAS query pipes"
         if  self.verbose > 1:
             print("parse_pipe", query)
         if  not len(query):
-            return '', 1
-        filters = {}
+            return 1 # advance index
         cfilter = None
         tot = len(query)
         idx = query.index('|') + 1
@@ -256,7 +312,7 @@ class DASQueryParser(object):
                 continue
             elif item == 'unique':
                 cfilter = item
-                filters[item] = None
+                filters[item] = 1
                 idx += 1
                 continue
             elif item == 'sort':
@@ -266,9 +322,9 @@ class DASQueryParser(object):
                 continue
             elif item in self.aggregators:
                 cfilter = item
-                val, step = parse_curle_brackets(query[idx:], item)
+                val, step = parse_curle_brackets(query[idx:])
                 if  val:
-                    filters.setdefault('aggregator', []).append(val)
+                    aggregators.append((item, val))
                 idx += step
             elif item == ',':
                 idx += 1
@@ -281,18 +337,10 @@ class DASQueryParser(object):
                 error(query, idx, 'Fail to parse filters')
             idx += 1
         if  self.verbose > 1:
-            print("filters", filters, idx, query[idx:])
-        if  len(filters.keys()) != 1:
-            error(query, idx, 'Wrong filter size')
-        out = ''
+            print("filters", filters)
+            print("aggregators", aggregators)
         for key, val in filters.items():
-            if  key == 'aggregator':
-                out = ['aggregators']
-                for item in val:
-                    if  item:
-                        out.append(item)
-                out = tuple(out)
-            elif key == 'grep':
+            if  key == 'grep':
                 if  len(val) > 2:
                     new_val = []
                     iii = 0
@@ -309,39 +357,30 @@ class DASQueryParser(object):
                     val = new_val
                 else:
                     val = ','.join(val).split(',')
-                out = ('filter', key, val)
-            else:
-                out = ('filter', key, val)
-        # perform cross-check
-        def helper_check(query, value, daskeys):
-            "Check value to start with DAS key"
-            val = value.split('.')[0].split('=')[0].split('<')[0].split('>')[0].strip()
-            if  val not in daskeys:
-                iii = 0
-                for iii in range(0, len(query)):
-                    if  query[iii].startswith(val):
-                        break
-                error(query, iii, 'Filter value does not start with DAS key')
-        if  out[0] == 'filter' and out[1] in ['grep', 'sort']:
-            for elem in out[2]:
-                helper_check(query, elem, self.daskeys)
-        elif out[0] == 'aggregators':
-            _, _, val = out[1]
-            helper_check(query, val, self.daskeys)
-        return out, idx
+                filters[key] = val
+        return idx
+
+def test_parser(query, verbose=0):
+    "Test function"
+    daskeys = ['file', 'dataset', 'site', 'run', 'lumi', 'block']
+    dassystems = ['dbs', 'phedex']
+    mgr = DASQueryParser(daskeys, dassystems, verbose=verbose)
+    obj = mgr.parse(query)
+    return obj
 
 def main():
     "Main function"
     optmgr = OptionParser()
     opts = optmgr.parser.parse_args()
-    daskeys = ['file', 'dataset', 'site', 'run', 'lumi', 'block']
-    dassystems = ['dbs', 'phedex']
-    mgr = DASQueryParser(daskeys, dassystems)
-    obj = mgr.parse(opts.query)
-    return obj
+    query = opts.query
+    verbose = opts.verbose
+    print(test_parser(query, verbose))
+    if  opts.timeit:
+        import timeit
+        niter = int(opts.timeit)
+        args = 'from __main__ import test_parser\nquery="%s"\nverbose=%s' % (query, verbose)
+        TIME = timeit.timeit("test_parser(query, verbose)", setup=args, number=niter)
+        print("Benchmark: %e sec/query (%s iterations)" % (TIME/niter, niter))
 
 if __name__ == '__main__':
-    print(main())
-    import timeit
-    TIME = timeit.timeit("main()", setup="from __main__ import main", number=1000)
-    print("Benchmark: %e sec/query" % (TIME/1000))
+    main()
