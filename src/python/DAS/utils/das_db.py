@@ -65,8 +65,13 @@ class MongoConnection(object):
     def client(self):
         return self.mongo_client
 
+# TODO: re-think Singleton usage in environment where DAS/MongoDB is out of order
+# at start-up time. When MongoDB is not available DAS uses connection which is
+# Singleton and can't recover. I commented out the __metaclass__ and MongoConnection
+# usage in DBConnection class for time being.
+
 class DBConnection(object):
-    __metaclass__ = Singleton # in python3 use DBConnection(object, metaclass=Singleton)
+#    __metaclass__ = Singleton # in python3 use DBConnection(object, metaclass=Singleton)
     """
     DB Connection class which hanldes MongoDB connections. Input parameters:
 
@@ -113,8 +118,8 @@ class DBConnection(object):
         key = self.genkey(uri)
         for idx in xrange(0, self.retry):
             try:
-#                dbinst = MongoClient(host=uri, **self.mongo_opts)
-                dbinst = MongoConnection(uri, **self.mongo_opts).client()
+                dbinst = MongoClient(host=uri, **self.mongo_opts)
+#                dbinst = MongoConnection(uri, **self.mongo_opts).client()
                 gfs    = dbinst.gridfs
                 fsinst = gridfs.GridFS(gfs)
                 self.conndict[key] = (dbinst, fsinst)
