@@ -21,7 +21,7 @@ import gridfs
 import pymongo
 
 # DAS modules
-from DAS.utils.utils import genkey, print_exc, dastimestamp, Singleton
+from DAS.utils.utils import genkey, print_exc, dastimestamp
 from DAS.utils.das_config import das_readconfig
 from DAS.utils.ddict import DotDict
 from DAS.utils.das_pymongo import PYMONGO_OPTS, MongoOpts
@@ -58,15 +58,7 @@ def make_uri(pairs):
             uris.append('%s:%s' % (dbhost, dbport))
     return 'mongodb://%s' % ','.join(uris)
 
-class MongoConnection(object):
-    __metaclass__ = Singleton # in python3 use MongoConnection(object, metaclass=Singleton)
-    def __init__(self, uri, **args):
-        self.mongo_client = MongoClient(uri, **args)
-    def client(self):
-        return self.mongo_client
-
 class DBConnection(object):
-    __metaclass__ = Singleton # in python3 use DBConnection(object, metaclass=Singleton)
     """
     DB Connection class which hanldes MongoDB connections. Input parameters:
 
@@ -113,8 +105,7 @@ class DBConnection(object):
         key = self.genkey(uri)
         for idx in xrange(0, self.retry):
             try:
-#                dbinst = MongoClient(host=uri, **self.mongo_opts)
-                dbinst = MongoConnection(uri, **self.mongo_opts).client()
+                dbinst = MongoClient(host=uri, **self.mongo_opts)
                 gfs    = dbinst.gridfs
                 fsinst = gridfs.GridFS(gfs)
                 self.conndict[key] = (dbinst, fsinst)
