@@ -68,7 +68,7 @@ update_db()
     # still we have to check if clean script exists, in case of multiple collections...
     if [ -f ${DASMAPS_DIR}/clean_${obj}.js ]; then
         echo "Clean ${obj}"
-        mongo --host "$DAS_MONGO_HOST" --port "$DAS_MONGO_PORT" ${DASMAPS_DIR}/clean_${obj}.js
+        mongo --verbose --host "$DAS_MONGO_HOST" --port "$DAS_MONGO_PORT" ${DASMAPS_DIR}/clean_${obj}.js
     fi
 
     for entry in ${updates[@]}
