@@ -418,7 +418,7 @@ def main():
                 sys.exit(EX_TEMPFAIL)
             if  not found:
                 sys.exit(EX_TEMPFAIL)
-        nres = jsondict['nresults']
+        nres = jsondict.get('nresults', 0)
         if  not limit:
             drange = '%s' % nres
         else:
@@ -427,7 +427,7 @@ def main():
             msg  = "\nShowing %s results" % drange
             msg += ", for more results use --idx/--limit options\n"
             print(msg)
-        mongo_query = jsondict['mongo_query']
+        mongo_query = jsondict.get('mongo_query', {})
         unique  = False
         fdict   = mongo_query.get('filters', {})
         filters = fdict.get('grep', [])
