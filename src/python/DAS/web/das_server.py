@@ -47,6 +47,7 @@ class Root(object):
         """Configure server, CherryPy and the rest."""
         config = self.config['web_server']
         cpconfig["engine.autoreload_on"] = False
+        cpconfig["engine.timeout_monitor.on"] = config.get("timeout_monitor", False)
 
         cpconfig["server.environment"] = config.get("environment", "production")
         cpconfig["server.thread_pool"] = int(config.get("thread_pool", 30))
