@@ -837,6 +837,18 @@ class DASWebService(DASWebManager):
 
         return True
 
+    def empty_return(self, dasquery, status='busy', reason=None):
+        "Return header/data when DAS server is busy"
+        if  not reason:
+            reason  = 'DAS server is busy'
+            reason += ', #requests=%s, #workers=%s, queue size=%s' \
+                % (self.reqmgr.size(), self.taskmgr.nworkers(), self.queue_limit)
+        head = dict(timestamp=time.time())
+        head.update({'status': status, 'reason': reason, 'ctime':0})
+        data = []
+        dasprint(dastimestamp('DAS INFO '), dasquery, 'server status=%s'%status, reason)
+        return self.datafream(dict(head=head, data=data))
+
     @expose
     @checkargs(DAS_WEB_INPUTS)
     def cache(self, **kwargs):
@@ -852,15 +864,7 @@ class DASWebService(DASWebManager):
 
         # if busy return right away
         if  self.busy():
-            nrequests = self.reqmgr.size()
-            level   = nrequests - self.taskmgr.nworkers() - self.queue_limit
-            reason  = 'DAS server is busy'
-            reason += ', #requests=%s, #workers=%s, queue size=%s' \
-                % (self.reqmgr.size(), self.taskmgr.nworkds(), self.queue_limit)
-            head = dict(timestamp=time.time())
-            head.update({'status': 'busy', 'reason': reason, 'ctime':0})
-            data = []
-            return self.datastream(dict(head=head, data=data))
+            return self.empty_return(kwargs)
 
         uinput = kwargs.get('input', '').strip()
         if  not uinput:
@@ -902,25 +906,27 @@ class DASWebService(DASWebManager):
             return pid
         if  status == 'ok':
             self.reqmgr.remove(pid)
+            self.taskmgr.remove(pid)
             kwargs['dasquery'] = dasquery
             head, data = self.get_data(kwargs)
             return self.datastream(dict(head=head, data=data))
         kwargs['dasquery'] = dasquery.storage_query
         if  not self.pid_pat.match(str(pid)) or len(str(pid)) != 32:
             self.reqmgr.remove(pid)
-            head = {'status': 'fail', 'reason': 'Invalid pid',
-                    'args': kwargs, 'ctime': 0, 'input': uinput}
-            data = []
-            return self.datastream(dict(head=head, data=data))
+            self.taskmgr.remove(pid)
+            return self.empty_return(dasquery, 'fail', 'Invalid pid')
         elif self.taskmgr.is_alive(pid):
             return pid
         elif status == None:
+            # DAS was busy and query expired since status==None
             if  not self.taskmgr.is_alive(pid) and self.reqmgr.has_pid(pid):
-                self.reqmgr.remove(pid) # DAS was busy and query expired since status==None
-                dasprint(dastimestamp('DAS INFO '), 'resubmit', dasquery)
+                self.reqmgr.remove(pid)
+                self.taskmgr.remove(pid)
+                return self.empty_return(dasquery, 'fail', 'request expired')
             return pid
         else: # process is done, get data
             self.reqmgr.remove(pid)
+            self.taskmgr.remove(pid)
             head, data = self.get_data(kwargs)
             return self.datastream(dict(head=head, data=data))
 
@@ -1034,6 +1040,7 @@ class DASWebService(DASWebManager):
             self.reqmgr.add(pid, kwargs)
         elif status == 'ok' or status == 'fail':
             self.reqmgr.remove(pid)
+            self.taskmgr.remove(pid)
 
             # check if query can be rewritten via nested PK query
             rew_msg = self.q_rewriter and self.q_rewriter.check_fields(dasquery)
@@ -1053,14 +1060,17 @@ class DASWebService(DASWebManager):
                     uinput=uinput, view=view,
                     base=self.base, pid=pid, interval=self.interval)
         elif status == None:
+            # DAS was busy and query expired since status==None
             if  not self.taskmgr.is_alive(pid) and self.reqmgr.has_pid(pid):
-                self.reqmgr.remove(pid) # DAS was busy and query expired since status==None
-                dasprint(dastimestamp('DAS INFO '), 'resubmit', dasquery)
+                self.reqmgr.remove(pid)
+                self.taskmgr.remove(pid)
+                return self.empty_return(dasquery, 'fail', 'request expired')
             page = self.templatepage('das_check_pid', method='check_pid',
                     uinput=uinput, view=view,
                     base=self.base, pid=pid, interval=self.interval)
         else:
             self.reqmgr.remove(pid)
+            self.taskmgr.remove(pid)
             page = self.get_page_content(kwargs)
         ctime = (time.time()-time0)
         return self.page(form + page, ctime=ctime)
@@ -1093,6 +1103,7 @@ class DASWebService(DASWebManager):
                 # request manager for that pid
                 if  self.reqmgr.has_pid(pid):
                     self.reqmgr.remove(pid)
+                    self.taskmgr.remove(pid)
                     page  = 'Request PID=%s is completed' % pid
                     page += ', please wait for results to load'
                 else:
