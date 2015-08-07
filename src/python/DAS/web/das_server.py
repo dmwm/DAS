@@ -10,7 +10,6 @@ from __future__ import print_function
 __author__ = "Valentin Kuznetsov"
 
 # system modules
-import yaml
 import logging
 import threading
 from pprint import pformat
@@ -147,11 +146,10 @@ def main():
         help="provide cherrypy configuration file")
     opts, _ = parser.parse_args()
 
-    config  = das_readconfig(debug=True)
     if  opts.config: # read provided configuration
-        fdesc  = open(opts.config, 'r')
-        config = yaml.load(fdesc.read())
-        fdesc.close()
+        config = das_readconfig(opts.config, debug=True)
+    else:
+        config = das_readconfig(debug=True)
 
     # Start DAS server
     root = Root(config)
