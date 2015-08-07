@@ -256,10 +256,14 @@ def write_configparser(dasconfig, use_default):
 
     config.write(open(dasconfig, 'wb'))
 
-def das_configfile():
+def das_configfile(fname=None):
     """
     Return DAS configuration file name $DAS_ROOT/etc/das.cfg
     """
+    if  fname:
+        if  not os.path.isfile(fname):
+            raise EnvironmentError('No DAS config file %s found' % fname)
+        return fname
     if  'DAS_CONFIG' in os.environ:
         dasconfig = os.environ['DAS_CONFIG']
         if  not os.path.isfile(dasconfig):
@@ -293,13 +297,13 @@ def read_wmcore(filename):
                 configdict[option.section][option.name] = value
     return configdict
 
-def das_readconfig_helper(debug=False):
+def das_readconfig_helper(fname=None, debug=False):
     """
     Read DAS configuration file and store DAS parameters into returning
     dictionary.
     """
     configdict = {}
-    dasconfig  = das_configfile()
+    dasconfig  = das_configfile(fname)
     # read first CMS python configuration file
     # if not fall back to standard python cfg file
     try:
@@ -332,22 +336,22 @@ class _DASConfigSingleton(object):
         self.das_config = None
         self.das_config_debug = None
 
-    def config(self, debug=False):
+    def config(self, fname=None, debug=False):
         """Return DAS config"""
         if  debug:
             if not self.das_config_debug:
-                self.das_config_debug = das_readconfig_helper(debug)
+                self.das_config_debug = das_readconfig_helper(fname, debug)
             return self.das_config_debug
         else:
             if not self.das_config:
-                self.das_config = das_readconfig_helper()
+                self.das_config = das_readconfig_helper(fname)
             return self.das_config
 
 # ensure unique name for singleton object
 DAS_CONFIG_SINGLETON = _DASConfigSingleton()
 
-def das_readconfig(debug=False):
+def das_readconfig(fname=None, debug=False):
     """
     Return DAS configuration
     """
-    return DAS_CONFIG_SINGLETON.config(debug)
+    return DAS_CONFIG_SINGLETON.config(fname, debug)
