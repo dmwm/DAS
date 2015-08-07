@@ -368,6 +368,14 @@ class DASWebService(DASWebManager):
                         daskeys=list(daskeys), mapreduce=mapreduce)
         return self.page(page, response_div=False)
 
+    @expose
+    @checkargs(DAS_WEB_INPUTS)
+    def nsystems(self):
+        """
+        Return number of systems participating in DAS
+        """
+        systems = self.dasmgr.mapping.list_systems()
+        return "DAS systems %s" % ','.join(systems)
 
     @expose
     @checkargs(DAS_WEB_INPUTS)
