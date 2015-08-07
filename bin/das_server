@@ -97,6 +97,10 @@ start_das(){
     echo "Start DAS service..."
     $das_start
 }
+start_das_cli(){
+    echo "Start DAS CLI service..."
+    $das_start --config=$DAS_CONFIG_CLI
+}
 load_maps_start_das(){
     if [ -z `env | grep DASMAPS_DIR` ]; then
         echo "Envinronment DASMAPS_DIR is not set"
@@ -127,6 +131,9 @@ case "$1" in
     stop_das
     wait4db
     load_maps_start_das
+    ;;
+ start_cli)
+    start_das_cli
     ;;
  status)
     das_server_status
