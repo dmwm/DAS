@@ -11,7 +11,7 @@ Description: DAS Query Parser module. It tasks to parse input DAS queryes
 
 # system modules
 from __future__ import print_function
-import argparse
+from   optparse import OptionParser
 
 # das modules
 from DAS.core.das_ql import das_filters, das_operators, das_mapreduces
@@ -19,16 +19,18 @@ from DAS.core.das_ql import das_aggregators, das_special_keys
 from DAS.utils.regex import date_yyyymmdd_pattern, int_number_pattern, float_number_pattern
 from DAS.utils.utils import das_dateformat
 
-class OptionParser(object):
+class DASOptionParser(object):
     "Option parser class"
     def __init__(self):
         "User based option parser"
-        self.parser = argparse.ArgumentParser(prog='PROG')
-        self.parser.add_argument("--query", action="store", \
+        usage  = "Usage: %prog [options]\n"
+        usage += "For more help please visit https://cmsweb.cern.ch/das/faq"
+        self.parser = OptionParser(usage=usage)
+        self.parser.add_option("--query", action="store", \
             dest="query", default="", help="DAS query")
-        self.parser.add_argument("--verbose", action="store", \
+        self.parser.add_option("--verbose", action="store", \
             dest="verbose", default=0, help="verbosity level")
-        self.parser.add_argument("--timeit", action="store", \
+        self.parser.add_option("--timeit", action="store", \
             dest="timeit", default=0, help="timeit with provided number of iterations")
 
 def adjust_value(val):
@@ -370,7 +372,7 @@ def test_parser(query, verbose=0):
 
 def main():
     "Main function"
-    optmgr = OptionParser()
+    optmgr = DASOptionParser()
     opts = optmgr.parser.parse_args()
     query = opts.query
     verbose = opts.verbose
