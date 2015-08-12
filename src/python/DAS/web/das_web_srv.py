@@ -21,7 +21,7 @@ import pprint
 from datetime import date
 from urlparse import urlparse, parse_qsl
 from cherrypy import expose, HTTPError
-from cherrypy import response
+from cherrypy import response, tools
 from cherrypy.lib.static import serve_file
 from bson.objectid import ObjectId
 from pymongo.errors import AutoReconnect, ConnectionFailure
@@ -219,6 +219,7 @@ class DASWebService(DASWebManager):
 
     @expose
     @checkargs(DAS_WEB_INPUTS)
+    @tools.secmodv2()
     def redirect(self, **kwargs):
         """
         Represent DAS redirect page
@@ -249,6 +250,7 @@ class DASWebService(DASWebManager):
 
     @expose
     @checkargs(DAS_WEB_INPUTS + ['section', 'highlight'])
+    @tools.secmodv2()
     def faq(self, **kwargs):
         """
         represent DAS FAQ.
@@ -265,6 +267,7 @@ class DASWebService(DASWebManager):
         return self.page(page, response_div=False)
 
     @expose
+    @tools.secmodv2()
     def cli(self):
         """
         Serve DAS CLI file download.
@@ -274,6 +277,7 @@ class DASWebService(DASWebManager):
         return serve_file(clifile, content_type='text/plain')
 
     @expose
+    @tools.secmodv2()
     def movetodas(self):
         "Placeholder page for DBS to DAS migration"
         style = \
@@ -287,6 +291,7 @@ class DASWebService(DASWebManager):
         return page
 
     @expose
+    @tools.secmodv2()
     def opensearch(self):
         """
         Serve DAS opensearch file.
@@ -302,6 +307,7 @@ class DASWebService(DASWebManager):
 
     @expose
     @checkargs(DAS_WEB_INPUTS)
+    @tools.secmodv2()
     def keys(self, **kwds):
         """
         Show DAS keys and their attibutes
@@ -330,6 +336,7 @@ class DASWebService(DASWebManager):
 
     @expose
     @checkargs(DAS_WEB_INPUTS)
+    @tools.secmodv2()
     def services(self):
         """
         represent DAS services
@@ -370,6 +377,7 @@ class DASWebService(DASWebManager):
 
     @expose
     @checkargs(DAS_WEB_INPUTS)
+    @tools.secmodv2()
     def nsystems(self):
         """
         Return number of systems participating in DAS
@@ -379,6 +387,7 @@ class DASWebService(DASWebManager):
 
     @expose
     @checkargs(DAS_WEB_INPUTS)
+    @tools.secmodv2()
     def api(self, system, name):
         """
         Return DAS mapping record about provided API.
@@ -390,6 +399,7 @@ class DASWebService(DASWebManager):
 
     @expose
     @checkargs(DAS_WEB_INPUTS)
+    @tools.secmodv2()
     def default(self, *args, **kwargs):
         """
         Default method.
@@ -541,6 +551,7 @@ class DASWebService(DASWebManager):
 
     @expose
     @checkargs(DAS_WEB_INPUTS)
+    @tools.secmodv2()
     def index(self, *args, **kwargs):
         """
         represents DAS web interface.
@@ -572,6 +583,7 @@ class DASWebService(DASWebManager):
         return page
 
     @expose
+    @tools.secmodv2()
     def error(self, msg, wrap=True):
         """
         Show error message.
@@ -583,6 +595,7 @@ class DASWebService(DASWebManager):
 
     @expose
     @checkargs(DAS_WEB_INPUTS)
+    @tools.secmodv2()
     def gridfs(self, **kwargs):
         """
         Retieve records from GridFS
@@ -605,6 +618,7 @@ class DASWebService(DASWebManager):
 
     @expose
     @checkargs(DAS_WEB_INPUTS)
+    @tools.secmodv2()
     def records(self, *args, **kwargs):
         """
         Retieve all records id's.
@@ -859,6 +873,7 @@ class DASWebService(DASWebManager):
 
     @expose
     @checkargs(DAS_WEB_INPUTS)
+    @tools.secmodv2()
     def cache(self, **kwargs):
         """
         DAS web cache interface. Fire up new process for new requests and
@@ -967,12 +982,14 @@ class DASWebService(DASWebManager):
         return page
 
     @expose
+    @tools.secmodv2()
     def download(self, lfn):
         "DAS download page for given LFN"
         page = self.templatepage('filemover', lfn=lfn)
         return self.page(page, response_div=False)
 
     @expose
+    @tools.secmodv2()
     def makepy(self, dataset, instance):
         """
         Request to create CMSSW py snippet for a given dataset
@@ -1001,6 +1018,7 @@ class DASWebService(DASWebManager):
 
     @expose
     @checkargs(DAS_WEB_INPUTS)
+    @tools.secmodv2()
     def request(self, **kwargs):
         """
         Request data from DAS cache.
@@ -1084,6 +1102,7 @@ class DASWebService(DASWebManager):
         return self.page(form + page, ctime=ctime)
 
     @expose
+    @tools.secmodv2()
     def status(self):
         """Return list of all current requests in DAS queue"""
         requests = [r for r in self.reqmgr.items()]
@@ -1092,6 +1111,7 @@ class DASWebService(DASWebManager):
 
     @expose
     @checkargs(['pid'])
+    @tools.secmodv2()
     def check_pid(self, pid):
         """
         Check status of given pid. This is a server callback
@@ -1157,6 +1177,7 @@ class DASWebService(DASWebManager):
     @exposedasjson
     @enable_cross_origin
     @checkargs(['query', 'dbs_instance'])
+    @tools.secmodv2()
     def autocomplete(self, **kwargs):
         """
         Provides autocomplete functionality for DAS web UI.
