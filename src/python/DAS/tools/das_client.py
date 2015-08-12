@@ -8,6 +8,8 @@ DAS command line tool
 from __future__ import print_function
 __author__ = "Valentin Kuznetsov"
 
+# system modules
+import os
 import sys
 if  sys.version_info < (2, 6):
     raise Exception("DAS requires python 2.6 or greater")
@@ -103,12 +105,13 @@ class DASOptionParser:
         msg  = 'query waiting threshold in sec, default is 5 minutes'
         self.parser.add_option("--threshold", action="store", type="int",
                                default=300, dest="threshold", help=msg)
-        msg  = 'specify private key file name'
+        msg  = 'specify private key file name, default $X509_USER_PROXY'
+        x509 = os.environ.get('X509_USER_PROXY', '')
         self.parser.add_option("--key", action="store", type="string",
-                               default="", dest="ckey", help=msg)
-        msg  = 'specify private certificate file name'
+                               default=x509, dest="ckey", help=msg)
+        msg  = 'specify private certificate file name, default $X509_USER_PROXY'
         self.parser.add_option("--cert", action="store", type="string",
-                               default="", dest="cert", help=msg)
+                               default=x509, dest="cert", help=msg)
         msg  = 'specify number of retries upon busy DAS server message'
         self.parser.add_option("--retry", action="store", type="string",
                                default=0, dest="retry", help=msg)
