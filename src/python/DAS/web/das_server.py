@@ -26,8 +26,6 @@ import cherrypy
 
 # DAS modules
 from DAS.utils.das_config import das_readconfig
-#from DAS.web.das_web_srv import DASWebService
-#from DAS.web.kws_web_srv import KWSWebService
 
 # WMCore modules
 from WMCore.WebTools.FrontEndAuth import FrontEndAuth, NullAuth
