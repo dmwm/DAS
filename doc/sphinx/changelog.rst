@@ -9,6 +9,8 @@ This release series is targeted to DAS production stability and quality.
 
   - replace DASPLY/DASParserDB with DASQueryParser. It parses input DAS
     query into MongoDB spec and provides thread-safe code.
+  - enable custom das_ql_parser module instead of PLY
+  - add security module
 
 - 2.14.X
 
