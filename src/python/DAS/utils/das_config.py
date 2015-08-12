@@ -225,6 +225,15 @@ DASOption('load_balance', 'valid_origins', 'list', []),
 # Query rewrite
 DASOption('query_rewrite', 'pk_rewrite_on', 'bool', False),
 DASOption('query_rewrite', 'dasclient_doc_url', 'string', ''),
+
+# Security
+DASOption('security', 'role', 'string', ''),
+DASOption('security', 'group', 'string', ''),
+DASOption('security', 'site', 'string', ''),
+DASOption('security', 'module', 'string', ''),
+DASOption('security', 'key_file', 'string', ''),
+DASOption('security', 'store', 'string', '/tmp/security-store'),
+DASOption('security', 'mount_point', 'string', 'auth'),
 ]  # end of DAS_OPTIONS list
 
 def read_configparser(dasconfig):
