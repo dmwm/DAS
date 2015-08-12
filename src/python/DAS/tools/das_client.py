@@ -11,6 +11,7 @@ __author__ = "Valentin Kuznetsov"
 # system modules
 import os
 import sys
+import pwd
 if  sys.version_info < (2, 6):
     raise Exception("DAS requires python 2.6 or greater")
 
@@ -74,6 +75,15 @@ class HTTPSClientAuthHandler(urllib2.HTTPSHandler):
                                                 cert_file=self.cert)
         return httplib.HTTPSConnection(host)
 
+def x509():
+    "Helper function to get x509 either from env or tmp file"
+    x509 = os.environ.get('X509_USER_PROXY', '')
+    if  not x509:
+        x509 = '/tmp/x509up_u%s' % pwd.getpwuid( os.getuid() ).pw_uid
+        if  not os.path.isfile(x509):
+            return ''
+    return x509
+
 class DASOptionParser: 
     """
     DAS cache client option parser
@@ -106,9 +116,8 @@ class DASOptionParser:
         self.parser.add_option("--threshold", action="store", type="int",
                                default=300, dest="threshold", help=msg)
         msg  = 'specify private key file name, default $X509_USER_PROXY'
-        x509 = os.environ.get('X509_USER_PROXY', '')
         self.parser.add_option("--key", action="store", type="string",
-                               default=x509, dest="ckey", help=msg)
+                               default=x509(), dest="ckey", help=msg)
         msg  = 'specify private certificate file name, default $X509_USER_PROXY'
         self.parser.add_option("--cert", action="store", type="string",
                                default=x509, dest="cert", help=msg)
