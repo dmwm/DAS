@@ -18,18 +18,20 @@ from optparse import OptionParser
 # CherryPy modules
 from cherrypy import log, tree, engine
 from cherrypy import config as cpconfig
-
 from cherrypy.wsgiserver import CherryPyWSGIServer
 from cherrypy.process.servers import ServerAdapter
+from cherrypy.process.plugins import PIDFile
 from cherrypy import _cptree
+import cherrypy
 
 # DAS modules
 from DAS.utils.das_config import das_readconfig
-from DAS.web.das_web_srv import DASWebService
-from cherrypy.process.plugins import PIDFile
+#from DAS.web.das_web_srv import DASWebService
+#from DAS.web.kws_web_srv import KWSWebService
 
-from DAS.web.kws_web_srv import KWSWebService
-
+# WMCore modules
+from WMCore.WebTools.FrontEndAuth import FrontEndAuth, NullAuth
+from WMCore.Configuration import Configuration, ConfigSection
 
 class Root(object):
     """
@@ -66,6 +68,28 @@ class Root(object):
         log.error_log.setLevel(config.get("error_log_level", logging.DEBUG))
         log.access_log.setLevel(config.get("access_log_level", logging.DEBUG))
 
+        # SecurityModule config
+        # Registers secmodv2 into cherrypy.tools so it can be used through
+        # decorators
+        class SecConfig(object):
+            pass
+        security = self.config['security']
+        secconfig = SecConfig()
+        secsection = ConfigSection('security')
+        for key, val in security.items():
+            setattr(secconfig, key, val)
+        if  security.get('module', '') == '':
+            print("### DAS behind NullAuth, should NOT be used in production")
+            cpconfig["server.environment"] = "development"
+            cherrypy.tools.secmodv2 = NullAuth(secconfig)
+        else:
+            print("### DAS behind FrontEndAuth")
+            cherrypy.tools.secmodv2 = FrontEndAuth(secconfig)
+            cherrypy.config.update({'tools.secmodv2.on': True,
+                        'tools.secmodv2.role': security.get('role', ''),
+                        'tools.secmodv2.group': security.get('group' ''),
+                        'tools.secmodv2.site': security.get('site', '')})
+
         cpconfig.update ({\
                           'tools.expires.on': True,\
                           'tools.response_headers.on':True,\
@@ -90,6 +114,9 @@ class Root(object):
         if not self.config['keyword_search']['kws_service_on']:
             return
 
+        # load KWSWebService here since it will be loaded after self.configure
+        # which brings secmodv2 into cherrypy.tools
+        from DAS.web.kws_web_srv import KWSWebService
         kws_service = KWSWebService(self.config)
         kws_wsgi_app = _cptree.Tree()
         kws_wsgi_app.mount(kws_service, '/das')
@@ -117,6 +144,8 @@ class Root(object):
         url_base = self.config['web_server']['url_base']
         config = self.config.get('web_server', {})
         config['engine'] = engine
+        # import DASWebServices after we run self.configure which register secmodv2
+        from DAS.web.das_web_srv import DASWebService
         obj = DASWebService(self.config)
         tree.mount(obj, url_base) # mount web server
 
