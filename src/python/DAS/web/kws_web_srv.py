@@ -34,7 +34,7 @@ except Exception as _exc:
 # disable default urllib2 proxy
 disable_urllib2Proxy()
 
-from cherrypy import expose
+from cherrypy import expose, tools
 from DAS.web.das_web_srv import DAS_WEB_INPUTS
 from DAS.web.tools import enable_cross_origin
 from DAS.web.utils import checkargs, set_no_cache_flags
@@ -79,6 +79,7 @@ class KWSWebService(DASWebManager):
             self.kws = None
 
     @expose
+    @tools.secmodv2()
     def index(self, *args, **kwargs):
         """Main page"""
         page = "DAS KWS Server"
@@ -108,6 +109,7 @@ class KWSWebService(DASWebManager):
     @expose
     @enable_cross_origin
     @checkargs(DAS_WEB_INPUTS)
+    @tools.secmodv2()
     def kws_async(self, **kwargs):
         """
         Returns KeywordSearch results for AJAX call (for now as html snippet)
