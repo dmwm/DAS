@@ -377,7 +377,6 @@ class DASWebService(DASWebManager):
 
     @expose
     @checkargs(DAS_WEB_INPUTS)
-    @tools.secmodv2()
     def nsystems(self):
         """
         Return number of systems participating in DAS
@@ -551,7 +550,7 @@ class DASWebService(DASWebManager):
 
     @expose
     @checkargs(DAS_WEB_INPUTS)
-    @tools.secmodv2()
+#    @tools.secmodv2()
     def index(self, *args, **kwargs):
         """
         represents DAS web interface.
