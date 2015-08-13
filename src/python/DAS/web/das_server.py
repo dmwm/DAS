@@ -28,8 +28,28 @@ import cherrypy
 from DAS.utils.das_config import das_readconfig
 
 # WMCore modules
-from WMCore.WebTools.FrontEndAuth import FrontEndAuth, NullAuth
+from WMCore.WebTools.FrontEndAuth import FrontEndAuth
 from WMCore.Configuration import Configuration, ConfigSection
+
+class NullAuth(cherrypy.Tool):
+    """
+    Class similar to one from WMCore.WebTools.FrontEndAuth module, but withou
+    extra logging information
+    """
+    def __init__(self, config):
+        # Defines the hook point for cherrypy
+        self._name = None
+        self._point = 'before_request_body'
+        self._priority = 60 # Just after the sessions being enabled
+
+    def callable(self, role=[], group=[], site=[], authzfunc=None):
+        if authzfunc:
+            cherrypy.log.access_log.warning('\tusing authorisation function %s' % authzfunc.__name__)
+        cherrypy.request.user = {'dn': 'None',
+                                'method': 'Null Auth - totally insecure!',
+                                'login': 'test',
+                                'name': 'Test User',
+                                'roles': {} }
 
 class Root(object):
     """
@@ -78,7 +98,6 @@ class Root(object):
             setattr(secconfig, key, val)
         if  security.get('module', '') == '':
             print("### DAS behind NullAuth, should NOT be used in production")
-            cpconfig["server.environment"] = "development"
             cherrypy.tools.secmodv2 = NullAuth(secconfig)
         else:
             print("### DAS behind FrontEndAuth")
