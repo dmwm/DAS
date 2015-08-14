@@ -11,6 +11,8 @@ This release series is targeted to DAS production stability and quality.
     query into MongoDB spec and provides thread-safe code.
   - enable custom das_ql_parser module instead of PLY
   - add security module
+  - modify das_client to check glidein/auth settings, add warning for end-users
+    w/o auth, change version
 
 - 2.14.X
 
