@@ -15,7 +15,7 @@ import pwd
 if  sys.version_info < (2, 6):
     raise Exception("DAS requires python 2.6 or greater")
 
-DAS_CLIENT = 'das-client/1.0::python/%s.%s' % sys.version_info[:2]
+DAS_CLIENT = 'das-client/1.1::python/%s.%s' % sys.version_info[:2]
 
 import os
 import re
@@ -77,12 +77,30 @@ class HTTPSClientAuthHandler(urllib2.HTTPSHandler):
 
 def x509():
     "Helper function to get x509 either from env or tmp file"
-    x509 = os.environ.get('X509_USER_PROXY', '')
-    if  not x509:
-        x509 = '/tmp/x509up_u%s' % pwd.getpwuid( os.getuid() ).pw_uid
-        if  not os.path.isfile(x509):
+    proxy = os.environ.get('X509_USER_PROXY', '')
+    if  not proxy:
+        proxy = '/tmp/x509up_u%s' % pwd.getpwuid( os.getuid() ).pw_uid
+        if  not os.path.isfile(proxy):
             return ''
-    return x509
+    return proxy
+
+def check_glidein():
+    "Check glideine environment and exit if it is set"
+    glidein = os.environ.get('GLIDEIN_CMSSite', '')
+    if  glidein:
+        msg = "ERROR: das_client is running from GLIDEIN environment, it is prohibited"
+        print(msg)
+        sys.exit(EX__BASE)
+
+def check_auth(key):
+    "Check if user runs das_client with key/cert and warn users to switch"
+    if  not key:
+        msg  = "WARNING: das_client runs without user credential/X509 proxy\n"
+        msg += "         Next version will required authentication, please provide\n"
+        msg += "         user credential/X509 proxy every time to avoid future error.\n\n"
+        msg += "User credential can be provided via --key/--cert options or setup X509_USER_PROXY\n"
+        msg += "in your environment to point to valid proxy file"
+        print(msg)
 
 class DASOptionParser: 
     """
@@ -120,7 +138,7 @@ class DASOptionParser:
                                default=x509(), dest="ckey", help=msg)
         msg  = 'specify private certificate file name, default $X509_USER_PROXY'
         self.parser.add_option("--cert", action="store", type="string",
-                               default=x509, dest="cert", help=msg)
+                               default=x509(), dest="cert", help=msg)
         msg  = 'specify number of retries upon busy DAS server message'
         self.parser.add_option("--retry", action="store", type="string",
                                default=0, dest="retry", help=msg)
@@ -254,7 +272,8 @@ def get_data(host, query, idx, limit, debug, threshold=300, ckey=None,
         msg = 'Invalid hostname: %s' % host
         raise Exception(msg)
     url = host + path
-    headers = {"Accept": "application/json", "User-Agent": DAS_CLIENT}
+    client = '%s (%s)' % (DAS_CLIENT, os.environ.get('USER', ''))
+    headers = {"Accept": "application/json", "User-Agent": client}
     encoded_data = urllib.urlencode(params, doseq=True)
     url += '?%s' % encoded_data
     req  = urllib2.Request(url=url, headers=headers)
@@ -394,6 +413,8 @@ def main():
     ckey    = opts.ckey
     cert    = opts.cert
     base    = opts.base
+    check_glidein()
+    check_auth(ckey)
     if  opts.keys_attrs:
         keys_attrs(opts.keys_attrs, opts.format, host, ckey, cert, debug)
         return
