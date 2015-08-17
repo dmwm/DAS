@@ -95,12 +95,8 @@ def check_glidein():
 def check_auth(key):
     "Check if user runs das_client with key/cert and warn users to switch"
     if  not key:
-        msg  = "WARNING: das_client runs without user credential/X509 proxy\n"
-        msg += "         Next version will required authentication, please provide\n"
-        msg += "         user credential/X509 proxy every time to avoid future error.\n\n"
-        msg += "User credential can be provided via --key/--cert options or setup X509_USER_PROXY\n"
-        msg += "in your environment to point to valid proxy file"
-        print(msg)
+        msg  = "WARNING: das_client is running without user credentials/X509 proxy, create proxy via 'voms-proxy-init -voms cms'"
+        print(msg, file=sys.stderr)
 
 class DASOptionParser: 
     """
