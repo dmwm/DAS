@@ -25,8 +25,9 @@ check4db() {
         mongo_status="no"
         return
     fi
-    mongo=`mongostat --noheaders -n 1 --port $port --discover 2>&1`
-    mongo_ok=`echo $mongo | tail -1 | grep $port`
+#    mongo=`mongostat --noheaders -n 1 --port $port --discover 2>&1`
+#    mongo_ok=`echo $mongo | tail -1 | grep $port`
+    mongo_ok=`pymongostat | awk '{z=split($0,a," "); print a[z]}'`
     if  [ -n "$mongo_ok" ]; then
         mongo_status="ok"
         return
