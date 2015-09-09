@@ -654,7 +654,10 @@ class DBS3Service(DASAbstractService):
                 if  'spec' in query.mongo_query:
                     if  'status.name' in query.mongo_query['spec']:
                         status = query.mongo_query['spec']['status.name']
-                file_status = row['file']['is_file_valid']
+                try:
+                    file_status = row['file']['is_file_valid']
+                except KeyError:
+                    file_status = 0 # file status is unknown
                 if  status == '*': # any file
                     pass
                 elif  status == 'INVALID': # filter out valid files
