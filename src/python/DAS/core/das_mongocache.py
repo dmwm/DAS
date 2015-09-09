@@ -784,7 +784,7 @@ class DASMongocache(object):
         for row in result:
             yield row
 
-    def merge_records(self, dasquery):
+    def merge_records(self, dasquery, attempt=0):
         """
         Merge DAS records for provided query. We perform the following
         steps:
@@ -792,6 +792,9 @@ class DASMongocache(object):
         2. run aggregtor function to merge neighbors
         3. insert records into das.merge
         """
+        # remove any entries in merge collection for this query
+        self.merge.remove({'qhash':dasquery.qhash})
+        # proceed
         self.logger.debug(dasquery)
         id_list = []
         expire  = 9999999999 # future
@@ -842,6 +845,7 @@ class DASMongocache(object):
                     else:
                         break
             except InvalidDocument as exp:
+                print(dastimestamp('DAS WARNING'), 'InvalidDocument during merge', str(exp))
                 msg = "Caught bson error: " + str(exp)
                 self.logger.info(msg)
                 records = self.col.find(spec, **PYMONGO_OPTS).sort(skey)
@@ -855,21 +859,23 @@ class DASMongocache(object):
                 for row in genrows:
                     row.update(das_dict)
                     self.merge.insert(row)
-            except InvalidOperation:
+            except InvalidOperation as exp:
+                print(dastimestamp('DAS WARNING'), 'InvalidOperation during merge', str(exp))
                 pass
             except DuplicateKeyError as err:
+                print(dastimestamp('DAS WARNING'), 'DuplicateKeyError during merge')
                 if  not isinstance(gen, list):
                     raise err
+        status = 'fail'
         if  inserted:
-            # use explicit if statement, due to inserted condition
-            # with outside scope meaning
-            pass
+            status = 'ok'
         elif  not lookup_keys: # we get query w/o fields
             msg = 'qhash %s, no lookup_keys' % dasquery.qhash
             print(dastimestamp('DAS WARNING'), msg)
-            pass
+            status = 'ok'
         else: # we didn't merge anything, it is DB look-up failure
-            msg  = 'qhash %s, did not insert into das.merge' % dasquery.qhash
+            msg  = 'qhash %s, did not insert into das.merge, attempt %s' \
+                    % (dasquery.qhash, attempt)
             print(dastimestamp('DAS WARNING'), msg)
             empty_expire = etstamp()
             lkeys = list(lookup_keys)
@@ -894,6 +900,7 @@ class DASMongocache(object):
             nval = {'$set': {'das.expire':empty_expire}}
             spec = {'qhash':dasquery.qhash}
             self.col.update(spec, nval, multi=True)
+        return status
 
     def update_cache(self, dasquery, results, header):
         """

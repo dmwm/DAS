@@ -401,7 +401,11 @@ class DASCore(object):
         self.logger.info('\n##### merging ######\n')
         update_das_query(dasquery, 'merging')
         das_timer('merge', self.verbose)
-        self.rawcache.merge_records(dasquery)
+        for attempt in range(2): # try couple of times to avoid DB problems
+            status = self.rawcache.merge_records(dasquery, attempt)
+            if  status == 'ok':
+                break
+            time.sleep(attempt)
         das_timer('merge', self.verbose)
         # check if we have service records and properly setup status
         self.logger.info('\n##### check services ######\n')
