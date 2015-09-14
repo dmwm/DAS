@@ -5,6 +5,14 @@ Release notes
 
 This release series is targeted to DAS production stability and quality.
 
+- 2.16.X
+
+    - Remove block arg from dataset api, it is not support it
+    - Fix is_file_valid look-up
+    - Add retry to merge_records and printout failure durng merge
+    - Use own pymongostat tool instead of mongostat
+    - Add rfc option to voms-proxy-init
+
 - 2.15.X
 
   - replace DASPLY/DASParserDB with DASQueryParser. It parses input DAS
