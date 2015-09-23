@@ -868,7 +868,7 @@ class DASWebService(DASWebManager):
         head.update({'status': status, 'reason': reason, 'ctime':0})
         data = []
         dasprint(dastimestamp('DAS INFO '), dasquery, 'server status=%s'%status, reason)
-        return self.datafream(dict(head=head, data=data))
+        return self.datastream(dict(head=head, data=data))
 
     @expose
     @checkargs(DAS_WEB_INPUTS)
