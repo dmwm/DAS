@@ -637,6 +637,7 @@ das_map : [
 ]
 ---
 notations : [
+    {"api_output": "dataset", "rec_key": "name", "api": "blockorigin"},
     {"api_output": "creation_date", "rec_key":"creation_time", "api":""},
     {"api_output": "last_modification_date", "rec_key":"modification_time", "api":""},
     {"api_output": "create_by", "rec_key":"created_by", "api":""},
