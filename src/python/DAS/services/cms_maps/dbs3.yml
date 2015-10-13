@@ -273,7 +273,7 @@ lookup : dataset
 das_map : [
     {"das_key": "dataset", "rec_key":"dataset.name", "api_arg":"dataset",
      "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+"},
-    {"das_key": "site", "rec_key":"site.se", "api_arg":"original_site_name",
+    {"das_key": "site", "rec_key":"site.se", "api_arg":"origin_site_name",
      "pattern":"([a-zA-Z0-9-_]+\\.){2}"},
 ]
 # NOTE: blocksummaries is a subset of filesummaries output, so we really don't
