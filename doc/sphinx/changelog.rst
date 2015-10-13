@@ -5,6 +5,13 @@ Release notes
 
 This release series is targeted to DAS production stability and quality.
 
+- v02.17.XX
+
+  - Address issues with security check
+
+      - Add check for malicious queries
+      - Serve files only from given directory
+
 - 2.16.X
 
     - Remove block arg from dataset api, it is not support it
