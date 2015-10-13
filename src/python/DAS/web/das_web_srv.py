@@ -32,7 +32,7 @@ from DAS.core.das_core import DASCore
 from DAS.core.das_ql import das_aggregators, das_operators, das_filters
 from DAS.core.das_ql import DAS_DB_KEYWORDS
 from DAS.core.das_ply import das_parser_error
-from DAS.core.das_query import DASQuery
+from DAS.core.das_query import DASQuery, check_query
 from DAS.utils.utils import getarg
 from DAS.utils.url_utils import disable_urllib2Proxy
 from DAS.utils.ddict import DotDict
@@ -889,6 +889,7 @@ class DASWebService(DASWebManager):
             return self.empty_return(kwargs)
 
         uinput = kwargs.get('input', '').strip()
+        check_query(uinput)
         if  not uinput:
             head = {'status': 'fail', 'reason': 'No input found',
                     'args': kwargs, 'ctime': 0, 'input': uinput}
@@ -1026,6 +1027,7 @@ class DASWebService(DASWebManager):
         set_no_cache_flags()
 
         uinput  = kwargs.get('input', '').strip()
+        check_query(uinput)
         if  not uinput:
             kwargs['reason'] = 'No input found'
             return self.redirect(**kwargs)
