@@ -237,20 +237,19 @@ class RunRegistryService(DASAbstractService):
 
 def test():
     "Test function"
-    query = "{runNumber} >= 135230 and {runNumber} <= 135230"
-    query = {'runStartTime': '>= 2010-10-18 and < 2010-10-22'}
-    query = {'runNumber': '>= 137081 and < 137088'}
-    query = {'runNumber': '>= 147623 and <= 147623'}
-    query = {'runNumber': '147623'}
-    query = {'runNumber': '165103'}
-    ver = 2
+#    query = "{runNumber} >= 135230 and {runNumber} <= 135230"
+#    query = {'runStartTime': '>= 2010-10-18 and < 2010-10-22'}
+#    query = {'runNumber': '>= 137081 and < 137088'}
+#    query = {'runNumber': '>= 147623 and <= 147623'}
+#    query = {'runNumber': '147623'}
+#    query = {'runNumber': '165103'}
+#    ver = 2
     url = 'http://localhost:8081/cms-service-runregistry-api/xmlrpc'
     query = {'startTime': '>= 2010-10-18 and < 2010-10-22'}
     query = {'number': '165103'}
     query = {'number': '>= 165103 and <= 165110'}
     url = 'http://localhost:8081/runregistry/'
-    ver = 3
-    for row in rr_worker(url, query, ver):
+    for row in rr_worker(url, query):
         print(row, type(row))
 
 if __name__ == '__main__':
