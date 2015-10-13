@@ -127,6 +127,8 @@ def run(out, host, query, idx, limit, debug, thr, ckey, cert):
         qhash = DASQuery(query + ' instance=%s' % DBS_GLOBAL).qhash
     msg    = 'status: %s client: %s server: %s nresults: %s query: %s qhash: %s' \
             % (status, etime(time0), etime(tstm), nres, query, qhash)
+    if  nres == 0:
+        print(jsondict)
     if  reason:
         msg += ' reason: %s' % reason
     out.put((nres, status, qhash))
