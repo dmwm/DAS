@@ -22,6 +22,13 @@ from   DAS.core.das_process_dataset_wildcards import process_dataset_wildcards
 from   DAS.core.das_exceptions import WildcardMultipleMatchesException
 from   DAS.core.das_exceptions import WildcardMatchingException
 
+def check_query(query):
+    "Check query"
+    prohibited = ['__class__', '__bases__', '__getitem__', '__subclasses__', '__builtins__', '__import__']
+    for word in prohibited:
+        if  query.find(word) != -1:
+            raise Exception("Bad query %s" % query)
+
 class DASQuery(object):
     """
     Wrapper around base query. Uses properties to calculate
@@ -78,6 +85,7 @@ class DASQuery(object):
         supplied flags can carry any query attributes, e.g.
         filters, aggregators, system, instance, etc.
         """
+        check_query(query)
         self._mongoparser   = None
         self._params        = {}
         self._service_apis_map = {}
