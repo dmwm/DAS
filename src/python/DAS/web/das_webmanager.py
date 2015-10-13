@@ -139,13 +139,16 @@ class DASWebManager(TemplatedPage):
             if  key == 'f': # we only look-up files from given kwds dict
                 if  isinstance(val, list):
                     for name in val:
+                        if name.startswith('/'):
+                            continue
                         fname = os.path.join(idir, name)
                         if os.path.exists(fname) and os.path.isfile(fname):
                             args.append(name)
                 else:
-                    fname = os.path.join(idir, val)
-                    if os.path.exists(fname) and os.path.isfile(fname):
-                        args.append(val)
+                    if  not val.startswith('/'):
+                        fname = os.path.join(idir, val)
+                        if os.path.exists(fname) and os.path.isfile(fname):
+                            args.append(val)
         scripts = self.check_scripts(args, imap, idir)
         return self.serve_files(args, scripts, imap, datatype, minimize)
 
