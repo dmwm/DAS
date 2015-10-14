@@ -12,6 +12,7 @@ Description: DAS Query Parser module. It tasks to parse input DAS queryes
 # system modules
 from __future__ import print_function
 from   optparse import OptionParser
+import json
 
 # das modules
 from DAS.core.das_ql import das_filters, das_operators, das_mapreduces
@@ -107,7 +108,8 @@ def parse_array(query, oper, daskey):
     idx = query.index('[')
     jdx = query.index(']')
     try:
-        val = eval(' '.join(query[idx:jdx+1]), {"__builtins__": None}, {})
+#        val = eval(' '.join(query[idx:jdx+1]), {"__builtins__": None}, {})
+        val = json.loads(' '.join(query[idx:jdx+1]))
     except Exception as exc:
         error(query, idx, 'Fail to extract value from square brackets, '+str(exc))
     if  oper == 'in':
