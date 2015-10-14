@@ -26,8 +26,9 @@ def check_query(query):
     "Check query"
     prohibited = ['__class__', '__bases__', '__getitem__', '__subclasses__', '__builtins__', '__import__']
     for word in prohibited:
-        if  query.find(word) != -1:
-            raise Exception("Bad query %s" % query)
+        if  isinstance(query, basestring) or isinstance(query, DASQuery):
+            if  query.find(word) != -1:
+                raise Exception("Bad query %s" % query)
 
 class DASQuery(object):
     """
