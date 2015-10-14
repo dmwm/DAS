@@ -160,6 +160,10 @@ class DASQuery(object):
                     self._handle_dataset_slashes(key, val)
 
 
+    def find(self, pat):
+        "Find method"
+        return self._query.find(pat)
+
     def update_attr(self):
         """
         setup DAS query attributes if they were supplied in input query
