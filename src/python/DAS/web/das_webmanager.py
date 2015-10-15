@@ -51,19 +51,20 @@ def update_map(emap, mapdir, entry):
 
 def das_web_files():
     "List files used by DAS web server"
-    files = ['cms_logo.png', 'das.css', 'prototype.js', 'utils.js', 'ajax_utils.js',
+    files = ['cms_logo.png', 'das.css', 'opentip.css', 'kwsearch.css',
+            'prettify.css',
+            'prototype.js', 'utils.js', 'ajax_utils.js',
             'fonts-min.css', 'container.css', 'autocomplete.css', 'paginator.css',
             'datatable.css', 'yahoo-dom-event.js', 'container-min.js',
             'datasource-min.js', 'connection-min.js', 'yahoo-min.js',
             'cookie-min.js', 'json-min.js', 'autocomplete-min.js',
-            'element-min.js', 'paginator-min.js', 'datatable-min.js']
+            'element-min.js', 'paginator-min.js', 'datatable-min.js',
+            'opentip-prototype-excanvas.min.js', 'kwdsearch.js']
     return files
 
 def check_values(pfiles):
     "Check passed files against das web files"
     dasfiles = das_web_files()
-    print("PFILES", pfiles)
-    print("DFILES", dasfiles)
     if  isinstance(pfiles, list):
         for name in pfiles:
             fname = name.split('/')[-1]
