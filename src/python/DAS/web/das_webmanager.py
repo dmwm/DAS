@@ -49,6 +49,32 @@ def update_map(emap, mapdir, entry):
     if  entry not in emap:
         emap[entry] = mapdir + entry
 
+def das_web_files():
+    "List files used by DAS web server"
+    files = ['cms_logo.png', 'das.css', 'prototype.js', 'utils.js', 'ajax_utils.js',
+            'fonts-min.css', 'container.css', 'autocomplete.css', 'paginator.css',
+            'datatable.css', 'yahoo-dom-event.js', 'container-min.js',
+            'datasource-min.js', 'connection-min.js', 'yahoo-min.js',
+            'cookie-min.js', 'json-min.js', 'autocomplete-min.js',
+            'element-min.js', 'paginator-min.js', 'datatable-min.js']
+    return files
+
+def check_values(pfiles):
+    "Check passed files against das web files"
+    dasfiles = das_web_files()
+    print("PFILES", pfiles)
+    print("DFILES", dasfiles)
+    if  isinstance(pfiles, list):
+        for name in pfiles:
+            fname = name.split('/')[-1]
+            if fname not in dasfiles:
+                raise Exception("Passed wrong file", name)
+    elif isinstance(pfiles, basestring):
+        if pfiles not in dasfiles:
+                raise Exception("Passed wrong file", pfiles)
+    else:
+        raise Exception("Wrong type", pfiles, type(pfiles))
+
 class DASWebManager(TemplatedPage):
     """
     DAS web manager.
@@ -139,13 +165,13 @@ class DASWebManager(TemplatedPage):
             if  key == 'f': # we only look-up files from given kwds dict
                 if  isinstance(val, list):
                     for name in val:
-                        if name.startswith('/'):
+                        if name.startswith('/') or name.find('..')!=-1:
                             continue
                         fname = os.path.join(idir, name)
                         if os.path.exists(fname) and os.path.isfile(fname):
                             args.append(name)
                 else:
-                    if  not val.startswith('/'):
+                    if  not val.startswith('/') or name.find('..')!=-1:
                         fname = os.path.join(idir, val)
                         if os.path.exists(fname) and os.path.isfile(fname):
                             args.append(val)
@@ -160,6 +186,7 @@ class DASWebManager(TemplatedPage):
         Serve provided CSS files. They can be passed as
         f=file1.css&f=file2.css
         """
+        check_values(kwargs.get('f', []))
         resource = kwargs.get('resource', 'css')
         if  resource == 'css':
             return self.serve(kwargs, self.cssmap, self.cssdir, 'css', True)
@@ -175,6 +202,7 @@ class DASWebManager(TemplatedPage):
         f=file1.js&f=file2.js with optional resource parameter
         to speficy type of JS files, e.g. resource=yui.
         """
+        check_values(kwargs.get('f', []))
         resource = kwargs.get('resource', 'js')
         if  resource == 'js':
             return self.serve(kwargs, self.jsmap, self.jsdir)
