@@ -365,6 +365,13 @@ def checkargs(supported):
             if  checkarg(kwds, 'ahash') and len(str(kwds['ahash'])) != 32:
                 code  = web_code('Unsupported ahash value')
                 raise HTTPError(500, 'DAS error, code=%s' % code)
+            dbses = ["prod/global", "prod/phys01", "prod/phys02", "prod/phys03", "prod/caf",
+                        "int/global", "int/phys01", "int/phys02", "int/phys03",
+                        "dev/global", "dev/phys01", "dev/phys02", "dev/phys03"]
+            if  checkarg(kwds, 'instance') and \
+                    str(kwds['instance']) not in dbses:
+                code  = web_code('Unsupported dbs instance')
+                raise HTTPError(500, 'DAS error, code=%s' % code)
             data = func (self, *args, **kwds)
             return data
         wrapped_f.__doc__  = func.__doc__
