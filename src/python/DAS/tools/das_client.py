@@ -473,7 +473,14 @@ def main():
                     data = unique_filter(data)
                 for row in data:
                     rows = [r for r in get_value(row, filters, base)]
-                    print(' '.join(rows))
+                    if  isinstance(rows[0], list):
+                        out = set()
+                        for item in rows:
+                            for elem in item:
+                                out.add(elem)
+                        print(' '.join(out))
+                    else:
+                        print(' '.join(rows))
             else:
                 print(json.dumps(jsondict))
         elif aggregators:
