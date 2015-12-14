@@ -97,18 +97,20 @@ class DASWebService(DASWebManager):
         self.lifetime    = self.dasconfig['mongodb']['lifetime']
         self.queue_limit = config.get('queue_limit', 50)
         qtype            = config.get('qtype', 'Queue')
+        qfreq            = config.get('qfreq', 5)
         if  qtype not in ['Queue', 'PriorityQueue']:
             msg = 'Wrong queue type, qtype=%s' % qtype
             raise Exception(msg)
         if  self.engine:
             thr_name = 'DASWebService:PluginTaskManager'
             self.taskmgr = PluginTaskManager(bus=self.engine, \
-                    nworkers=nworkers, name=thr_name, qtype=qtype)
+                    nworkers=nworkers, name=thr_name, qtype=qtype, \
+                    qfreq=qfreq)
             self.taskmgr.subscribe()
         else:
             thr_name = 'DASWebService:TaskManager'
             self.taskmgr = TaskManager(nworkers=nworkers, name=thr_name, \
-                    qtype=qtype)
+                    qtype=qtype, qfreq=qfreq)
         self.adjust      = config.get('adjust_input', False)
         self.dasmgr      = None # defined at run-time via self.init()
         self.reqmgr      = None # defined at run-time via self.init()
@@ -922,9 +924,11 @@ class DASWebService(DASWebManager):
         if  not pid:
             pid = dasquery.qhash
         if  status == None and not self.reqmgr.has_pid(pid): # submit new request
-            addr = cherrypy.request.headers.get('Remote-Addr')
+            uid = cherrypy.request.headers.get('Remote-Addr')
+            if  hasattr(cherrypy.request, 'user'):
+                uid = cherrypy.request.user.get('dn', None)
             _evt, pid = self.taskmgr.spawn(\
-                self.dasmgr.call, dasquery, uid=addr, pid=dasquery.qhash)
+                self.dasmgr.call, dasquery, uid=uid, pid=dasquery.qhash)
             self.reqmgr.add(pid, kwargs)
             return pid
         if  status == 'ok':
@@ -1061,9 +1065,11 @@ class DASWebService(DASWebManager):
         pid = dasquery.qhash
         if  status is None: # process new request
             kwargs['dasquery'] = dasquery.storage_query
-            addr = cherrypy.request.headers.get('Remote-Addr')
+            uid = cherrypy.request.headers.get('Remote-Addr')
+            if  hasattr(cherrypy.request, 'user'):
+                uid = cherrypy.request.user.get('dn', None)
             _evt, pid = self.taskmgr.spawn(self.dasmgr.call, dasquery,
-                    uid=addr, pid=dasquery.qhash)
+                    uid=uid, pid=dasquery.qhash)
             self.reqmgr.add(pid, kwargs)
         elif status == 'ok' or status == 'fail':
             self.reqmgr.remove(pid)
