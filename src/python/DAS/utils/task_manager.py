@@ -103,9 +103,10 @@ class TaskManager(object):
         mgr.joinall(jobs)
 
     """
-    def __init__(self, nworkers=10, name='TaskManager', qtype='Queue', debug=0):
+    def __init__(self, nworkers=10, name='TaskManager', qtype='Queue', debug=0, qfreq=5):
         self.name   = name
         self.debug  = debug
+        self.qfreq = qfreq
         self._pids  = set()
         self._uids  = UidSet()
         if  qtype == 'PriorityQueue':
@@ -128,10 +129,7 @@ class TaskManager(object):
 
     def assign_priority(self, uid):
         "Assign priority for given uid"
-        if  not uid or self._tasks.empty():
-            return 0
-        frequency = self._uids.get(uid)
-        return frequency/10
+        return self._uids.get(uid)/self.qfreq
 
     def spawn(self, func, *args, **kwargs):
         """Spawn new process for given function"""
