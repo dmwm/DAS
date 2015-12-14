@@ -88,7 +88,7 @@ class testUtils(unittest.TestCase):
 
     def test_assign_priority(self):
         """Test priority assignment"""
-        tasks  = TaskManager(qtype='PriorityQueue')
+        tasks  = TaskManager(qtype='PriorityQueue', qfreq=10)
         uid1   = '1.1.1.1'
         tasks._uids.add(uid1)
         uid2   = '2.2.2.2'
@@ -103,9 +103,9 @@ class testUtils(unittest.TestCase):
 
     def test_priority_task_manager(self):
         """Test priority task manager"""
-        data   = [idx for idx in xrange(0, 100)]
+        data   = [idx for idx in xrange(0, 30)]
         shared_data = Array('i', len(data))
-        mypool = TaskManager(qtype='PriorityQueue')
+        mypool = TaskManager(qtype='PriorityQueue', qfreq=10)
         tasks  = []
         for idx in data:
             if  idx%2:
