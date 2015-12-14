@@ -120,6 +120,10 @@ DASOption('web_server', 'status_update', 'int', 3000),
 DASOption('web_server', 'web_workers', 'int', 50),
 # limit number of peding jobs in DAS server queue
 DASOption('web_server', 'queue_limit', 'int', 1000),
+# type of Queue used by DAS server
+DASOption('web_server', 'qtype', 'Queue')
+# frequency denominator for PriorityQueue, see code
+DASOption('web_server', 'qfreq', 5)
 # The adjust_input function can be implemented for concrete use case
 # In CMS we can adjust input values to regex certain things, like dataset/run.
 DASOption('web_server', 'adjust_input', 'bool', False),
