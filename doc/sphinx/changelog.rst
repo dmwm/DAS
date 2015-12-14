@@ -5,6 +5,10 @@ Release notes
 
 This release series is targeted to DAS production stability and quality.
 
+- v02.18.XX
+
+  - Work on priority queue
+
 - v02.17.XX
 
   - Address issues with security check
