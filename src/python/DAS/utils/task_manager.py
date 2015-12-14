@@ -186,9 +186,9 @@ class PluginTaskManager(TaskManager, plugins.SimplePlugin):
     cherrypy.engine
     """
     def __init__(self, bus, nworkers=10, name='PluginTaskManager',
-                    qtype='Queue', debug=0):
+                    qtype='Queue', debug=0, qfreq=5):
         plugins.SimplePlugin.__init__(self, bus)
-        TaskManager.__init__(self, nworkers, name, debug)
+        TaskManager.__init__(self, nworkers, name, debug, qfreq)
         if  debug:
             print("%s init with %s workers" % (name, nworkers))
 
