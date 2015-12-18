@@ -25,6 +25,7 @@ import urllib
 import urllib2
 import httplib
 import cookielib
+import ssl
 from   optparse import OptionParser
 from   math import log
 from   types import GeneratorType
@@ -70,10 +71,12 @@ class HTTPSClientAuthHandler(urllib2.HTTPSHandler):
 
     def get_connection(self, host, timeout=300):
         """Connection method"""
-        if  self.key:
+        if sys.version_info < (2, 7, 9):
             return httplib.HTTPSConnection(host, key_file=self.key,
-                                                cert_file=self.cert)
-        return httplib.HTTPSConnection(host)
+                                                 cert_file=self.cert)
+        return httplib.HTTPSConnection(host, key_file=self.key,
+                                             cert_file=self.cert,
+                                             context=ssl._create_unverified_context())
 
 def x509():
     "Helper function to get x509 either from env or tmp file"
@@ -278,7 +281,10 @@ def get_data(host, query, idx, limit, debug, threshold=300, ckey=None,
         cert = fullpath(cert)
         http_hdlr  = HTTPSClientAuthHandler(ckey, cert, debug)
     else:
-        http_hdlr  = urllib2.HTTPHandler(debuglevel=debug)
+        if sys.version_info < (2, 7, 9):
+            http_hdlr  = urllib2.HTTPSHandler(debuglevel=debug)
+        else:
+            http_hdlr  = urllib2.HTTPSHandler(debuglevel=debug, context=ssl._create_unverified_context())
     proxy_handler  = urllib2.ProxyHandler({})
     cookie_jar     = cookielib.CookieJar()
     cookie_handler = urllib2.HTTPCookieProcessor(cookie_jar)
@@ -369,7 +375,10 @@ def keys_attrs(lkey, oformat, host, ckey, cert, debug=0):
         cert = fullpath(cert)
         http_hdlr  = HTTPSClientAuthHandler(ckey, cert, debug)
     else:
-        http_hdlr  = urllib2.HTTPHandler(debuglevel=debug)
+        if sys.version_info < (2, 7, 9):
+            http_hdlr  = urllib2.HTTPSHandler(debuglevel=debug)
+        else:
+            http_hdlr  = urllib2.HTTPSHandler(debuglevel=debug, context=ssl._create_unverified_context())
     proxy_handler  = urllib2.ProxyHandler({})
     cookie_jar     = cookielib.CookieJar()
     cookie_handler = urllib2.HTTPCookieProcessor(cookie_jar)
