@@ -8,6 +8,7 @@ This release series is targeted to DAS production stability and quality.
 - v02.18.XX
 
   - Work on priority queue
+  - issues: #4242, 4240, 4237, 4230, 4223, 4208
 
 - v02.17.XX
 
