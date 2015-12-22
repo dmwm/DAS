@@ -435,7 +435,8 @@ class CMSRepresentation(DASRepresentation):
         inst     = dasquery.instance
         filters  = dasquery.filters
         aggrtrs  = dasquery.aggregators
-        main     = self.pagination(head)
+        pager    = self.pagination(head)
+        main     = pager
         style    = 'white'
         rowkeys  = []
         fltpage  = self.filter_bar(dasquery)
@@ -612,6 +613,10 @@ class CMSRepresentation(DASRepresentation):
             main += self.templatepage('das_duplicates', uinput=uinput,
                         instance=inst)
         main += page
+        if total>10:
+            main += '<hr class="line" />'
+            main += pager
+            main += '<hr class="line" />'
         proc_time = self.processing_time(dasquery)
         if  proc_time:
             msg = 'processing time: %5.3f sec, ' % proc_time
