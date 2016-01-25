@@ -46,7 +46,7 @@ def relax(query, operators):
     "Add spaces around special symbols"
     qlen = len(query)
     for oper in operators + ['(', ')', '>', '<', '!', '[', ']', ',', '=']:
-        if  oper in ['in', 'between']:
+        if  oper in ['in', 'between', 'last']:
             continue
         query = query.replace(oper, ' %s ' % oper)
     query = ' '.join(q.strip() for q in query.split())
