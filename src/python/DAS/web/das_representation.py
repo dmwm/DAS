@@ -23,6 +23,12 @@ from DAS.web.das_webmanager import DASWebManager
 from DAS.web.tools import exposedasjson, exposetext, exposedasplist
 from DAS.web.utils import quote, das_json_full
 
+def datasetPattern(query):
+    "Check if given query is dataset pattern one"
+    if  query.startswith('dataset=') and query.find('*') != -1:
+        return True
+    return False
+
 class DASRepresentation(DASWebManager):
     """
     DASRepresentation is an abstract class which represents DAS records
@@ -169,6 +175,12 @@ class DASRepresentation(DASWebManager):
         uinput  = getarg(kwargs, 'input', '')
         skip_args = ['status', 'error', 'reason']
         page    = ''
+        if  datasetPattern(uinput):
+            msg = 'By default DAS show dataset with <b>VALID</b> status. '
+            msg += 'To query all datasets regardless of their status please use'
+            msg += '<span class="example">dataset %s status=*</span> query' % uinput
+            msg += ' or use proper status value, e.g. PRODUCTION'
+            page += '<div>%s</div><br/>' % msg
         if  total > 0:
             params = {} # will keep everything except idx/limit
             for key, val in kwargs.iteritems():
