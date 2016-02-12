@@ -5,6 +5,10 @@ Release notes
 
 This release series is targeted to DAS production stability and quality.
 
+- v02.19.XX
+
+  - Add support for ReqMgr2
+
 - v02.18.XX
 
   - Work on priority queue
