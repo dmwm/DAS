@@ -1,0 +1,59 @@
+# ReqMgr2 API mapping to DAS
+system : reqmgr2
+format : JSON
+---
+urn: configs
+url : "https://cmsweb.cern.ch/couchdb/reqmgr_config_cache"
+expire : 900
+params : {"dataset": "required"}
+lookup : config
+das_map : [
+    {"das_key":"config", "rec_key":"config.name"},
+    {"das_key": "dataset", "rec_key":"dataset.name", "api_arg":"dataset",
+     "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+"},
+]
+---
+urn: inputdataset
+url : "https://cmsweb.cern.ch/reqmgr2/data/request"
+expire : 900
+params : {"inputdataset": "required"}
+lookup : dataset
+das_map : [
+    {"das_key": "dataset", "rec_key":"dataset.name", "api_arg":"inputdataset",
+     "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+"},
+]
+---
+urn: outputdataset
+url : "https://cmsweb.cern.ch/reqmgr2/data/request"
+expire : 900
+params : {"outputdataset": "required"}
+lookup : dataset
+das_map : [
+    {"das_key": "dataset", "rec_key":"dataset.name", "api_arg":"outputdataset",
+     "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+"},
+]
+---
+urn: configIDs
+url : "https://cmsweb.cern.ch/reqmgr2/data/request"
+expire : 900
+params : {"inputdataset": "required"}
+lookup : dataset
+das_map : [
+    {"das_key": "dataset", "rec_key":"dataset.name", "api_arg":"inputdataset",
+     "pattern":"/[\\w-]+/[\\w-]+/[A-Z-]+"},
+]
+---
+urn: datasetByPrepID
+url : "https://cmsweb.cern.ch/reqmgr2/data/request"
+expire : 900
+params : {"prep_id": "required"}
+lookup : dataset
+das_map : [
+    {"das_key": "dataset", "rec_key":"dataset.name", "api_arg":"dataset",
+     "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+"},
+    {"das_key": "prepid", "rec_key":"prepid", "api_arg":"prep_id"},
+]
+---
+notations : [
+    {"api_output": "primary_ds_name", "rec_key": "name", "api": "primarydatasets"},
+]
