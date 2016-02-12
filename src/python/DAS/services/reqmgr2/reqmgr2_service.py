@@ -194,7 +194,6 @@ class ReqMgr2Service(DASAbstractService):
                 for rdict in data:
                     for _, val in rdict.items():
                         for name in val['OutputDatasets']:
-                            print("yield", name)
                             yield {'dataset':{'name': name}}
         elif api == 'configIDs':
             gen = DASAbstractService.parser(self, query, dformat, source, api)
