@@ -292,12 +292,13 @@ class DASAbstractService(object):
                     row = row['results']
                 if  isinstance(row, list):
                     for item in row:
-                        if  prim_key in item:
-                            counter += 1
-                            yield item
-                        else:
-                            counter += 1
-                            yield {prim_key:item}
+                        if  item:
+                            if  prim_key in item:
+                                counter += 1
+                                yield item
+                            else:
+                                counter += 1
+                                yield {prim_key:item}
                 else:
                     if  prim_key in row:
                         counter += 1
