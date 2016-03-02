@@ -95,7 +95,7 @@ urn: datasets
 url : "https://cmsweb.cern.ch/dbs/prod/global/DBSReader/datasets/"
 expire : 900
 params : {
-        "dataset":"*",
+        "dataset":"required",
         "primary_ds_name":"optional",
         "primary_ds_type":"optional",
         "detail":"True",
@@ -112,7 +112,44 @@ params : {
 }
 lookup : dataset
 das_map : [
-    {"das_key": "dataset", "rec_key":"dataset.name", "api_arg":"dataset"},
+    {"das_key": "dataset", "rec_key":"dataset.name", "api_arg":"dataset", "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+"},
+    {"das_key": "primary_dataset", "rec_key":"primary_dataset.name", "api_arg":"primary_ds_name"},
+    {"das_key": "datatype", "rec_key":"datatype.name", "api_arg":"primary_ds_type"},
+    {"das_key": "tier", "rec_key":"tier.name", "api_arg":"data_tier_name", "pattern":".*[A-Z].*"},
+    {"das_key": "release", "rec_key":"release.name", "api_arg":"release_version"},
+    {"das_key": "run", "rec_key":"run.run_number", "api_arg":"run_num"},
+    {"das_key": "file", "rec_key":"file.name", "api_arg":"logical_file_name"},
+    {"das_key": "era", "rec_key":"era", "api_arg":"acquisition_era_name"},
+    {"das_key": "group", "rec_key":"group.name", "api_arg":"physics_group_name"},
+    {"das_key": "status", "rec_key":"status.name", "api_arg":"dataset_access_type"},
+    {"das_key": "date", "rec_key":"date", "api_arg":"cdate"},
+    {"das_key": "user", "rec_key":"user.name", "api_arg":"create_by"},
+    {"das_key": "prepid", "rec_key":"prepid", "api_arg":"prep_id"},
+]
+---
+urn: datasetlist
+url : "https://cmsweb.cern.ch/dbs/prod/global/DBSReader/datasetlist/"
+expire : 900
+params : {
+        "dataset":"required",
+        "primary_ds_name":"optional",
+        "primary_ds_type":"optional",
+        "detail":"True",
+        "dataset_access_type": "VALID",
+        "data_tier_name":"optional",
+        "release_version": "optional",
+        "run_num": "optional",
+        "logical_file_name": "optional",
+        "acquisition_era_name": "optional",
+        "physics_group_name": "optional",
+        "cdate": "optional",
+        "create_by": "optional",
+        "prep_id": "optional",
+}
+lookup : dataset
+das_map : [
+    {"das_key": "dataset", "rec_key":"dataset.name", "api_arg":"dataset",
+     "pattern":"\\[\"/[\\w-]+/[\\w-]+/[A-Z-]+\"(\\,\\s*\"/[\\w-]+/[\\w-]+/[A-Z-]+)+\"\\]"},
     {"das_key": "primary_dataset", "rec_key":"primary_dataset.name", "api_arg":"primary_ds_name"},
     {"das_key": "datatype", "rec_key":"datatype.name", "api_arg":"primary_ds_type"},
     {"das_key": "tier", "rec_key":"tier.name", "api_arg":"data_tier_name", "pattern":".*[A-Z].*"},
