@@ -20,11 +20,11 @@ mongo_status="no"
 # helper function to check MongoDB status
 check4db() {
     port=8230
-    mongo_cmd=`mongo --verbose --port $port $DASMAPS_DIR/clean_mapping.js | egrep -i "fail|error"`
-    if  [ -n "$mongo_cmd" ]; then
-        mongo_status="no"
-        return
-    fi
+#    mongo_cmd=`mongo --verbose --port $port $DASMAPS_DIR/clean_mapping.js | egrep -i "fail|error"`
+#    if  [ -n "$mongo_cmd" ]; then
+#        mongo_status="no"
+#        return
+#    fi
 #    mongo=`mongostat --noheaders -n 1 --port $port --discover 2>&1`
 #    mongo_ok=`echo $mongo | tail -1 | grep $port`
     mongo_ok=`pymongostat | awk '{z=split($0,a," "); print a[z]}'`
