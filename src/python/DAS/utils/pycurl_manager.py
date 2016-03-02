@@ -81,7 +81,10 @@ class RequestHandler(object):
         encoded_data = urllib.urlencode(params, doseq=doseq)
         if  post:
             curl.setopt(pycurl.POST, 1)
-            curl.setopt(pycurl.POSTFIELDS, encoded_data)
+            if  params and isinstance(params, dict):
+                curl.setopt(pycurl.POSTFIELDS, json.dumps(params))
+            else:
+                curl.setopt(pycurl.POSTFIELDS, encoded_data)
         else:
             url = url + '?' + encoded_data
         if  verbose > 1:
