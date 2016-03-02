@@ -681,6 +681,10 @@ class DASMapping(object):
                 if  row['rec_key'] != rec_key:
                     continue
                 if  value and pat:
+                    if  isinstance(value, dict):
+                        if pat.match(json.dumps(value.values()[0])):
+                            if  api_param not in names:
+                                names.append(api_param)
                     if  pat.match(str(value)):
                         if  api_param not in names:
                             names.append(api_param)
