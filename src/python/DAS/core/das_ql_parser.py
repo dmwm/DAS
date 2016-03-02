@@ -108,8 +108,11 @@ def parse_array(query, oper, daskey):
     idx = query.index('[')
     jdx = query.index(']')
     try:
-#        val = eval(' '.join(query[idx:jdx+1]), {"__builtins__": None}, {})
-        val = json.loads(' '.join(query[idx:jdx+1]))
+        subq = ' '.join(query[idx:jdx+1])
+        if  daskey == 'dataset':
+            subq = subq.replace('[', '["').replace(']', '"]').replace(',', '","')
+            subq = ''.join([s.strip() for s in subq.split()])
+        val = json.loads(subq)
     except Exception as exc:
         error(query, idx, 'Fail to extract value from square brackets, '+str(exc))
     if  oper == 'in':
