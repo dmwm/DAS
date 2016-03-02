@@ -5,6 +5,11 @@ Release notes
 
 This release series is targeted to DAS production stability and quality.
 
+- v02.20.XX
+
+  - Support datasetlist API from DBS3, issue #4248
+    support for query dataset dataset in [/a/b/c, /c/d/e]
+
 - v02.19.XX
 
   - Add support for ReqMgr2
