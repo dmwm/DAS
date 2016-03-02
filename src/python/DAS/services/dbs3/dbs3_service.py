@@ -447,6 +447,9 @@ class DBS3Service(DASAbstractService):
         """URL call wrapper"""
         if  not headers:
             headers =  {'Accept': 'application/json' } # DBS3 always needs that
+        if  url.find('datasetlist') != -1:
+            post = True
+            headers['Content-type'] = 'application/json'
         return getdata(url, params, headers, expire, post,
                 self.error_expire, self.verbose, self.ckey, self.cert,
                 doseq=False, system=self.name)
@@ -493,11 +496,18 @@ class DBS3Service(DASAbstractService):
                 del kwds['era']
             except KeyError:
                 pass
-        if  api == 'datasets':
+        if  api == 'datasets' or api == 'datasetlist':
+            if  isinstance(kwds['dataset'], dict):
+                kwds['dataset'] = kwds['dataset']['$in']
             if  kwds['dataset'][0] == '*':
                 kwds['dataset'] = '/' + kwds['dataset']
             if  kwds['dataset'] == '*' and kwds['block_name']:
                 kwds['dataset'] = kwds['block_name'].split('#')[0]
+            if  api == 'datasetlist' and 'detail' in kwds:
+                if  kwds['detail'] == 'True':
+                    kwds['detail'] = True
+                else:
+                    kwds['detail'] = False
             if  'cdate' in kwds:
                 min_date = None
                 max_date = None
@@ -593,7 +603,7 @@ class DBS3Service(DASAbstractService):
                         sites.add(orig_site)
             for site in sites:
                 yield {'site': {'name': site}}
-        elif api == 'datasets' or api == 'dataset_info':
+        elif api == 'datasets' or api == 'dataset_info' or api == 'datasetlist':
             for row in gen:
                 row['name'] = row['dataset']
                 del row['dataset']
