@@ -112,7 +112,8 @@ params : {
 }
 lookup : dataset
 das_map : [
-    {"das_key": "dataset", "rec_key":"dataset.name", "api_arg":"dataset", "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+"},
+    {"das_key": "dataset", "rec_key":"dataset.name", "api_arg":"dataset",
+     "pattern": "/.*/.*/.*"},
     {"das_key": "primary_dataset", "rec_key":"primary_dataset.name", "api_arg":"primary_ds_name"},
     {"das_key": "datatype", "rec_key":"datatype.name", "api_arg":"primary_ds_type"},
     {"das_key": "tier", "rec_key":"tier.name", "api_arg":"data_tier_name", "pattern":".*[A-Z].*"},
