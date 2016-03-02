@@ -148,6 +148,8 @@ class DASQuery(object):
         # check dataset wild-cards
         for key, val in self._mongo_query['spec'].items():
             if  key == 'dataset.name':
+                if  isinstance(val, dict): # we get {'$in':[a,b]}
+                    continue
                 # only match dataset.name but do not primary_dataset.name
                 if  not RE_3SLASHES.match(val):
 
