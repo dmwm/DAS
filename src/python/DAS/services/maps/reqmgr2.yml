@@ -13,16 +13,6 @@ das_map : [
      "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+"},
 ]
 ---
-urn: inputdataset
-url : "https://cmsweb.cern.ch/reqmgr2/data/request"
-expire : 900
-params : {"inputdataset": "required"}
-lookup : dataset
-das_map : [
-    {"das_key": "dataset", "rec_key":"dataset.name", "api_arg":"inputdataset",
-     "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+"},
-]
----
 urn: outputdataset
 url : "https://cmsweb.cern.ch/reqmgr2/data/request"
 expire : 900
@@ -31,16 +21,6 @@ lookup : dataset
 das_map : [
     {"das_key": "dataset", "rec_key":"dataset.name", "api_arg":"outputdataset",
      "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+"},
-]
----
-urn: configIDs
-url : "https://cmsweb.cern.ch/reqmgr2/data/request"
-expire : 900
-params : {"inputdataset": "required"}
-lookup : dataset
-das_map : [
-    {"das_key": "dataset", "rec_key":"dataset.name", "api_arg":"inputdataset",
-     "pattern":"/[\\w-]+/[\\w-]+/[A-Z-]+"},
 ]
 ---
 urn: datasetByPrepID
