@@ -473,7 +473,10 @@ def main():
                     data = unique_filter(data)
                 for row in data:
                     rows = [r for r in get_value(row, filters, base)]
-                    if  isinstance(rows[0], list):
+                    types = [type(r) for r in rows]
+                    if  len(types)>1: # mixed types print as is
+                        print(' '.join([str(r) for r in rows]))
+                    elif isinstance(rows[0], list):
                         out = set()
                         for item in rows:
                             for elem in item:
