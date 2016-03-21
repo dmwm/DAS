@@ -5,6 +5,11 @@ Release notes
 
 This release series is targeted to DAS production stability and quality.
 
+- v02.21.XX
+
+  - Fix issues: #4251
+  - Remove inputdataset ReqMgr2 API
+
 - v02.20.XX
 
   - Support datasetlist API from DBS3, issue #4248
