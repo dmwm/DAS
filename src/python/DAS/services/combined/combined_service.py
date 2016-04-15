@@ -146,8 +146,7 @@ def site4dataset(dbs_url, phedex_api, args, expire):
     phedex_args = {'dataset':args['dataset']}
     headers = {'Accept': 'text/xml'}
     source, expire = \
-        getdata(phedex_api, phedex_args, headers, expire, post=True,
-                system='phedex')
+        getdata(phedex_api, phedex_args, headers, expire, system='phedex')
     prim_key = 'block'
     tags = 'block.replica.node'
     site_info = {}
@@ -211,7 +210,7 @@ class CombinedService(DASAbstractService):
             api = phedex_url + '/nodes'
             headers = {'Accept': 'application/json;text/json'}
             source, expire = \
-                getdata(api, args, headers, expire, post=False, system='phedex')
+                getdata(api, args, headers, expire, system='phedex')
             self.sites['tstamp'] = time.time()
             for rec in json_parser(source, None):
                 for row in rec['phedex']['node']:
@@ -251,8 +250,7 @@ class CombinedService(DASAbstractService):
                                 'node': '%s*' % args['site']}
             headers = {'Accept': 'text/xml'}
             source, expire = \
-                getdata(phedex_api, phedex_args, headers, expire, post=True,
-                        system='phedex')
+                getdata(phedex_api, phedex_args, headers, expire, system='phedex')
             prim_key = 'block'
             tags = 'block.replica.node'
             found = {}
