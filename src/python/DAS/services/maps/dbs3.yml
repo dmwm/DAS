@@ -449,7 +449,7 @@ das_map : [
 urn: file4DatasetRunLumi
 url : "https://cmsweb.cern.ch/dbs/prod/global/DBSReader/files/"
 expire : 900
-params : {"dataset":"required", "run_num":"required", "lumi_list":[]}
+params : {"dataset":"required", "run_num":"required", "lumi_list":[], "detail":"True"}
 lookup : file
 das_map : [
     {"das_key":"file", "rec_key":"file.name"},
@@ -707,16 +707,19 @@ notations : [
     {"api_output": "file_type", "rec_key": "type", "api": "files"},
     {"api_output": "file_type", "rec_key": "type", "api": "files_via_dataset"},
     {"api_output": "file_type", "rec_key": "type", "api": "files_via_block"},
+    {"api_output": "file_type", "rec_key": "type", "api": "file4DatasetRunLumi"},
     {"api_output": "file.file_type", "rec_key": "file.type", "api": ""},
     {"api_output": "file.block_name", "rec_key": "file.block.name", "api": ""},
     {"api_output": "file_size", "rec_key": "size", "api": "files"},
     {"api_output": "file_size", "rec_key": "size", "api": "filesummaries"},
     {"api_output": "file_size", "rec_key": "size", "api": "files_via_dataset"},
     {"api_output": "file_size", "rec_key": "size", "api": "files_via_block"},
+    {"api_output": "file_size", "rec_key": "size", "api": "file4DatasetRunLumi"},
     {"api_output": "file.file_size", "rec_key": "file.size", "api": ""},
     {"api_output": "event_count", "rec_key": "nevents", "api": "files"},
     {"api_output": "event_count", "rec_key": "nevents", "api": "files_via_dataset"},
     {"api_output": "event_count", "rec_key": "nevents", "api": "files_via_block"},
+    {"api_output": "event_count", "rec_key": "nevents", "api": "file4DatasetRunLumi"},
     {"api_output": "num_event", "rec_key": "nevents", "api": "filesummaries"},
     {"api_output": "num_block", "rec_key": "nblocks", "api": "filesummaries"},
     {"api_output": "file.event_count", "rec_key": "file.nevents", "api": ""},

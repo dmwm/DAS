@@ -5,6 +5,11 @@ Release notes
 
 This release series is targeted to DAS production stability and quality.
 
+- v02.22.XX
+
+  - remove POST requests to PhEDEx
+  - fix maps attributes for file4DatasetRunLumi
+
 - v02.21.XX
 
   - Fix issues: #4251
