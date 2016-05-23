@@ -328,14 +328,16 @@ def prim_value(row):
     """Extract primary key value from DAS record"""
     prim_key = row['das']['primary_key']
     if  prim_key == 'summary':
-        return row[prim_key]
+        return row.get(prim_key, None)
     key, att = prim_key.split('.')
     if  isinstance(row[key], list):
         for item in row[key]:
             if  att in item:
                 return item[att]
     else:
-        return row[key][att]
+        if  key in row:
+            if  att in row[key]:
+                return row[key][att]
 
 def print_summary(rec):
     "Print summary record information on stdout"
