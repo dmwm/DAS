@@ -10,6 +10,7 @@ from __future__ import print_function
 # pymongo modules
 from bson.objectid import ObjectId
 from pymongo import ASCENDING
+from pymongo.errors import OperationFailure
 
 # DAS modules
 from DAS.core.das_son_manipulator import DAS_SONManipulator
@@ -86,7 +87,10 @@ class DASKeyLearning(object):
         colnames = mdb.collection_names()
         if  not colnames or self.colname not in colnames:
             print("Create", mdb, self.colname)
-            mdb.create_collection(self.colname)
+            try:
+                mdb.create_collection(self.colname)
+            except OperationFailure:
+                pass
         mdb.add_son_manipulator(self.das_son_manipulator)
         return mdb[self.colname]
 

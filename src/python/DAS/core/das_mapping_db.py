@@ -32,6 +32,7 @@ import hashlib
 
 # monogo db modules
 from pymongo import DESCENDING
+from pymongo.errors import OperationFailure
 
 # DAS modules
 from DAS.utils.utils import md5hash, TRANSIENT_FIELDS
@@ -148,7 +149,10 @@ class DASMapping(object):
         colnames = mdb.collection_names()
         if  not colnames or self.colname not in colnames:
             print("Create", mdb, self.colname)
-            mdb.create_collection(self.colname)
+            try:
+                mdb.create_collection(self.colname)
+            except OperationFailure:
+                pass
         mdb.add_son_manipulator(self.das_son_manipulator)
         return mdb[self.colname]
 

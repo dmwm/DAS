@@ -44,6 +44,7 @@ from bson.code import Code
 from pymongo import DESCENDING, ASCENDING
 from bson.errors import InvalidDocument
 from pymongo.errors import ConnectionFailure, InvalidOperation, DuplicateKeyError
+from pymongo.errors import OperationFailure
 
 def adjust_expire(expire):
     "Adjust expire timestamp"
@@ -226,7 +227,10 @@ class DASMongocache(object):
         colnames = mdb.collection_names()
         if  not colnames or self.col_ not in colnames:
             print("Create", mdb, self.col_)
-            mdb.create_collection(self.col_)
+            try:
+                mdb.create_collection(self.col_)
+            except OperationFailure:
+                pass
         mdb.add_son_manipulator(self.das_son_manipulator)
         return mdb[self.col_]
 
@@ -238,7 +242,10 @@ class DASMongocache(object):
         colnames = mdb.collection_names()
         if  not colnames or self.merge_ not in colnames:
             print("Create", mdb, self.merge_)
-            mdb.create_collection(self.merge_)
+            try:
+                mdb.create_collection(self.merge_)
+            except OperationFailure:
+                pass
         mdb.add_son_manipulator(self.das_son_manipulator)
         return mdb[self.merge_]
 
