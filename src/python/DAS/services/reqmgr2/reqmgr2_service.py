@@ -174,6 +174,8 @@ class ReqMgr2Service(DASAbstractService):
                 key = 'WMCore.RequestManager.DataStructs.Request.Request'
                 try:
                     data = row['dataset']
+                    if  data == {'result':[]}:
+                        continue
                     if  isinstance(data, dict) and 'error' in data:
                         yield row
                     else:

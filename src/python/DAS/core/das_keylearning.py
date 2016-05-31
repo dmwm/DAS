@@ -86,7 +86,6 @@ class DASKeyLearning(object):
         mdb  = conn[self.dbname]
         colnames = mdb.collection_names()
         if  not colnames or self.colname not in colnames:
-            print("Create", mdb, self.colname)
             try:
                 mdb.create_collection(self.colname)
             except OperationFailure:

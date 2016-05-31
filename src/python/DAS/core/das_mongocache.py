@@ -226,7 +226,6 @@ class DASMongocache(object):
         mdb  = conn[self.dbname]
         colnames = mdb.collection_names()
         if  not colnames or self.col_ not in colnames:
-            print("Create", mdb, self.col_)
             try:
                 mdb.create_collection(self.col_)
             except OperationFailure:
@@ -241,7 +240,6 @@ class DASMongocache(object):
         mdb  = conn[self.dbname]
         colnames = mdb.collection_names()
         if  not colnames or self.merge_ not in colnames:
-            print("Create", mdb, self.merge_)
             try:
                 mdb.create_collection(self.merge_)
             except OperationFailure:
