@@ -19,6 +19,7 @@ DAS_CLIENT = 'das-client/1.1::python/%s.%s' % sys.version_info[:2]
 
 import os
 import re
+import ssl
 import time
 import json
 import urllib
@@ -53,13 +54,14 @@ class HTTPSClientAuthHandler(urllib2.HTTPSHandler):
     Simple HTTPS client authentication class based on provided
     key/ca information
     """
-    def __init__(self, key=None, cert=None, level=0):
+    def __init__(self, key=None, cert=None, capath=None, level=0):
         if  level > 1:
             urllib2.HTTPSHandler.__init__(self, debuglevel=1)
         else:
             urllib2.HTTPSHandler.__init__(self)
         self.key = key
         self.cert = cert
+	self.capath = capath
 
     def https_open(self, req):
         """Open request method"""
@@ -70,9 +72,14 @@ class HTTPSClientAuthHandler(urllib2.HTTPSHandler):
 
     def get_connection(self, host, timeout=300):
         """Connection method"""
-        if  self.key:
+        if  self.key and self.cert and not self.capath:
             return httplib.HTTPSConnection(host, key_file=self.key,
                                                 cert_file=self.cert)
+        elif self.cert and self.capath:
+            context = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
+            context.load_verify_locations(capath=self.capath)
+            context.load_cert_chain(self.cert)
+            return httplib.HTTPSConnection(host, context=context)
         return httplib.HTTPSConnection(host)
 
 def x509():
@@ -135,6 +142,10 @@ class DASOptionParser:
         msg  = 'specify private certificate file name, default $X509_USER_PROXY'
         self.parser.add_option("--cert", action="store", type="string",
                                default=x509(), dest="cert", help=msg)
+        msg  = 'specify CA path, default $X509_CERT_DIR'
+        self.parser.add_option("--capath", action="store", type="string",
+                               default=os.environ.get("X509_CERT_DIR", ""),
+                               dest="capath", help=msg)
         msg  = 'specify number of retries upon busy DAS server message'
         self.parser.add_option("--retry", action="store", type="string",
                                default=0, dest="retry", help=msg)
@@ -259,7 +270,7 @@ def fullpath(path):
     return path
 
 def get_data(host, query, idx, limit, debug, threshold=300, ckey=None,
-        cert=None, das_headers=True):
+        cert=None, capath=None, das_headers=True):
     """Contact DAS server and retrieve data for given DAS query"""
     params  = {'input':query, 'idx':idx, 'limit':limit}
     path    = '/das/cache'
@@ -276,7 +287,10 @@ def get_data(host, query, idx, limit, debug, threshold=300, ckey=None,
     if  ckey and cert:
         ckey = fullpath(ckey)
         cert = fullpath(cert)
-        http_hdlr  = HTTPSClientAuthHandler(ckey, cert, debug)
+        http_hdlr  = HTTPSClientAuthHandler(ckey, cert, capath, debug)
+    elif cert and capath:
+        cert = fullpath(cert)
+        http_hdlr  = HTTPSClientAuthHandler(ckey, cert, capath, debug)
     else:
         http_hdlr  = urllib2.HTTPHandler(debuglevel=debug)
     proxy_handler  = urllib2.ProxyHandler({})
@@ -410,6 +424,7 @@ def main():
     thr     = opts.threshold
     ckey    = opts.ckey
     cert    = opts.cert
+    capath  = opts.capath
     base    = opts.base
     check_glidein()
     check_auth(ckey)
@@ -420,7 +435,7 @@ def main():
         print('Input query is missing')
         sys.exit(EX_USAGE)
     if  opts.format == 'plain':
-        jsondict = get_data(host, query, idx, limit, debug, thr, ckey, cert)
+        jsondict = get_data(host, query, idx, limit, debug, thr, ckey, cert, capath)
         cli_msg  = jsondict.get('client_message', None)
         if  cli_msg:
             print("DAS CLIENT WARNING: %s" % cli_msg)
@@ -440,7 +455,7 @@ def main():
                     interval = log(attempt)**5
                     print("Retry in %5.3f sec" % interval)
                     time.sleep(interval)
-                    data = get_data(host, query, idx, limit, debug, thr, ckey, cert)
+                    data = get_data(host, query, idx, limit, debug, thr, ckey, cert, capath)
                     jsondict = json.loads(data)
                     if  jsondict.get('status', 'fail') == 'ok':
                         found = True
@@ -525,7 +540,7 @@ def main():
                 print(data)
     else:
         jsondict = get_data(\
-                host, query, idx, limit, debug, thr, ckey, cert)
+                host, query, idx, limit, debug, thr, ckey, cert, capath)
         print(json.dumps(jsondict))
 
 #
