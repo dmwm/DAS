@@ -5,6 +5,14 @@ Release notes
 
 This release series is targeted to DAS production stability and quality.
 
+- v02.25.XX
+
+  - add X509_CERT_DIR to das_client
+
+- v02.24.XX
+
+  - remove reqmgr2 empty records
+
 - v02.22.XX
 
   - remove POST requests to PhEDEx
