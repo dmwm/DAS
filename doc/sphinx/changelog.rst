@@ -5,6 +5,13 @@ Release notes
 
 This release series is targeted to DAS production stability and quality.
 
+- v03.00.XX
+  
+  - Re-factor DAS code to tear apart DAS DBS updates and DAS cache cleanups
+  - create new scripts das_dbs_update, das_cleanup which will run as
+    stand-alone cronjobs
+  - added dumpthreads API to dump content of DAS server thread stack
+
 - v02.25.XX
 
   - add X509_CERT_DIR to das_client
