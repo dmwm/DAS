@@ -35,7 +35,6 @@ from DAS.utils.utils import dastimestamp, record_codes
 from DAS.utils.das_db import db_connection, find_one
 from DAS.utils.das_db import db_gridfs, parse2gridfs, create_indexes
 from DAS.utils.logger import PrintManager
-from DAS.utils.thread import start_new_thread
 from DAS.utils.das_pymongo import PYMONGO_OPTS, PYMONGO_NOEXHAUST
 
 # monogo db modules
@@ -134,15 +133,6 @@ def etstamp(delta=20):
     """
     return time.time() + delta
 
-def cleanup_worker(dburi, dbname, collections, del_ttl, sleep):
-    """DAS cache cleanup worker"""
-    while True:
-        conn = db_connection(dburi)
-        spec = {'das.expire': { '$lt':time.time()-del_ttl}}
-        for col in collections:
-            conn[dbname][col].remove(spec)
-        time.sleep(sleep)
-
 class DASMongocache(object):
     """
     DAS cache based MongoDB.
@@ -214,10 +204,6 @@ class DASMongocache(object):
         cols   = [config['dasdb']['cachecollection'],
                   config['dasdb']['mrcollection'],
                   config['dasdb']['mergecollection']]
-        sleep  = config['dasdb'].get('cleanup_interval', 600)
-        if  config['dasdb'].get('cleanup_worker', True):
-            args = (self.dburi, self.dbname, cols, self.cleanup_del_ttl, sleep)
-            start_new_thread(thname, cleanup_worker, args, unique=True)
 
     @property
     def col(self):

@@ -37,7 +37,7 @@ from DAS.utils.utils import getarg
 from DAS.utils.url_utils import disable_urllib2Proxy
 from DAS.utils.ddict import DotDict
 from DAS.utils.utils import genkey, print_exc, dastimestamp, dasprint
-from DAS.utils.thread import start_new_thread
+from DAS.utils.thread import start_new_thread, dumpstacks
 from DAS.utils.das_db import db_gridfs
 from DAS.utils.task_manager import TaskManager, PluginTaskManager
 from DAS.web.utils import free_text_parser, threshold
@@ -121,51 +121,34 @@ class DASWebService(DASWebManager):
         self.dbs_instances = [] # defined at run-time via self.init()
         self.kws         = None # defined at run-time via self.init()
         self.q_rewriter  = None # defined at run-time via self.init()
-        self.dataset_daemon = config.get('dbs_daemon', False)
         self.dbsmgr      = {} # dbs_urls vs dbs_daemons, defined at run-time
         self.daskeyslist = [] # list of DAS keys
         self.init()
+	self.dbs_init(config)
 
         # Monitoring thread which performs auto-reconnection
         thname = 'dascore_monitor'
         start_new_thread(thname, dascore_monitor, \
                 ({'das':self.dasmgr, 'uri':self.dburi}, self.init, 5))
 
-    def dbs_daemon(self, config):
-        """Start DBS daemon if it is requested via DAS configuration"""
-        try:
-            main_dbs_url = self.dbs_url
-            dbs_urls = []
-            print("### DBS URL:", self.dbs_url)
-            print("### DBS global instance:", self.dbs_global)
-            print("### DBS instances:", self.dbs_instances)
-            if  not self.dbs_url or not self.dbs_instances:
-                return # just quit
-            for inst in self.dbs_instances:
-                dbs_urls.append(\
-                        (main_dbs_url.replace(self.dbs_global, inst), inst))
-            interval  = config.get('dbs_daemon_interval', 3600)
-            dbsexpire = config.get('dbs_daemon_expire', 3600)
-            preserve_dbs_col = config.get('preserve_on_restart', False)
-            dbs_config  = {'expire': dbsexpire,
-                           'preserve_on_restart': preserve_dbs_col}
-            if  self.dataset_daemon:
-                for dbs_url, inst in dbs_urls:
-                    dbsmgr = DBSDaemon(dbs_url, self.dburi, dbs_config)
-                    self.dbsmgr[(dbs_url, inst)] = dbsmgr
-                    def dbs_updater(_dbsmgr, interval):
-                        """DBS updater daemon"""
-                        while True:
-                            try:
-                                _dbsmgr.update()
-                            except:
-                                pass
-                            time.sleep(interval)
-                    print("### Start DBSDaemon for %s" % dbs_url)
-                    thname = 'dbs_updater:%s' % dbs_url
-                    start_new_thread(thname, dbs_updater, (dbsmgr, interval, ))
-        except Exception as exc:
-            print_exc(exc)
+    def dbs_init(self, config):
+        """Initialize DBS daemons"""
+        main_dbs_url = self.dbs_url
+        dbs_urls = []
+        print("### DBS URL:", self.dbs_url)
+        print("### DBS global instance:", self.dbs_global)
+        print("### DBS instances:", self.dbs_instances)
+        for inst in self.dbs_instances:
+            dbs_urls.append(\
+                    (main_dbs_url.replace(self.dbs_global, inst), inst))
+        interval  = config.get('dbs_daemon_interval', 3600)
+        dbsexpire = config.get('dbs_daemon_expire', 3600)
+        preserve_dbs_col = config.get('preserve_on_restart', False)
+        dbs_config  = {'expire': dbsexpire,
+                       'preserve_on_restart': preserve_dbs_col}
+        for dbs_url, inst in dbs_urls:
+            dbsmgr = DBSDaemon(dbs_url, self.dburi, dbs_config)
+            self.dbsmgr[(dbs_url, inst)] = dbsmgr
 
     def init(self):
         """Init DAS web server, connect to DAS Core"""
@@ -184,9 +167,6 @@ class DASWebService(DASWebManager):
             self.colors = {'das':gen_color('das')}
             for system in self.dasmgr.systems:
                 self.colors[system] = gen_color(system)
-            # Start DBS daemon
-            if  self.dataset_daemon:
-                self.dbs_daemon(self.dasconfig['web_server'])
             if  not self.daskeyslist:
                 keylist = [r for r in self.dasmapping.das_presentation_map()]
                 keylist.sort(key=lambda r: r['das'])
@@ -232,6 +212,17 @@ class DASWebService(DASWebManager):
             msg = 'Reason: ' + msg
         page = self.templatepage('das_redirect', msg=msg)
         return self.page(page, response_div=False)
+
+    @expose
+    @checkargs(DAS_WEB_INPUTS)
+    @tools.secmodv2()
+    def dumpthreads(self, **kwargs):
+        """
+        Represent DAS redirect page
+        """
+        dumpstacks('web call', 'web frame')
+        msg = 'Thread dump performed: %s' % time.strftime("%Y%m%d %H:%M:%S GMT", time.gmtime())
+        return self.page(msg, response_div=False)
 
     def bottom(self, response_div=True):
         """

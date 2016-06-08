@@ -30,6 +30,8 @@ DASOption('pycurl', 'VERBOSE', 'int', 0),
 DASOption('mongodb', 'dburi', 'list', ['mongodb://localhost:27017']),
 # default DB name
 DASOption('mongodb', 'dbname', 'string', 'das'),
+# default DB collection names
+DASOption('mongodb', 'collections', 'list', ['cache', 'merge']),
 # default bulk size to be used by DAS during records insertion into MongoDB
 DASOption('mongodb', 'bulkupdate_size', 'int', 5000),
 # default lifetime of requests in MongoDB, default is 10min
@@ -164,6 +166,12 @@ DASOption('dbs', 'extended_expire', 'int', 0),
 # extended threshold in seconds, it can be used to trigger
 # extended timestamp usage, default is zero
 DASOption('dbs', 'extended_threshold', 'int', 0),
+# DBS url
+DASOption('dbs', 'url', 'string', 'https://cmsweb.cern.ch/dbs/prod/global/DBSReader'),
+# DBS url
+DASOption('dbs', 'global', 'string', 'prod/global'),
+# DBS instances
+DASOption('dbs', 'instances', 'list', ['prod/global', 'prod/phys01', 'prod/phys02', 'prod/phys03', 'prod/caf']),
 
 #
 # DAS test server options
