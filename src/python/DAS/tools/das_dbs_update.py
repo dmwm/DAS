@@ -10,6 +10,7 @@ Description: Script to update DBS datasets in DAS cache
 # system modules
 import os
 import sys
+import time
 import argparse
 
 # DAS modules
@@ -42,10 +43,10 @@ def dbs_update(dasconfig, verbose=False):
                 (dbs_url.replace(dbs_global, inst), inst))
     dbs_config  = {'expire': dbsexpire,
                    'preserve_on_restart': preserve_dbs_col}
+    if  verbose:
+        print(time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(time.time())))
     for dbs_url, inst in dbs_urls:
         dbsmgr = DBSDaemon(dbs_url, dburi, dbs_config)
-        if  verbose:
-            print("### update %s, %s" % (dbs_url, dbs_config))
         dbsmgr.update()
 
 def main():

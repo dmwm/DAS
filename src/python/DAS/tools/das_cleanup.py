@@ -8,6 +8,7 @@ Description: Clean up DAS caches
 """
 
 # system modules
+import json
 import time
 import argparse
 
@@ -33,14 +34,15 @@ def cleanup(dasconfig, verbose=False):
     del_ttl = dasconfig['dasdb']['cleanup_delta_ttl']
     conn = db_connection(dburi)
     spec = {'das.expire': { '$lt':time.time()-del_ttl}}
-    if  verbose:
-        print(dburi, dbname, cols)
-        print(spec)
+    msgs = []
     for col in cols:
         if  verbose:
             ndocs = conn[dbname][col].find(spec).count()
-            print("cleanup %s.%s, %s docs" % (dbname, col, ndocs))
+            msgs.append('%s.%s %s docs' % (dbname, col, ndocs))
         conn[dbname][col].remove(spec)
+    if  verbose:
+        tstamp = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(time.time()))
+        print('%s %s %s' % (tstamp, json.dumps(spec), ' '.join(msgs)))
 
 def main():
     "Main function"
