@@ -296,10 +296,14 @@ def get_data(host, query, idx, limit, debug, threshold=300, ckey=None,
     proxy_handler  = urllib2.ProxyHandler({})
     cookie_jar     = cookielib.CookieJar()
     cookie_handler = urllib2.HTTPCookieProcessor(cookie_jar)
-    opener = urllib2.build_opener(http_hdlr, proxy_handler, cookie_handler)
-    fdesc = opener.open(req)
-    data = fdesc.read()
-    fdesc.close()
+    try:
+        opener = urllib2.build_opener(http_hdlr, proxy_handler, cookie_handler)
+        fdesc = opener.open(req)
+        data = fdesc.read()
+        fdesc.close()
+    except urllib2.HTTPError as error:
+	print(error.read())
+	sys.exit(1)
 
     pat = re.compile(r'^[a-z0-9]{32}')
     if  data and isinstance(data, str) and pat.match(data) and len(data) == 32:
