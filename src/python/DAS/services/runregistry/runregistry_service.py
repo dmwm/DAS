@@ -19,6 +19,7 @@ import DAS.utils.jsonwrapper as json
 from   DAS.services.abstract_service import DASAbstractService
 from   DAS.utils.utils import map_validator, adjust_value, convert_datetime
 from   DAS.utils.utils import convert2date, print_exc, convert2ranges
+from   DAS.utils.url_utils import getdata
 
 def rr_date(timestamp):
     """
@@ -106,11 +107,11 @@ def worker_helper(url, query, table='runsummary'):
                    'runCreated', 'modified', 'lsCount', 'lsRanges']
     elif table == 'runlumis':
         columns = ['sectionFrom', 'sectionTo', 'runNumber']
-    sdata = json.dumps({'filter':query})
+    sdata = {'filter':query}
     path = 'api/GLOBAL/%s/%s/%s/none/data' \
                 % (table, template, urllib.quote(','.join(columns)))
     callurl = os.path.join(url, path)
-    result = urllib.urlopen(callurl, sdata)
+    result, _ = getdata(callurl, sdata, post=True)
     record = json.load(result)
     result.close()
     notations = {'lsRanges':'lumi_section_ranges',
@@ -165,14 +166,14 @@ class RunRegistryService(DASAbstractService):
         _table  = 'runsummary'
         if  api == 'rr_xmlrpc_lumis':
             _table = 'runlumis'
-        for key, val in dasquery.mongo_query['spec'].iteritems():
+        for key, val in dasquery.mongo_query['spec'].items():
             if  key == 'run.run_number':
                 if  isinstance(val, int):
                     _query = {'runNumber': '%s' % val}
                 elif isinstance(val, dict):
                     minrun = 0
                     maxrun = 0
-                    for kkk, vvv in val.iteritems():
+                    for kkk, vvv in val.items():
                         if  kkk == '$in':
                             runs = ' or '.join([str(r) for r in vvv])
                             _query = {'runNumber': runs}
