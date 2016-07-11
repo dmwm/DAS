@@ -11,6 +11,7 @@ This release series is targeted to DAS production stability and quality.
   - create new scripts das_dbs_update, das_cleanup which will run as
     stand-alone cronjobs
   - added dumpthreads API to dump content of DAS server thread stack
+  - create new branch for this release series, release_v03
 
 - v02.25.XX
 
