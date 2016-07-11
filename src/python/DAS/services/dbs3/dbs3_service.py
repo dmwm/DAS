@@ -20,9 +20,17 @@ from __future__ import print_function
 __author__ = "Valentin Kuznetsov"
 
 # system modules
+import sys
 import time
-import urllib
+try: # python3
+    import urllib.parse as urllib
+except ImportError: # fallback to python2, we use urllib.urlencode
+    import urllib
 from types import GeneratorType
+
+# python3
+if  sys.version.startswith('3.'):
+    basestring = str
 
 # DAS modules
 from DAS.services.abstract_service import DASAbstractService
@@ -56,7 +64,7 @@ def process_lumis_with(ikey, gen):
                 odict.setdefault(key, []).append(ilumi)
         else:
             odict.setdefault(key, []).append(ilumi)
-    for key, lumi_list in odict.iteritems():
+    for key, lumi_list in odict.items():
         lumi_list.sort()
         lumis = convert2ranges(lumi_list)
         if  ikey == 'file':
@@ -149,7 +157,7 @@ def block_run_lumis(url, blocks, runs=None, verbose=0):
                 key = (blk, run)
                 for lumi in lumilist:
                     odict.setdefault(key, []).append(lumi)
-    for key, lumis in odict.iteritems():
+    for key, lumis in odict.items():
         blk, run = key
         yield blk, run, lumis
 
@@ -188,7 +196,7 @@ def file_run_lumis(url, blocks, runs=None, valid=None, verbose=0):
                 key = (lfn, run)
                 for lumi in lumilist:
                     odict.setdefault(key, []).append(lumi)
-    for key, lumis in odict.iteritems():
+    for key, lumis in odict.items():
         lfn, run = key
         yield lfn, run, lumis
 

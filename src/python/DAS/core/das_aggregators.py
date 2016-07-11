@@ -160,7 +160,7 @@ def cochain(ckey, data_name, sink_name):
         code  += "selector('%s'," % key
         count_bracket += 1
     code += sink_name
-    for _ in xrange(0, count_bracket):
+    for _ in range(0, count_bracket):
         code += ")"
     return code
 
@@ -250,7 +250,7 @@ def expand_lumis(rows):
                 lumi = item['number']
                 if  isinstance(lumi, list):
                     for lumis in lumi:
-                        lrange = [l for l in xrange(lumis[0], lumis[-1]+1)]
+                        lrange = [l for l in range(lumis[0], lumis[-1]+1)]
                         for slumi in lrange:
                             rec = dict(row)
                             rec['lumi'] = {'number': slumi}

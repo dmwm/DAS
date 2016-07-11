@@ -16,10 +16,9 @@ import cgi
 import sys
 import time
 import copy
-from   types import GeneratorType, InstanceType
+from   types import GeneratorType
 import inspect
 import hashlib
-import plistlib
 import calendar
 import datetime
 import traceback
@@ -27,7 +26,15 @@ import itertools
 import xml.etree.cElementTree as ET
 from   itertools import groupby
 from   bson.objectid import ObjectId
-from HTMLParser import HTMLParser
+try:
+    from HTMLParser import HTMLParser
+except ImportError: # python3
+    from html.parser import HTMLParser
+
+# python3
+if  sys.version.startswith('3.'):
+    basestring = str
+    unicode = str
 
 # DAS modules
 from   DAS.utils.ddict import DotDict, convert_dot_notation
@@ -113,7 +120,10 @@ def md5hash(rec):
             del record[key]
     rec = json.JSONEncoder(sort_keys=True).encode(record)
     keyhash = hashlib.md5()
-    keyhash.update(rec)
+    try:
+        keyhash.update(rec)
+    except TypeError: # python3
+        keyhash.update(rec.encode('ascii'))
     return keyhash.hexdigest()
 
 def add_hash(record):
@@ -190,7 +200,7 @@ def identical_data_records(old, row):
 def delete_keys(rec, value):
     "Delete dict keys whose values equal to a given one"
     if  value in rec.values():
-        to_delete = [k for k, v in rec.iteritems() if v == value]
+        to_delete = [k for k, v in rec.items() if v == value]
         for key in to_delete:
             if  key in rec:
                 del rec[key]
@@ -199,7 +209,7 @@ def deepcopy(obj):
     """Perform full copy of given object into new object"""
     if  isinstance(obj, dict):
         newobj = {}
-        for key, val in obj.iteritems():
+        for key, val in obj.items():
             if  isinstance(val, dict):
                 newobj[key] = deepcopy(val)
             elif isinstance(val, list):
@@ -264,7 +274,7 @@ def parse_filters(query):
     mdict = {}
     existance = {'$exists': True}
     for flt in filters:
-        for key, val in parse_filter(spec, flt).iteritems():
+        for key, val in parse_filter(spec, flt).items():
             if  key in mdict:
                 value = mdict[key]
                 if  isinstance(value, dict) and isinstance(val, dict):
@@ -600,10 +610,10 @@ def adjust_mongo_keyvalue(value):
     newdict = value
     if  isinstance(value, dict):
         newdict = {}
-        for key, val in value.iteritems():
+        for key, val in value.items():
             newval = val
             if  isinstance(val, dict):
-                for kkk, vvv in val.iteritems():
+                for kkk, vvv in val.items():
                     if  kkk == '$in':
                         newval = vvv
                     elif  kkk == '$lte' or kkk == '$gte':
@@ -658,14 +668,14 @@ def merge_dict(dict1, dict2):
 
         merged_dict = {}
         for dictionary in [dict1, dict2]:
-            for key, value in dictionary.iteritems():
+            for key, value in dictionary.items():
                 merged_dict.setdefault(key,[]).append(value)
         return merged_dict
 
     where I changed append(value) on merging lists or adding new
     value into the list based on value type.
     """
-    for key, value in dict2.iteritems():
+    for key, value in dict2.items():
         if  key in dict1:
             val = dict1[key]
             if  val == value:
@@ -688,7 +698,7 @@ def splitlist(ilist, nentries):
     """
     Split input list into a list of lists with nentries
     """
-    for step in xrange(0, len(ilist), nentries):
+    for step in range(0, len(ilist), nentries):
         idx = step
         jdx = idx+nentries
         if  jdx > len(ilist):
@@ -712,7 +722,10 @@ def genkey(query):
         return _das_hash(query)
     except:
         keyhash = hashlib.md5()
-        keyhash.update(query)
+        try:
+            keyhash.update(query)
+        except TypeError: # python3
+            keyhash.update(query.encode('ascii'))
         return keyhash.hexdigest()
 
 def gen2list(results):
@@ -775,17 +788,17 @@ def cartesian_product(ilist1, ilist2):
 
     # find relation keys between two dicts (rows) in lists
     row1  = master_list[0]
-    keys1 = [k for k, v in row1.iteritems() if v and k != 'system']
+    keys1 = [k for k, v in row1.items() if v and k != 'system']
     row2  = slave_list[0]
-    keys2 = [k for k, v in row2.iteritems() if v and k != 'system']
+    keys2 = [k for k, v in row2.items() if v and k != 'system']
     rel_keys = list( set(keys1) & set(keys2) )
     ins_keys = set(keys2) - set(rel_keys)
 
     # loop over largest list and insert
     master_len = len(master_list)
-    for idx in xrange(0, master_len):
+    for idx in range(0, master_len):
         idict = master_list[idx]
-        for jdx in xrange(0, len(slave_list)):
+        for jdx in range(0, len(slave_list)):
             jdict = slave_list[jdx]
             found = 0
             for key in rel_keys:
@@ -830,7 +843,7 @@ def cartesian_product_via_list(master_set, slave_set, rel_keys=None):
             if  match != len(rel_keys): # not all keys are matched
                 continue
             newrow = dict(row)
-            for k, val in row_match.iteritems():
+            for k, val in row_match.items():
                 if  val:
                     if  k == 'system':
                         if  newrow[k].find(val) == -1:
@@ -865,7 +878,7 @@ def genresults_gen(system, results, collect_list):
 
     for res in results:
         rowdict = dict(rdict)
-        for idx in xrange(0, len(collect_list)):
+        for idx in range(0, len(collect_list)):
             key = collect_list[idx]
             if  key in res:
                 rowdict[key] = res[key]
@@ -887,7 +900,7 @@ def genresults(system, results, collect_list):
     olist = []
     for res in results:
         rowdict = dict(rdict)
-        for idx in xrange(0, len(collect_list)):
+        for idx in range(0, len(collect_list)):
             key = collect_list[idx]
             if  key in res:
                 rowdict[key] = res[key]
@@ -904,7 +917,7 @@ def transform_dict2list(indict):
     """
     foundlist = 0
     row  = {}
-    for kkk, vvv in indict.iteritems():
+    for kkk, vvv in indict.items():
         row[kkk] = None
         if  isinstance(vvv, list):
             if  foundlist and foundlist != len(vvv):
@@ -913,9 +926,9 @@ def transform_dict2list(indict):
 
     olist = []
     if  foundlist:
-        for idx in xrange(0, foundlist):
+        for idx in range(0, foundlist):
             newrow = dict(row)
-            for kkk, vvv in indict.iteritems():
+            for kkk, vvv in indict.items():
                 if  isinstance(vvv, list):
                     newrow[kkk] = vvv[idx]
                 else:
@@ -986,14 +999,14 @@ def map_validator(smap):
         }
     """
     msg = 'Fail to validate data-service map %s' % smap
-    if  not isinstance(smap.keys(), list):
-        raise Exception(msg)
+#     if  not isinstance(smap.keys(), list):
+#         raise Exception(msg)
     possible_keys = ['api', 'keys', 'params', 'url', 'expire',
         'lookup', 'format', 'wild_card', 'ckey', 'cert', 'services']
     for item in smap.values():
         if  not isinstance(item, dict):
             raise Exception(msg)
-        keys = item.keys()
+        keys = list(item.keys())
         if  set(keys) | set(possible_keys) != set(possible_keys):
             raise Exception(msg)
         if  not isinstance(item['keys'], list):
@@ -1034,7 +1047,7 @@ def oneway_permutations(ilist):
     Example: ilist=[a,b,c] and this function returns
     (a,b), (a,c), (b,c)
     """
-    for idx in xrange(0, len(ilist)):
+    for idx in range(0, len(ilist)):
         key = ilist[idx]
         try:
             tmp = list(ilist[idx+1:])
@@ -1096,7 +1109,7 @@ def gen_key_tuples(data, key):
     """
     Generator function to yield (value, id) pairs for provided key
     """
-    for idx in xrange(0, len(data)):
+    for idx in range(0, len(data)):
         row = data[idx]
         tup = (row[key], idx)
         yield tup
@@ -1221,7 +1234,7 @@ def dict_helper(idict, notations):
         return _dict_handler(idict, notations)
     except:
         child_dict = {}
-        for kkk, vvv in idict.iteritems():
+        for kkk, vvv in idict.items():
             child_dict[notations.get(kkk, kkk)] = adjust_value(vvv)
         return child_dict
 
@@ -1272,7 +1285,7 @@ def qlxml_parser(source, prim_key):
             yield row
     if  root:
         root.clear()
-    if  isinstance(source, InstanceType) or isinstance(source, file):
+    if  hasattr(source, "close"):
         source.close()
 
 def xml_parser(source, prim_key, tags=None):
@@ -1343,7 +1356,7 @@ def xml_parser(source, prim_key, tags=None):
             yield row
     if  root:
         root.clear()
-    if  isinstance(source, InstanceType) or isinstance(source, file):
+    if  hasattr(source, "close"):
         source.close()
 
 def get_children(elem, event, row, key, notations):
@@ -1393,7 +1406,7 @@ def json_parser(source, logger=None):
     descriptor with .read()-supported file-like object or
     data as a string object.
     """
-    if  isinstance(source, InstanceType) or isinstance(source, file):
+    if  hasattr(source, "close"):
         # got data descriptor
         try:
             jsondict = json.load(source)
@@ -1411,7 +1424,8 @@ def json_parser(source, logger=None):
         # to prevent unicode/ascii errors like
         # UnicodeDecodeError: 'utf8' codec can't decode byte 0xbf in position
         if  isinstance(data, basestring):
-            data = unicode(data, errors='ignore')
+            if  not sys.version.startswith('3.'):
+                data = unicode(data, errors='ignore')
             res  = data.replace('null', '\"null\"')
         elif isinstance(data, object) and hasattr(data, 'read'): # StringIO
             res  = data.read()
@@ -1436,25 +1450,6 @@ def json_parser(source, logger=None):
                     print(msg)
                 jsondict = eval(res, { "__builtins__": None }, {})
     yield jsondict
-
-def plist_parser(source):
-    """
-    Apple plist parser based on plistlib. It accepts either source
-    descriptor with .read()-supported file-like object or
-    data as a string object.
-    """
-    if  isinstance(source, InstanceType) or isinstance(source, file):
-        # got data descriptor
-        try:
-            data = source.read()
-        except Exception as exc:
-            print_exc(exc)
-            source.close()
-            raise
-        source.close()
-    else:
-        data = source
-    yield plistlib.readPlistFromString(data)
 
 def row2das(mapper, system, api, row):
     """
@@ -1498,7 +1493,7 @@ def aggregator(dasquery, results, expire):
         rec['cache_id'] = list(set(_ids))
         rec['das']['record'] = record_codes('data_record')
         rec['qhash'] = dasquery.qhash
-        for key, val in rec.iteritems():
+        for key, val in rec.items():
             if  key not in ['das_id', 'das', 'cache_id', '_id']:
                 if  isinstance(val, dict):
                     rec[key] = [val]
@@ -1673,7 +1668,7 @@ def extract_http_error(err):
             value = err['message']
             if  isinstance(value, dict):
                 msg = ''
-                for key, val in value.iteritems():
+                for key, val in value.items():
                     msg += '%s: %s. ' % (key, val)
             else:
                 msg = str(value)

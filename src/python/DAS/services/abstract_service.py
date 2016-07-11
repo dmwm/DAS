@@ -113,7 +113,7 @@ class DASAbstractService(object):
         if  self._keys:
             return self._keys
         srv_keys = []
-        for _api, params in self.map.iteritems():
+        for _api, params in self.map.items():
             for key in params['keys']:
                 if  not key in srv_keys:
                     srv_keys.append(key)
@@ -127,7 +127,7 @@ class DASAbstractService(object):
         if  self._params:
             return self._params
         srv_params = []
-        for _api, params in self.map.iteritems():
+        for _api, params in self.map.items():
             for key in params['params']:
                 param_list = self.dasmapping.api2das(self.name, key)
                 for par in param_list:
@@ -142,7 +142,7 @@ class DASAbstractService(object):
         """
         if  self._notations:
             return self._notations
-        for _, rows in self.dasmapping.notations(self.name).iteritems():
+        for _, rows in self.dasmapping.notations(self.name).items():
             for row in rows:
                 api  = row['api']
                 nmap = row['rec_key']
@@ -225,11 +225,11 @@ class DASAbstractService(object):
         Perform API parameter inspection. Check if API accept a range
         of parameters, etc.
         """
-        for key, value in args.iteritems():
+        for key, value in args.items():
             if  isinstance(value, dict):
                 minval = None
                 maxval = None
-                for oper, val in value.iteritems():
+                for oper, val in value.items():
                     if  oper == '$in':
                         minval = int(val[0])
                         maxval = int(val[-1])
@@ -286,7 +286,7 @@ class DASAbstractService(object):
             das_dict = {}
             for row in gen:
                 if  dformat.lower() == 'dasjson':
-                    for key, val in row.iteritems():
+                    for key, val in row.items():
                         if  key != 'results':
                             das_dict[key] = val
                     row = row['results']
@@ -496,7 +496,7 @@ class DASAbstractService(object):
         if  not skeys:
             skeys = []
         self.logger.info("\n")
-        for api, value in self.map.iteritems():
+        for api, value in self.map.items():
             expire = value['expire']
             iformat = value['format']
             url    = self.adjust_url(value['url'], instance)
@@ -515,7 +515,7 @@ class DASAbstractService(object):
                 continue
             # once we now that API covers input set of parameters we check
             # every input parameter for pattern matching
-            for key, val in cond.iteritems():
+            for key, val in cond.items():
                 # check if keys from conditions are accepted by API
                 # need to convert key (which is daskeys.map) into
                 # input api parameter
@@ -523,10 +523,15 @@ class DASAbstractService(object):
                     if  apiparam in args:
                         args[apiparam] = val
                         found += 1
+            # VK 20160708, wrong statement, it caused to pass
+            # datasets API for query dataset in [path1, path2]
+            # I'll leave block here until I test and verify that
+            # commented out block will not cause other issues
+            #
             # check the case when we only have single condition key
             # and it is the key we look-up
-            if  not found and skeys == [k.split('.')[0] for k in cond.keys()]:
-                found = 1
+#             if  not found and skeys == [k.split('.')[0] for k in cond.keys()]:
+#                 found = 1
             # check if number of keys on cond and args are the same
             if  len(cond.keys()) != found:
                 msg = "--- reject API %s, not all condition keys are covered" \
@@ -554,7 +559,7 @@ class DASAbstractService(object):
                 continue
             # adjust pattern symbols in arguments
             if  wild != '*':
-                for key, val in args.iteritems():
+                for key, val in args.items():
                     if  isinstance(val, str) or isinstance(val, unicode):
                         val   = val.replace('*', wild)
                     args[key] = val

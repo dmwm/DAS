@@ -19,13 +19,22 @@ followed by N requests to filesummaries API.
 from __future__ import print_function
 
 # system modules
+import sys
 import time
 import pycurl
-import urllib
-from   urllib2 import HTTPError
+try: # python3
+    import urllib.parse as urllib
+except ImportError: # python2 fallback
+    import urllib
+try:
+    from   urllib2 import HTTPError
+except ImportError: # python3
+    import urllib.request as urllib2
 import threading
 try:
     import cStringIO as StringIO
+except ImportError: # python3
+    import io
 except:
     import StringIO
 
@@ -78,7 +87,10 @@ class RequestHandler(object):
         curl.setopt(pycurl.FOLLOWLOCATION, self.followlocation)
         curl.setopt(pycurl.MAXREDIRS, self.maxredirs)
 
-        encoded_data = urllib.urlencode(params, doseq=doseq)
+        if  isinstance(params, dict):
+            encoded_data = urllib.urlencode(params, doseq=doseq)
+        else:
+            encoded_data = params
         if  post:
             curl.setopt(pycurl.POST, 1)
             if  params and isinstance(params, dict):
@@ -98,9 +110,13 @@ class RequestHandler(object):
                 % (url, type(url)))
         if  headers:
             curl.setopt(pycurl.HTTPHEADER, \
-                    ["%s: %s" % (k, v) for k, v in headers.iteritems()])
-        bbuf = StringIO.StringIO()
-        hbuf = StringIO.StringIO()
+                    ["%s: %s" % (k, v) for k, v in headers.items()])
+        if  sys.version.startswith('3.'):
+            bbuf = io.BytesIO()
+            hbuf = io.BytesIO()
+        else:
+            bbuf = StringIO.StringIO()
+            hbuf = StringIO.StringIO()
         curl.setopt(pycurl.WRITEFUNCTION, bbuf.write)
         curl.setopt(pycurl.HEADERFUNCTION, hbuf.write)
         curl.setopt(pycurl.SSL_VERIFYPEER, False)
@@ -138,13 +154,25 @@ class RequestHandler(object):
                 ckey, cert, verbose, post, doseq)
         curl.perform()
 
-        http_header = hbuf.getvalue()
+        if  sys.version.startswith('3.'):
+            http_header = hbuf.getvalue().decode('UTF-8')
+        else:
+            http_header = hbuf.getvalue()
 
 #        data = parse_body(bbuf.getvalue())
 #        data = bbuf.getvalue() # read entire content
 #        bbuf.flush()
-        bbuf.seek(0)# to use file description seek to the beggning of the stream
-        data = bbuf # leave StringIO object, which will serve as file descriptor
+
+#         bbuf.seek(0)# to use file description seek to the beggning of the stream
+#         data = bbuf # leave StringIO object, which will serve as file descriptor
+
+        # will yield data as StringIO object, i.e. provide file object
+        if  sys.version.startswith('3.'):
+            data = io.StringIO(bbuf.getvalue().decode('UTF-8'))
+        else:
+            bbuf.seek(0)# to use file description seek to the beggning of the stream
+            data = bbuf # leave StringIO object, which will serve as file descriptor
+
         expire = get_expire(http_header, error_expire, verbose)
         hbuf.flush()
 

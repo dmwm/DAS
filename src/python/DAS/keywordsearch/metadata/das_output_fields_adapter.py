@@ -72,7 +72,7 @@ def get_outputs_field_list(dascore):
     # build the result made of fields and their titles
     titles_by_field = get_titles_by_field(dascore)
     field_data_by_lookup = defaultdict(dict)
-    for lookup, fields in fields_by_lookup.iteritems():
+    for lookup, fields in fields_by_lookup.items():
         for field in fields:
             field_data_by_lookup[lookup][field] = {
                 'name': field,

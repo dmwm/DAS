@@ -10,10 +10,18 @@ from __future__ import print_function
 
 # system modules
 import time
-import urllib
-import urllib2
-import httplib
-from   types import InstanceType
+try: # python3, we use urllib.urlencode which now is urllib.parse.urlencode
+    import urllib.parse as urllib
+except: # fallback to python2, we use urllib.urlencode
+    import urllib
+try:
+    import urllib2
+except ImportError: # python3
+    import urllib.request as urllib2
+try:
+    import httplib
+except ImportError: # python3
+    import http.client as httplib
 
 import cherrypy
 
@@ -71,6 +79,10 @@ def getdata(url, params, headers=None, expire=3600, post=False,
         headers.update({'User-Agent': DAS_SERVER})
     else:
         headers = {'User-Agent': DAS_SERVER}
+    # Phedex POST calls do not work with JSON, and we need to pass encoded params in POST call
+    if  url.find('phedex') != -1:
+        post = True
+        params = urllib.urlencode(params, doseq=True)
 #    return getdata_urllib(url, params, headers, expire, post, \
 #                error_expire, verbose, ckey, cert, doseq, system)
     return getdata_pycurl(url, params, headers, expire, post, \
@@ -82,7 +94,10 @@ def getdata_pycurl(url, params, headers=None, expire=3600, post=None,
     contact = 'data-service.'
     if  system:
         contact = system + ' ' + contact
-    timer_key = '%s?%s' % (url, urllib.urlencode(params, doseq=True))
+    if  isinstance(params, dict):
+        timer_key = '%s?%s' % (url, urllib.urlencode(params, doseq=True))
+    else:
+        timer_key = '%s?%s' % (url, params)
     das_timer(timer_key, verbose)
     handler = REQUEST_HANDLER
     try:
@@ -138,7 +153,7 @@ def getdata_urllib(url, params, headers=None, expire=3600, post=None,
     if  verbose:
         print('+++ getdata, url=%s, headers=%s' % (url, headers))
     req = urllib2.Request(url)
-    for key, val in headers.iteritems():
+    for key, val in headers.items():
         req.add_header(key, val)
     if  verbose > 1:
         handler = urllib2.HTTPHandler(debuglevel=1)
@@ -254,7 +269,7 @@ class UrlProxy(object):
 
     def headers(self):
         """Get URL headers"""
-        return dict(self._url.headers.iteritems())
+        return dict(self._url.headers.items())
 
     def get(self):
         """Get URL data"""
@@ -277,7 +292,7 @@ class UrlRequest(urllib2.Request):
 
 def close(stream):
     "Close given stream"
-    if  isinstance(stream, InstanceType) or isinstance(stream, file):
+    if  hasattr(stream, "close"):
         stream.close()
 
 def get_proxy():

@@ -8,6 +8,7 @@ Description: Main class to hold DAS query object
 
 # system modules
 import re
+import sys
 import copy
 from   bson.objectid import ObjectId
 
@@ -18,9 +19,16 @@ from   DAS.utils.regex import RE_3SLASHES
 from   DAS.utils.utils import genkey, deepcopy, print_exc, dastimestamp
 from   DAS.utils.query_utils import compare_specs
 from   DAS.core.das_parser import ql_manager
-from   DAS.core.das_process_dataset_wildcards import process_dataset_wildcards
+try:
+    from   DAS.core.das_process_dataset_wildcards import process_dataset_wildcards
+    DATASET_WILDCARDS = True
+except ImportError: # python3
+    DATASET_WILDCARDS = False
 from   DAS.core.das_exceptions import WildcardMultipleMatchesException
 from   DAS.core.das_exceptions import WildcardMatchingException
+
+if  sys.version.startswith('3.'):
+    basestring = str
 
 def check_query(query):
     "Check query"
@@ -51,7 +59,10 @@ class DASQuery(object):
         Fixes: ticket #3071
         """
         msg  = 'Dataset value requires 3 slashes.'
-        dataset_matches = process_dataset_wildcards(val, self._instance)
+        if  DATASET_WILDCARDS:
+            dataset_matches = process_dataset_wildcards(val, self._instance)
+        else:
+            dataset_matches = []
 #        print "Matching wildcard query=%s into dataset patterns=%s" % (
 #            val, dataset_matches)
         if not len(dataset_matches):
@@ -109,7 +120,7 @@ class DASQuery(object):
         self._flags         = flags
 
         # loop over flags and set available attributes
-        for key, val in flags.iteritems():
+        for key, val in flags.items():
             setattr(self, '_%s' % key, val)
 
         # test data type of input query and apply appropriate initialization
@@ -117,7 +128,7 @@ class DASQuery(object):
             self._query = query
             try:
                 self._mongo_query = self.mongoparser.parse(query)
-                for key, val in flags.iteritems():
+                for key, val in flags.items():
                     if  key in self.NON_CACHEABLE_FLAGS:
                         continue
                     if  key not in self._mongo_query:
@@ -128,7 +139,7 @@ class DASQuery(object):
                 raise exp
         elif isinstance(query, dict):
             newquery = {}
-            for key, val in query.iteritems():
+            for key, val in query.items():
                 newquery[key] = val
             if  isinstance(newquery.get('spec'), dict): # mongo query
                 self._mongo_query = newquery
@@ -183,7 +194,7 @@ class DASQuery(object):
     @property
     def services(self):
         "Return list of services which may provide information about this query"
-        return self.service_apis_map().keys()
+        return list(self.service_apis_map().keys())
 
     @property
     def hashes(self):
@@ -259,7 +270,7 @@ class DASQuery(object):
             query  = ' '.join(fields)
             query += ' ' # space between fields and spec values
             query += ' '.join(['%s=%s' % (k, v) for k, v \
-                        in self.mongo_query.get('spec', {}).iteritems()])
+                        in self.mongo_query.get('spec', {}).items()])
             self._query = query.strip()
         return self._query
 
@@ -271,7 +282,7 @@ class DASQuery(object):
         if  not self._storage_query:
             self._storage_query = deepcopy(self.mongo_query)
             speclist = []
-            for key, val in self._storage_query.pop('spec').iteritems():
+            for key, val in self._storage_query.pop('spec').items():
                 if  str(type(val)) == "<type '_sre.SRE_Pattern'>":
                     val = json.dumps(val.pattern)
                     speclist.append({"key":key, "value":val, "pattern":1})
@@ -293,7 +304,7 @@ class DASQuery(object):
         aggregators = self._mongo_query.get('aggregators', [])
         if  not self._mongo_query:
             self._mongo_query = deepcopy(self.storage_query)
-            for key, val in self._mongo_query.iteritems():
+            for key, val in self._mongo_query.items():
                 if  key not in ['fields', 'spec']:
                     setattr(self, '_%s' % key, val)
             spec = {}
@@ -308,7 +319,7 @@ class DASQuery(object):
         if  fields and fields == ['records']:
             self._mongo_query['fields'] = None
             spec = {}
-            for key, val in self._mongo_query['spec'].iteritems():
+            for key, val in self._mongo_query['spec'].items():
                 if  key != 'records':
                     spec[key] = val
             self._mongo_query = dict(fields=None, spec=spec)
@@ -344,7 +355,7 @@ class DASQuery(object):
             spec    = query.get('spec', {})
             fields  = query.get('fields', None)
             newspec = {}
-            for key, val in spec.iteritems():
+            for key, val in spec.items():
                 if  key != '_id' and \
                 isinstance(val, str) or isinstance(val, unicode):
                     if  val[-1] != '*':
@@ -367,7 +378,7 @@ class DASQuery(object):
                 Inner recursive dictionary manipulator
                 """
                 result = {}
-                for key, val in old.iteritems():
+                for key, val in old.items():
                     if isinstance(val, basestring):
                         if  '*' in val:
                             if len(val) == 1:
@@ -408,7 +419,7 @@ class DASQuery(object):
         """
         Return true if we only have 'fields' and 'spec' keys.
         """
-        return sorted(self.mongo_query.keys()) == ['fields', 'spec']
+        return sorted(list(self.mongo_query.keys())) == ['fields', 'spec']
             
     def to_bare_query(self):
         """

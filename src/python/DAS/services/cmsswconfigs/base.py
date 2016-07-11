@@ -48,7 +48,7 @@ class MongoQuery(object):
         # Query the collection
         time0 = time.time()
         results = self.index.search(query)
-        top_matches = nlargest(10, results.iteritems(), itemgetter(1))
+        top_matches = nlargest(10, results.items(), itemgetter(1))
         time_taken = time.time() - time0
         if  self.logger:
             msg = 'MongoQuery: querying took %s seconds' % time_taken

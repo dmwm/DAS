@@ -84,7 +84,7 @@ def _select_best_scores(scores_iterator):
     for score, field in scores_iterator:
         scores[field] = max(scores[field], score)
 
-    for field, score in scores.iteritems():
+    for field, score in scores.items():
         scores[field] = (score, field)
 
     return scores

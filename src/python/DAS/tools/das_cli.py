@@ -207,7 +207,7 @@ def main():
         msg = "DAS services:"
         print(msg)
         print("-"*len(msg))
-        keys = sdict.keys()
+        keys = list(sdict.keys())
         keys.sort()
         for key in keys:
             print(key)

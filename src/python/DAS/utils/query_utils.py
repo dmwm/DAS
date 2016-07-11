@@ -33,7 +33,7 @@ def encode_mongo_query(query):
         raise Exception(msg)
     return_query = dict(query)
     speclist = []
-    for key, val in return_query.pop('spec').iteritems():
+    for key, val in return_query.pop('spec').items():
         if  str(type(val)) == "<type '_sre.SRE_Pattern'>":
             val = json.dumps(val.pattern)
             speclist.append({"key":key, "value":val, "pattern":1})
@@ -70,7 +70,7 @@ def convert2pattern(query):
     system  = query.get('system', None)
     newspec = {}
     verspec = {}
-    for key, val in spec.iteritems():
+    for key, val in spec.items():
         if  key == 'records':
             continue # skip special records keyword
         if  isinstance(val, str) or isinstance(val, unicode):
@@ -87,7 +87,7 @@ def convert2pattern(query):
         elif isinstance(val, dict):
             cond  = {}
             vcond = {}
-            for ckey, cval in val.iteritems():
+            for ckey, cval in val.items():
                 if  isinstance(cval, str) or isinstance(cval, unicode):
                     if  cval.find('*') != -1:
                         cval = re.compile("^%s" % cval.replace('*', '.*'))
@@ -125,7 +125,7 @@ def compare_dicts(input_dict, exist_dict):
     Mongo dict conditions, e.g. {'$gt':10}. Return true if exist_dict
     is superset of input_dict
     """
-    for key, val in input_dict.iteritems():
+    for key, val in input_dict.items():
         signal = False
         vvv = None
         if  key in exist_dict:
@@ -307,7 +307,7 @@ def compare_specs(input_query, exist_query):
     if  spec2.keys() != spec1.keys():
         return False
 
-    for key, val1 in spec1.iteritems():
+    for key, val1 in spec1.items():
         if  key in spec2:
             val2 = spec2[key]
             if  (isinstance(val1, str) or isinstance(val1, unicode)) and \

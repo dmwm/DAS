@@ -91,7 +91,7 @@ class QLManager(object):
             raise Exception('Invalid MongoDB query %s' % mongo_query)
         if  not mongo_query['fields'] and len(mongo_query['spec'].keys()) > 1:
             raise Exception(ambiguous_msg(query, mongo_query['spec'].keys()))
-        for key, val in mongo_query['spec'].iteritems():
+        for key, val in mongo_query['spec'].items():
             if  isinstance(val, list):
                 raise Exception(ambiguos_val_msg(query, key, val))
         return mongo_query
@@ -109,7 +109,7 @@ class QLManager(object):
             return
         spec = mongo_query['spec']
         to_replace = []
-        for key, val in spec.iteritems():
+        for key, val in spec.items():
             for system in self.dasmapping.list_systems():
                 mapkey = self.dasmapping.find_mapkey(system, key, val)
                 if  mapkey and mapkey != key and \
@@ -131,7 +131,7 @@ class QLManager(object):
         slist = []
         # look-up services from Mapping DB
         for key in skeys + [i for i in cond.keys()]:
-            for service, keys in self.daskeysmap.iteritems():
+            for service, keys in self.daskeysmap.items():
                 if  service not in self.dasservices:
                     continue
                 value = cond.get(key, None)

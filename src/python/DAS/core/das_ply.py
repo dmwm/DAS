@@ -402,7 +402,7 @@ class DASPLY(object):
                   | DASKEY_ATTR FILTER_OPERATOR VALUE
                   | DASKEY_ATTR FILTER_OPERATOR NUMBER"""
         val = ''
-        for idx in xrange(0, len(p)):
+        for idx in range(0, len(p)):
             if  p[idx] or p[idx] == 0:
                 val += str(p[idx])
         p[0] = [val]
@@ -561,7 +561,7 @@ def ply2mongo(query):
                     del spec[key]
     else:
         if  len(spec.keys()) == 1:
-            mongodict['fields'] = [spec.keys()[0].split('.')[0]]
+            mongodict['fields'] = [list(spec.keys())[0].split('.')[0]]
         else:
             mongodict['fields'] = None
     mongodict['spec'] = spec
@@ -572,7 +572,7 @@ def ply2mongo(query):
     allowed_single_keys = ['records', 'queries', 'status', 'tier', 'type', \
             'group', 'release', 'primary_dataset', 'era']
     if  len(spec.keys()) == 1 and spec.values() == ['*'] and \
-            spec.keys()[0] not in allowed_single_keys:
+            list(spec.keys())[0] not in allowed_single_keys:
         msg = 'Single DAS key with no conditions, input query=%s, mongodict=%s' \
             % (query, mongodict)
         raise Exception(msg)

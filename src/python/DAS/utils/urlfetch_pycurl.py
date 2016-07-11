@@ -13,6 +13,7 @@ from __future__ import print_function
 
 import os
 import re
+import sys
 import pycurl
 
 # We should ignore SIGPIPE when using pycurl.NOSIGNAL - see
@@ -28,6 +29,8 @@ import pycurl
 
 try:
     import cStringIO as StringIO
+except ImportError: # python3
+    import io
 except:
     import StringIO
 
@@ -71,7 +74,7 @@ def getdata(urls, ckey, cert, headers=None, num_conn=100):
         mcurl.handles.append(curl)
         if  headers:
             curl.setopt(pycurl.HTTPHEADER, \
-                    ["%s: %s" % (k, v) for k, v in headers.iteritems()])
+                    ["%s: %s" % (k, v) for k, v in headers.items()])
 
     # Main loop
     freelist = mcurl.handles[:]
@@ -83,8 +86,12 @@ def getdata(urls, ckey, cert, headers=None, num_conn=100):
             url = queue.pop(0)
             curl = freelist.pop()
             curl.setopt(pycurl.URL, url.encode('ascii', 'ignore'))
-            bbuf = StringIO.StringIO()
-            hbuf = StringIO.StringIO()
+            if  sys.version.startswith('3.'):
+                bbuf = io.BytesIO()
+                hbuf = io.BytesIO()
+            else:
+                bbuf = StringIO.StringIO()
+                hbuf = StringIO.StringIO()
             curl.setopt(pycurl.WRITEFUNCTION, bbuf.write)
             curl.setopt(pycurl.HEADERFUNCTION, hbuf.write)
             mcurl.add_handle(curl)
@@ -102,8 +109,12 @@ def getdata(urls, ckey, cert, headers=None, num_conn=100):
         while 1:
             num_q, ok_list, err_list = mcurl.info_read()
             for curl in ok_list:
-                hdrs  = curl.hbuf.getvalue()
-                data  = curl.bbuf.getvalue()
+                if  sys.version.startswith('3.'):
+                    hdrs  = curl.hbuf.getvalue().decode('utf-8')
+                    data  = curl.bbuf.getvalue().decode('utf-8')
+                else:
+                    hdrs  = curl.hbuf.getvalue()
+                    data  = curl.bbuf.getvalue()
                 url   = curl.url
                 curl.bbuf.flush()
                 curl.bbuf.close()

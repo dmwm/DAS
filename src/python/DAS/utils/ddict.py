@@ -118,7 +118,7 @@ class DotDict(dict):
         """
         obj  = self
         keys = ikey.split('.')
-        for idx in xrange(0, len(keys)):
+        for idx in range(0, len(keys)):
             key = keys[idx]
             if  key not in obj:
                 ckey = '.'.join(keys[idx:])
@@ -279,7 +279,7 @@ class DotDict(dict):
         if  ckey:
             keys = self._get_keys(ckey)
         else:
-            keys = self.keys()
+            keys = list(self.keys())
             for key in self.keys():
                 keys += [k for k in self._get_keys(key)]
         return list(set(keys))

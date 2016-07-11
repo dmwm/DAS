@@ -53,7 +53,7 @@ class CondDBService(DASAbstractService):
         if  'Runs' in kwds and isinstance(kwds['Runs'], dict):
             minrun = 0
             maxrun = 0
-            for kkk, vvv in kwds['Runs'].iteritems():
+            for kkk, vvv in kwds['Runs'].items():
                 if  kkk == '$in':
                     kwds['Runs'] = ','.join([str(r) for r in vvv])
                 elif kkk == '$lte':

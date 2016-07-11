@@ -104,7 +104,7 @@ def result_to_dasql(result, frmt='text', shorten_html=True,
         # a helper function to map values of dict
         # TODO: in Py2.7: {k: f(v) for k, v in my_dictionary.items()}
         map_dict_values = lambda f, my_dict: dict(
-            (k, f(v)) for k, v in my_dict.iteritems())
+            (k, f(v)) for k, v in my_dict.items())
 
         if frmt == 'html':
             # shorten value if it's longer than

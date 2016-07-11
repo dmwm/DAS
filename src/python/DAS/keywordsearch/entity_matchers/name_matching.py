@@ -12,12 +12,12 @@ def keyword_schema_weights(keyword, kwd_idx=-1):
     for each schema term (entity, entity attribute) calculates likelihood for
     the keyword to match it
     """
-    entities = get_schema().entity_names.iteritems()
+    entities = get_schema().entity_names.items()
     result = [(string_distance(keyword, entity_short), entity_long)
               for entity_long, entity_short in entities]
 
     # check synonyms
-    entity_synonyms = get_schema().cms_synonyms['daskeys'].iteritems()
+    entity_synonyms = get_schema().cms_synonyms['daskeys'].items()
     for entity_long, synonyms in entity_synonyms:
         for synonym in synonyms:
             result.extend([(string_distance(keyword, synonym), entity_long), ])

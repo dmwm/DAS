@@ -194,7 +194,7 @@ class CMSQueryRewrite(object):
         lookups = (f for f in fields
                    if f not in exclude)
 
-        das_conditions = q.mongo_query.get('spec', {}).iteritems()
+        das_conditions = q.mongo_query.get('spec', {}).items()
 
         short_daskey = lambda ldaskey: \
             self.entity_names.get(ldaskey, ldaskey)

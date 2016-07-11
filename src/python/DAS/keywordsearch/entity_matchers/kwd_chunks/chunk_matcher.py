@@ -76,7 +76,7 @@ class MultiKwdAttributeMatcher(object):
         matches = self.get_phrase_matches(keywords)
         self.append_subquery_matches(keywords, matches)
         # return the matches in sorted order (per result type)
-        for entity, m_list in matches.iteritems():
+        for entity, m_list in matches.items():
             for match in m_list:
                 last_token = match['tokens_required'][-1]
                 tokens_used = match['tokens_required']

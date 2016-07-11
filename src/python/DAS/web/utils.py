@@ -15,7 +15,6 @@ import time
 import urllib
 import hashlib
 import cherrypy
-import plistlib
 from   cherrypy import HTTPError
 from   json import JSONEncoder
 from   urllib import quote_plus
@@ -314,7 +313,7 @@ def checkargs(supported):
                     jsondict = json.loads(body, encoding='latin-1')
                 else:
                     jsondict = kwds
-                for key, val in jsondict.iteritems():
+                for key, val in jsondict.items():
                     kwds[str(key)] = str(val)
 
             pat = web_arg_pattern
@@ -407,7 +406,7 @@ def json2html(idict, pad="", ref=None):
     newline = '\n'
     orig_pad = pad
     sss = pad + '{' + newline
-    for key, val in idict.iteritems():
+    for key, val in idict.items():
         if  key == 'das_id' or key == 'cache_id':
             if  isinstance(val, list):
                 value = '['
@@ -542,7 +541,7 @@ def das_json_services(system, das):
     """
     msg = ''
     for row in das.get('services', []):
-        for srv, items in row.iteritems():
+        for srv, items in row.items():
             if  srv != system:
                 continue
             msg = 'Sources:'
@@ -634,7 +633,7 @@ def gen_error_msg(kwargs):
     """
     error  = "My request to DAS is failed\n\n"
     error += "Input parameters:\n"
-    for key, val in kwargs.iteritems():
+    for key, val in kwargs.items():
         error += '%s: %s\n' % (key, val)
     error += "Exception type: %s\nException value: %s\nTime: %s" \
                 % (sys.exc_info()[0], sys.exc_info()[1], web_time())
@@ -673,13 +672,3 @@ def wrap2dasjson(data):
     except:
         return dict(error="Failed to JSONtify obj '%s' type '%s'" \
             % (data, type(data)))
-
-def wrap2dasxml(data):
-    """DAS XML wrapper.
-    Return data in XML plist format,
-    see http://docs.python.org/library/plistlib.html#module-plistlib
-    """
-    plist_str = plistlib.writePlistToString(data)
-    cherrypy.response.headers['Content-Type'] = "application/xml"
-    return plist_str
-

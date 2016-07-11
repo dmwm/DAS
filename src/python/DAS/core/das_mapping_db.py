@@ -70,7 +70,7 @@ def verification_token(iterator):
     all_hashes = hashlib.md5()
     hashes = sorted(row['hash'] for row in iterator if 'hash' in row)
     for hash_ in hashes:
-        all_hashes.update(hash_)
+        all_hashes.update(hash_.encode('ascii'))
     return all_hashes.hexdigest()
 
 
@@ -178,7 +178,7 @@ class DASMapping(object):
         for row in records:
             if  'urn' in row:
                 for dmap in row['das_map']:
-                    for key, val in dmap.iteritems():
+                    for key, val in dmap.items():
                         if  key == 'pattern':
                             pat = re.compile(val)
                             dmap[key] = pat
@@ -189,7 +189,7 @@ class DASMapping(object):
         """
         Initialize notation cache by reading notations.
         """
-        for system, notations in self.notations().iteritems():
+        for system, notations in self.notations().items():
             for row in notations:
                 key = system, row['api_output']
                 if  key in self.notationcache:
@@ -205,7 +205,7 @@ class DASMapping(object):
         data  = find_one(self.col, spec)
         if  data:
             self.presentationcache = data['presentation']
-            for daskey, uilist in self.presentationcache.iteritems():
+            for daskey, uilist in self.presentationcache.items():
                 for row in uilist:
                     link = None
                     if  'link' in row:
@@ -224,7 +224,7 @@ class DASMapping(object):
         spec  = {'type':'presentation'}
         data  = find_one(self.col, spec)
         if  data:
-            for _, uilist in data.get('presentation', {}).iteritems():
+            for _, uilist in data.get('presentation', {}).items():
                 for row in uilist:
                     if  'link' in row:
                         yield row
@@ -430,7 +430,7 @@ class DASMapping(object):
         """
         Return a list of relational keys between provided systems
         """
-        for system, keys in self.daskeys().iteritems():
+        for system, keys in self.daskeys().items():
             if  system == system1:
                 keys1 = keys
             if  system == system2:
@@ -511,7 +511,7 @@ class DASMapping(object):
         """
         msg   = 'system=%s\n' % das_system
         daskeys = []
-        for key, record in self.dasmapscache.iteritems():
+        for key, record in self.dasmapscache.items():
             srv, _ = key
             if  das_system != srv:
                 continue
@@ -540,7 +540,7 @@ class DASMapping(object):
         Find map key for given system and das key.
         """
         msg   = 'system=%s\n' % das_system
-        for key, record in self.dasmapscache.iteritems():
+        for key, record in self.dasmapscache.items():
             srv, _ = key
             if  das_system != srv:
                 continue

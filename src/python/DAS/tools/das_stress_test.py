@@ -366,7 +366,7 @@ def output(gen):
     columns  = ''
     for data in gen:
         if  not columns:
-            columns = data.keys()
+            columns = list(data.keys())
             columns.sort()
             yield ', '.join(columns)
         values = [str(data.get(c, 0)) for c in columns]

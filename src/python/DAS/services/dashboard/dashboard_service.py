@@ -11,7 +11,6 @@ __author__ = "Valentin Kuznetsov"
 
 import time
 import xml.etree.cElementTree as ET
-from types import InstanceType
 from DAS.services.abstract_service import DASAbstractService
 from DAS.utils.utils import map_validator, convert2date, print_exc
                 
@@ -39,7 +38,7 @@ class DashboardService(DASAbstractService):
         Dashboard data-service parser.
         """
         close = False
-        if  isinstance(source, InstanceType):
+        if  hasattr(source, "read"):
             data = source.read()
             close = True
         elif isinstance(source, object) and hasattr(source, 'read'): # StringIO
@@ -57,7 +56,7 @@ class DashboardService(DASAbstractService):
                             name = k.tag
                             row[name] = k.text
                         if  params:
-                            for key, val in params.iteritems():
+                            for key, val in params.items():
                                 if  key not in row:
                                     row[key] = val
                         rowkey = self.map[api]['keys'][0]
@@ -74,7 +73,7 @@ class DashboardService(DASAbstractService):
         """
         cond   = dasquery.mongo_query['spec']
         count  = 0
-        for key, value in cond.iteritems():
+        for key, value in cond.items():
             err = 'JobSummary does not support key=%s, value=%s' \
                     % (key, value)
             if  not isinstance(value, dict): # we got equal condition

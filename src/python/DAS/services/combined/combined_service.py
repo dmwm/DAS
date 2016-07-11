@@ -30,6 +30,8 @@ import time
 import urllib
 try:
     import cStringIO as StringIO
+except ImportError: # python3
+    import io as StringIO
 except:
     import StringIO
 
@@ -172,7 +174,7 @@ def site4dataset(dbs_url, phedex_api, args, expire):
             site_info[node] = {'files': files, 'blocks': nblks,
                         'blocks_complete': b_complete}
     row = {}
-    for key, val in site_info.iteritems():
+    for key, val in site_info.items():
         if  totfiles:
             nfiles = '%5.2f%%' % (100*float(val['files'])/totfiles)
         else:
@@ -266,7 +268,7 @@ class CombinedService(DASAbstractService):
                         'files': val['files'] + files}
                 else:
                     found[found_dataset] = {'bytes': bbytes, 'files': files}
-            for name, val in found.iteritems():
+            for name, val in found.items():
                 record = dict(name=name, size=val['bytes'], files=val['files'])
                 if  api == 'child4site_release_dataset':
                     yield {'child': record}

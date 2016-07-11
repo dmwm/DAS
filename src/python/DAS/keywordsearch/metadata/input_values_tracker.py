@@ -189,7 +189,7 @@ def get_fields_tracked(only_stable=False):
     """ list of fields available """
     if only_stable:
         return STABLE_FIELDS
-    return TRACKERS.keys()
+    return list(TRACKERS.keys())
 
 
 def get_tracker(field):

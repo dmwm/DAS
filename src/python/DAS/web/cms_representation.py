@@ -154,7 +154,7 @@ def adjust_values(func, gen, links, pkey):
     to_show = []
     green = 'style="color:green"'
     red = 'style="color:red"'
-    for key, val in rdict.iteritems():
+    for key, val in rdict.items():
         uilink, _uidesc, _uiexamples = uidict[key]
         if  uilink and val:
             if  not isinstance(val, list):

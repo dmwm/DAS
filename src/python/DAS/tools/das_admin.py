@@ -101,7 +101,7 @@ def print_dict(idict):
             print_dict(val)
         else:
             sys.stdout.write( "'%s':'%s'" % (PM.blue(key), val) )
-        if  key != idict.keys()[-1]:
+        if  key != list(idict.keys())[-1]:
             sys.stdout.write(", ")
         else:
             sys.stdout.write("")

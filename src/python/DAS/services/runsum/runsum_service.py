@@ -24,7 +24,7 @@ def run_summary_url(url, params):
     if  url[-1] == '?':
         url = url[:-1]
     paramstr = ''
-    for key, val in params.iteritems():
+    for key, val in params.items():
         if  isinstance(val, list):
             paramstr += '%s=%s&' % (key, urllib.quote(val))
         elif key.find('TIME') != -1:
@@ -58,7 +58,7 @@ class RunSummaryService(DASAbstractService):
         # translate selection keys into ones data-service APIs provides
         cond = dasquery.mongo_query['spec']
         args = dict(self.params)
-        for key, value in cond.iteritems():
+        for key, value in cond.items():
             if  isinstance(value, dict): # we got equal condition
                 if  key == 'date':
                     if  isinstance(value, list) and len(value) != 2:
@@ -74,7 +74,7 @@ class RunSummaryService(DASAbstractService):
             elif key == 'run.number' or key == 'run.run_number':
                 minrun = None
                 maxrun = None
-                for oper, val in value.iteritems():
+                for oper, val in value.items():
                     if  oper == '$in':
                         minrun = int(val[0])
                         maxrun = int(val[-1])
@@ -110,7 +110,7 @@ class RunSummaryService(DASAbstractService):
             debug   = 1
         try:
             time0   = time.time()
-            api     = self.map.keys()[0] # we only register 1 API
+            api     = list(self.map.keys())[0] # we only register 1 API
             url     = self.map[api]['url']
             expire  = self.map[api]['expire']
             msg     = 'DASAbstractService::%s::getdata(%s, %s)' \

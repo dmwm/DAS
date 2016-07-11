@@ -17,8 +17,13 @@ __author__ = "Valentin Kuznetsov"
 
 # system modules
 import os
+import sys
 import time
 import itertools
+
+# python3
+if  sys.version.startswith('3.'):
+    basestring = str
 
 # DAS modules
 from DAS.core.das_ql import das_operators, das_special_keys
@@ -147,7 +152,7 @@ class DASCore(object):
                 klass  = 'DAS/services/%s/%s_service.py' \
                     % (name, name)
                 srvfile = os.path.join(dasroot, klass)
-                with file(srvfile) as srvclass:
+                with open(srvfile) as srvclass:
                     for line in srvclass:
                         if  line.find('(DASAbstractService)') != -1:
                             klass = line.split('(DASAbstractService)')[0]
@@ -179,7 +184,7 @@ class DASCore(object):
         self.service_keys = {}
         self.service_parameters = {}
         for name in self.systems: 
-            skeys = getattr(self, name).keys()
+            skeys = list(getattr(self, name).keys())
             self.service_keys[getattr(self, name).name] = skeys
             sparams = getattr(self, name).parameters()
             self.service_parameters[getattr(self, name).name] = sparams
@@ -338,7 +343,7 @@ class DASCore(object):
             # server (in a future it would be better to find programatically
             # this syncdelay value, but it seems pymongo driver does not
             # provide any API for it.
-            for idx in xrange(1, 7):
+            for idx in range(1, 7):
                 spec = {'qhash':dasquery.qhash, 'das.system':['das']}
                 res = self.rawcache.col.find_one(spec)
                 if  res:
@@ -402,10 +407,10 @@ class DASCore(object):
         update_das_query(dasquery, 'merging')
         das_timer('merge', self.verbose)
         for attempt in range(2): # try couple of times to avoid DB problems
+            time.sleep(attempt+2)
             status = self.rawcache.merge_records(dasquery, attempt)
             if  status == 'ok':
                 break
-            time.sleep(attempt)
         das_timer('merge', self.verbose)
         # check if we have service records and properly setup status
         self.logger.info('\n##### check services ######\n')

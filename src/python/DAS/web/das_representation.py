@@ -20,7 +20,7 @@ from DAS.utils.ddict import DotDict
 from DAS.utils.das_config import das_readconfig
 from DAS.utils.utils import getarg, deepcopy
 from DAS.web.das_webmanager import DASWebManager
-from DAS.web.tools import exposedasjson, exposetext, exposedasplist
+from DAS.web.tools import exposedasjson, exposetext
 from DAS.web.utils import quote, das_json_full
 
 def datasetPattern(query):
@@ -130,7 +130,7 @@ class DASRepresentation(DASWebManager):
                     rec.append(DotDict(row).get(flt))
             else:
                 titles = []
-                for key, val in row.iteritems():
+                for key, val in row.items():
                     skip = 0
                     if  not filters:
                         if  key in titles:
@@ -183,7 +183,7 @@ class DASRepresentation(DASWebManager):
             page += '<div>%s</div><br/>' % msg
         if  total > 0:
             params = {} # will keep everything except idx/limit
-            for key, val in kwargs.iteritems():
+            for key, val in kwargs.items():
                 if  key in skip_args:
                     continue
                 if  key != 'idx' and key != 'limit' and key != 'query':
@@ -245,19 +245,6 @@ class DASRepresentation(DASWebManager):
                         pass
                 results += '\n'
         return results
-
-    @exposedasplist
-    def xmlview(self, head, data):
-        "Represent data in XML data format"
-        try: # remove DASQuery object from the head before serialization
-            del head['dasquery']
-        except:
-            pass
-        if  'args' in head and 'dasquery' in head['args']:
-            del head['args']['dasquery']
-        result = dict(head)
-        result['data'] = [r for r in data]
-        return result
 
     @exposedasjson
     def jsonview(self, head, data):

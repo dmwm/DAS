@@ -59,7 +59,7 @@ class RequestManager(object):
     def items(self):
         """Return list of current requests"""
         self.clean()
-        for pid, req in self.store.iteritems():
+        for pid, req in self.store.items():
             row = dict(_id=pid, kwds=req.kwds, ts=req.tstamp,
                     timestamp=req.tsrepr)
             yield row

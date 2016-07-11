@@ -62,7 +62,7 @@ class DasSchemaAdapter(object):
             self._discover_apis_and_inputs(dascore)
 
         # compile the input constraints (regexps)
-        regexps = self._apis_by_their_input_contraints.iteritems()
+        regexps = self._apis_by_their_input_contraints.items()
         self.compiled_input_regexps = [
             (re.compile(regexp), regexp, apis)
             for regexp, apis in regexps]

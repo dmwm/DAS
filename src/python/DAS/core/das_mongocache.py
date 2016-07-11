@@ -17,11 +17,16 @@ __author__ = "Valentin Kuznetsov"
 
 # system modules
 import re
+import sys
 import time
 from   types import GeneratorType
 import datetime
 import itertools
 import fnmatch
+
+# python3
+if  sys.version.startswith('3.'):
+    long = int
 
 # DAS modules
 from DAS.core.das_ql import das_record_keys
@@ -30,7 +35,7 @@ from DAS.utils.query_utils import decode_mongo_query
 from DAS.utils.ddict import convert_dot_notation
 from DAS.utils.utils import aggregator, unique_filter
 from DAS.utils.utils import adjust_mongo_keyvalue, print_exc, das_diff
-from DAS.utils.utils import parse_filters, expire_timestamp
+from DAS.utils.utils import parse_filters, expire_timestamp, gen_counter
 from DAS.utils.utils import dastimestamp, record_codes
 from DAS.utils.das_db import db_connection, find_one
 from DAS.utils.das_db import db_gridfs, parse2gridfs, create_indexes
@@ -38,6 +43,7 @@ from DAS.utils.logger import PrintManager
 from DAS.utils.das_pymongo import PYMONGO_OPTS, PYMONGO_NOEXHAUST
 
 # monogo db modules
+import pymongo
 from bson.objectid import ObjectId
 from bson.code import Code
 from pymongo import DESCENDING, ASCENDING
@@ -65,10 +71,10 @@ def update_query_spec(spec, fdict):
     keys overlap with spec dict, we construct and $and condition.
     Please note we update given query spec!!!
     """
-    keys = spec.keys()
+    keys = list(spec.keys())
     and_list = spec.get('$and', None)
     if  set(keys) & set(fdict.keys()):
-        for key, val in fdict.iteritems():
+        for key, val in fdict.items():
             if  key in keys:
                 qvalue = spec[key]
                 if  isinstance(qvalue, list):
@@ -81,7 +87,7 @@ def update_query_spec(spec, fdict):
             else:
                 spec.update({key:val})
     elif and_list:
-        for key, val in fdict.iteritems():
+        for key, val in fdict.items():
             if  key in [k for d in and_list for k in d.keys()]:
                 and_list.append({key:val})
             else:
@@ -278,7 +284,7 @@ class DASMongocache(object):
         cond = {'query.spec.key': key}
         for row in self.col.find(cond, **PYMONGO_OPTS):
             mongo_query = decode_mongo_query(row['query'])
-            for thiskey, thisvalue in mongo_query.iteritems():
+            for thiskey, thisvalue in mongo_query.items():
                 if thiskey == key:
                     if fnmatch.fnmatch(value, thisvalue):
                         yield thisvalue
@@ -577,7 +583,7 @@ class DASMongocache(object):
                         if  mkey not in lkeys:
                             lkeys.append(mkey)
             else:
-                lkeys = spec.keys()
+                lkeys = list(spec.keys())
             keys = [k for k in lkeys \
                 if k.find('das') == -1 and k.find('_id') == -1 and \
                         k in existing_idx]
@@ -783,6 +789,9 @@ class DASMongocache(object):
         2. run aggregtor function to merge neighbors
         3. insert records into das.merge
         """
+        ### TMP for asyncio
+        time.sleep(attempt+3) # pymongo 3.2 don't yet flush in time
+
         # remove any entries in merge collection for this query
         self.merge.remove({'qhash':dasquery.qhash})
         # proceed
@@ -825,16 +834,20 @@ class DASMongocache(object):
             # aggregate all records
             agen = aggregator(dasquery, records, expire)
             # diff aggregated records
-            gen  = das_diff(agen, self.mapping.diff_keys(pkey.split('.')[0]))
+            gen = das_diff(agen, self.mapping.diff_keys(pkey.split('.')[0]))
             # insert all records into das.merge using bulk insert
             size = self.cache_size
             try:
-                while True:
-                    nres = self.merge.insert(itertools.islice(gen, size))
-                    if  nres and isinstance(nres, list):
-                        inserted += len(nres)
-                    else:
-                        break
+                if  pymongo.version.startswith('3.'): # pymongo 3.X
+                    res = self.merge.insert_many(gen)
+                    inserted += len(res.inserted_ids)
+                else:
+                    while True:
+                        nres = self.merge.insert(itertools.islice(gen, size))
+                        if  nres and isinstance(nres, list):
+                            inserted += len(nres)
+                        else:
+                            break
             except InvalidDocument as exp:
                 print(dastimestamp('DAS WARNING'), 'InvalidDocument during merge', str(exp))
                 msg = "Caught bson error: " + str(exp)
@@ -880,7 +893,7 @@ class DASMongocache(object):
                             'cache_id':[], 'das_id': id_list}
             for key in lkeys:
                 empty_record.update({key.split('.')[0]:[]})
-            for key, val in dasquery.mongo_query['spec'].iteritems():
+            for key, val in dasquery.mongo_query['spec'].items():
                 if  key.find('.') == -1:
                     empty_record[key] = []
                 else: # it is compound key, e.g. site.name
@@ -906,12 +919,16 @@ class DASMongocache(object):
         inserted = 0
         # bulk insert
         try:
-            while True:
-                nres = self.col.insert(itertools.islice(gen, self.cache_size))
-                if  nres and isinstance(nres, list):
-                    inserted += len(nres)
-                else:
-                    break
+            if  pymongo.version.startswith('3.'): # pymongo 3.X
+                res = self.col.insert_many(gen, ordered=False, bypass_document_validation=True)
+                inserted += len(res.inserted_ids)
+            else:
+                while True:
+                    nres = self.col.insert(itertools.islice(gen, self.cache_size))
+                    if  nres and isinstance(nres, list):
+                        inserted += len(nres)
+                    else:
+                        break
         except InvalidOperation:
             pass
 
@@ -966,7 +983,7 @@ class DASMongocache(object):
             lup_keys = header['lookup_keys']
             lkeys    = [l for i in lup_keys for k in i.values() for l in k]
             prim_key = lkeys[0] if 'summary' not in lkeys else 'summary'
-        cond_keys  = dasquery.mongo_query['spec'].keys()
+        cond_keys  = list(dasquery.mongo_query['spec'].keys())
         # get API record id
         spec       = {'qhash':dasquery.qhash, 'das.system':system,
                       'das.expire': {'$gt':time.time()},

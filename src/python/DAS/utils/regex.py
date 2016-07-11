@@ -19,7 +19,7 @@ def word_chars(word, equal=True):
     '^d$|^da$|^dat$|^data$|^datas$|^datase$|^dataset$'
     which can be used later in regular expressions
     """
-    pat = r'|'.join(['^%s$' % word[:x+1] for x in xrange(len(word))])
+    pat = r'|'.join(['^%s$' % word[:x+1] for x in range(len(word))])
     if  equal:
         pat += '|^%s=' % word
     return pat

@@ -14,6 +14,9 @@ import sys
 import time
 import threading
 
+if  sys.version.startswith('3.'):
+    basestring = str
+
 # monogo db modules
 from pymongo import MongoClient
 from pymongo.errors import AutoReconnect, ConnectionFailure
@@ -86,7 +89,7 @@ class DBConnection(object):
         self.thr      = lifetime
         self.retry    = retry
         self.psize    = pool_size
-        self.mongo_opts = MongoOpts(w=1, psize=self.psize).opts()
+        self.mongo_opts = MongoOpts(w=1, psize=self.psize, fsync=True).opts()
 
     def genkey(self, uri):
         "Generate unique key"
@@ -116,7 +119,7 @@ class DBConnection(object):
     def get_new_connection(self, uri):
         "Get new MongoDB connection"
         key = self.genkey(uri)
-        for idx in xrange(0, self.retry):
+        for idx in range(0, self.retry):
             try:
                 dbinst = MongoClient(host=uri, **self.mongo_opts)
 #                dbinst = MongoConnection(uri, **self.mongo_opts).client()

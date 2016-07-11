@@ -336,7 +336,7 @@ class DASWebService(DASWebManager):
         """
         dasdict = {}
         daskeys = set()
-        dasmapkeys = self.dasmgr.mapping.dasmapscache.keys()
+        dasmapkeys = list(self.dasmgr.mapping.dasmapscache.keys())
         dasmapkeys.sort()
         for key in dasmapkeys:
             srv, urn = key
@@ -355,7 +355,7 @@ class DASWebService(DASWebManager):
                 vdict = dasdict[srv]
                 okeys = vdict['keys']
                 apis  = vdict['apis'] + [urn]
-                for kkk, vvv in okeys.iteritems():
+                for kkk, vvv in okeys.items():
                     vlist = tmpdict.get(kkk, []) + vvv
                     tmpdict[kkk] = list(set(vlist))
             else:

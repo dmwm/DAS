@@ -15,7 +15,6 @@ __email__ = "vkuznet@gmail.com"
 import os
 import types
 import logging
-import plistlib
 
 from datetime import datetime, timedelta
 from time import mktime
@@ -206,21 +205,6 @@ def exposedasjson (func):
             Exception("Failed to JSONtify obj '%s' type '%s'" \
                 % (data, type(data)))
     return wrapper
-
-def exposedasplist (func):
-    """
-    Return data in XML plist format, 
-    see http://docs.python.org/library/plistlib.html#module-plistlib
-    """
-    @expose
-    def wrapper (self, *args, **kwds):
-        """Decorator wrapper"""
-        data_struct = func(self, *args, **kwds)
-        plist_str = plistlib.writePlistToString(data_struct)
-        cherrypy.response.headers['Content-Type'] = "application/xml"
-        return plist_str
-    return wrapper
-
 
 def enable_cross_origin(func):
     """

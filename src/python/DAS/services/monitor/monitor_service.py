@@ -8,7 +8,6 @@ __author__ = "Valentin Kuznetsov"
 
 # system modules
 import time
-from   types import InstanceType
 
 # DAS modules
 import DAS.utils.jsonwrapper as json
@@ -44,7 +43,7 @@ class MonitorService(DASAbstractService):
         """
         Data parser for Monitor service.
         """
-        if  isinstance(source, InstanceType) or isinstance(source, file):
+        if  hasattr(source, "close"):
             try: # we got data descriptor
                 data = source.read()
             except:
@@ -71,7 +70,7 @@ class MonitorService(DASAbstractService):
             for row in items:
                 interval = row['time']
                 dataval  = row['data']
-                for key, val in dataval.iteritems():
+                for key, val in dataval.items():
                     newrow = {'time': interval}
                     newrow[args['grouping']] = key
                     newrow['rate'] = val
@@ -85,7 +84,7 @@ class MonitorService(DASAbstractService):
         """
         keys = [key for key in self.map[api]['keys'] for api in self.map.keys()]
         cond = dasquery.mongo_query['spec']
-        for key, value in cond.iteritems():
+        for key, value in cond.items():
             if  key.find('.') != -1:
                 args['grouping'] = key.split('.')[-1]
                 key, _attr = key.split('.', 1)

@@ -11,9 +11,12 @@ from __future__ import print_function
 # system modules
 import re
 import time
-import thread
+# import thread
 import urllib
-import urllib2
+try:
+    import urllib2
+except ImportError:
+    import urllib.request as urllib2
 import itertools
 
 # MongoDB modules

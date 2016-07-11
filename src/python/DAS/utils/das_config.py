@@ -9,7 +9,10 @@ from __future__ import print_function
 __author__ = "Valentin Kuznetsov"
 
 import os
-import ConfigParser
+try:
+    import ConfigParser
+except ImportError: # python3
+    import configparser as ConfigParser
 from DAS.utils.das_option import DASOption
 
 DAS_OPTIONS = [
@@ -27,7 +30,7 @@ DASOption('pycurl', 'VERBOSE', 'int', 0),
 # MongoDB options
 #
 # URI, can be multiple
-DASOption('mongodb', 'dburi', 'list', ['mongodb://localhost:27017']),
+DASOption('mongodb', 'dburi', 'list', ['mongodb://localhost:8230']),
 # default DB name
 DASOption('mongodb', 'dbname', 'string', 'das'),
 # default DB collection names
@@ -198,7 +201,7 @@ DASOption('das', 'error_expire', 'int', 300),
 DASOption('das', 'emptyset_expire', 'int', 5),
 # list of data services participated in DAS
 DASOption('das', 'services', 'list',
-                ['google_maps', 'ip', 'postalcode'], destination='services'),
+                ['dbs3', 'phedex'], destination='services'),
 # Choice of main DBS
 DASOption('das', 'main_dbs', 'string', 'dbs3'),
 # Choice of DBS instances, use empty list to allow read them from DAS maps
@@ -251,7 +254,8 @@ DASOption('security', 'mount_point', 'string', 'auth'),
 def read_configparser(dasconfig):
     """Read DAS configuration"""
     config = ConfigParser.ConfigParser()
-    config.read(dasconfig)
+    if  dasconfig:
+        config.read(dasconfig)
 
     configdict = {}
 
@@ -339,6 +343,7 @@ def das_readconfig_helper(fname=None, debug=False):
         except Exception as exp:
             print('Unable to read DAS cfg configuration,', str(exp))
             print('Unable to read DAS CMS configuration,', str(err))
+            configdict = read_configparser(None)
     if  not configdict:
         msg = 'Unable to read DAS configuration'
         raise Exception(msg)

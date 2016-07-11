@@ -7,8 +7,13 @@ SiteDB service
 __author__ = "Valentin Kuznetsov"
 
 # system modules
+import sys
 import time
-from   types import InstanceType
+
+# python 3
+if  sys.version.startswith('3.'):
+    unicode = str
+    basestring = str
 
 # DAS modules
 import DAS.utils.jsonwrapper as json
@@ -29,7 +34,7 @@ def sitedb_parser(source):
     """SiteDB parser"""
     if  isinstance(source, str) or isinstance(source, unicode):
         data = json.loads(source)
-    elif isinstance(source, InstanceType) or isinstance(source, file):
+    elif hasattr(source, "close") or isinstance(source, file):
         # got data descriptor
         try:
             data = json.load(source)

@@ -81,7 +81,7 @@ def configs(url, args, verbose=False):
     idict, source = findReqMgrIds(dataset, base, verbose)
     ids = []
     ids_types = {} # keep track of ids/types relationship
-    for key, ilist in idict.iteritems():
+    for key, ilist in idict.items():
         rtype = 'output' if key.lower().find('output') != -1 else 'input'
         for item in ilist:
             ids.append(item)
@@ -183,7 +183,7 @@ class ReqMgr2Service(DASAbstractService):
                         if  'InputDatasetTypes' in data:
                             arr = []
                             for key, val in \
-                                    data['InputDatasetTypes'].iteritems():
+                                    data['InputDatasetTypes'].items():
                                 arr.append({'dataset':key, 'type':val})
                             data['InputDatasetTypes'] = arr
                         yield data
@@ -205,7 +205,7 @@ class ReqMgr2Service(DASAbstractService):
                     if  isinstance(data, dict) and 'error' in data:
                         yield row
                     else:
-                        for key, val in data.iteritems():
+                        for key, val in data.items():
                             yield dict(request_name=key, config_files=val)
                 except:
                     pass

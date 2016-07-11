@@ -42,7 +42,7 @@ def cleanup_values_weights(values_ws):
     # TODO: move this to matchers to simplify code
     # cleanup values weights
     values_ws_ = defaultdict(list)
-    for kw, maps in values_ws.iteritems():
+    for kw, maps in values_ws.items():
         for score, m in maps:
             if not isinstance(m, dict):
                 m = {

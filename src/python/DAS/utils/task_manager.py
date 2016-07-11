@@ -13,7 +13,11 @@ from __future__ import print_function
 # system modules
 from cherrypy.process import plugins
 from threading import Thread, Event
-from Queue import Queue, PriorityQueue
+try:
+    from Queue import Queue, PriorityQueue
+except ImportError: # python3
+    from queue import Queue
+    from queue import Queue as PriorityQueue
 
 # DAS modules
 from DAS.utils.utils import genkey, print_exc
@@ -114,7 +118,7 @@ class TaskManager(object):
         else:
             self._tasks = Queue()
         self._workers = [Worker(name, self._tasks, self._pids, self._uids) \
-                        for _ in xrange(0, nworkers)]
+                        for _ in range(0, nworkers)]
 
     def status(self):
         "Return status of task manager queue"
