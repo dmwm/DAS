@@ -406,8 +406,8 @@ class DASCore(object):
         self.logger.info('\n##### merging ######\n')
         update_das_query(dasquery, 'merging')
         das_timer('merge', self.verbose)
-        for attempt in range(2): # try couple of times to avoid DB problems
-            time.sleep(attempt+2)
+        for attempt in range(1,4): # try couple of times to avoid DB problems
+            time.sleep(attempt)
             status = self.rawcache.merge_records(dasquery, attempt)
             if  status == 'ok':
                 break
