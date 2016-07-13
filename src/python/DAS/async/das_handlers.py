@@ -33,13 +33,14 @@ async def process(request):
     """Process user request"""
     loop = asyncio.get_event_loop()
     params = dict(urllib.parse.parse_qsl(request.query_string))
-    uinput = params.get('uinput', None)
+    uinput = params.get('input', None)
     inst = params.get('instance', 'prod/global')
     if not uinput:
         raise Exception("No input query")
     try:
         dasquery = DASQuery(uinput, instance=inst)
     except Exception as exp:
+        traceback.print_exc()
         return {'status':'fail', 'query':uinput}
     pid = dasquery.qhash
     dascore = DASCore()
