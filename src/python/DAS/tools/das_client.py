@@ -308,6 +308,8 @@ def get_data(host, query, idx, limit, debug, threshold=300, ckey=None,
     pat = re.compile(r'^[a-z0-9]{32}')
     if  data and isinstance(data, str) and pat.match(data) and len(data) == 32:
         pid = data
+    elif data.find('"pid"') != -1 and data.find('"status"') != -1:
+        pid = json.loads(data)['pid']
     else:
         pid = None
     iwtime  = 2  # initial waiting time in seconds
