@@ -19,10 +19,8 @@ from aiohttp import web
 from DAS.core.das_query import DASQuery, check_query
 from DAS.core.das_core import DASCore
 
-async def workflow(dasquery, loop):
+async def workflow(dascore, dasquery, loop):
     print("### call workflow", dasquery, loop)
-    dascore = DASCore()
-    print("### dascore", dascore)
     res = None
     try:
         res = dascore.call(dasquery)
@@ -44,7 +42,12 @@ async def process(request):
     except Exception as exp:
         return {'status':'fail', 'query':uinput}
     pid = dasquery.qhash
-    asyncio.ensure_future(workflow(dasquery, loop))
+    dascore = DASCore()
+    if  dascore.incache(dasquery):
+        res = dascore.get_from_cache(dasquery)
+        data = {'status':'ok', 'data': [r for r in res]}
+        return data
+    asyncio.ensure_future(workflow(dascore, dasquery, loop))
 #     try:
 #         task = loop.create_task(workflow(dasquery,loop))
 #     except asyncio.CancelledError:
