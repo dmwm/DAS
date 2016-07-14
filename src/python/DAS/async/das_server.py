@@ -28,17 +28,21 @@ class OptionParser():
             dest="host", default='127.0.0.1', help="DAS server host IP address")
         self.parser.add_argument("--port", action="store",
             dest="port", default=8212, help="DAS server port number")
+        self.parser.add_argument("--path", action="store",
+            dest="path", default="", help="DAS web entry")
         self.parser.add_argument("--verbose", action="store_true",
             dest="verbose", default=False, help="verbose output")
 
-def dasserver(host, port, verbose=False):
+def dasserver(host, port, path, verbose=False):
     "DAS async web server"
     loop = asyncio.get_event_loop()
     app = web.Application(loop=loop)
-    for (method, path, handler) in HANDLERS:
+    for (method, hpath, handler) in HANDLERS:
+        if  path:
+            hpath = path + hpath
         if  verbose:
-            print('### Register: %s %s %s' % (method, path, handler))
-        app.router.add_route(method, path, handler)
+            print('### Register: %s %s %s' % (method, hpath, handler))
+        app.router.add_route(method, hpath, handler)
 
     server = loop.create_server(app.make_handler(), host, port)
     print('### Server started at http://%s:%s' % (host, port))
@@ -54,7 +58,7 @@ def main():
     opts = optmgr.parser.parse_args()
     port = int(opts.port)
     host = opts.host.replace('http://', '').replace('https://', '')
-    dasserver(host, port, opts.verbose)
+    dasserver(host, port, opts.path, opts.verbose)
 
 if __name__ == '__main__':
     main()

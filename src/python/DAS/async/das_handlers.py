@@ -43,10 +43,12 @@ async def process(request):
         traceback.print_exc()
         return {'status':'fail', 'query':uinput}
     pid = dasquery.qhash
+    time0 = time.time()
     dascore = DASCore()
+    print("### dascore", dascore, time.time()-time0)
     if  dascore.incache(dasquery):
-        res = dascore.get_from_cache(dasquery)
-        data = {'status':'ok', 'data': [r for r in res]}
+        res = [r for r in dascore.get_from_cache(dasquery)]
+        data = {'status':'ok', 'data': res, 'nresults':len(res), 'mongo_query':dasquery.mongo_query}
         return data
     asyncio.ensure_future(workflow(dascore, dasquery, loop))
 #     try:
