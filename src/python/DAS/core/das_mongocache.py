@@ -790,7 +790,7 @@ class DASMongocache(object):
         3. insert records into das.merge
         """
         ### TMP for asyncio
-        time.sleep(attempt+3) # pymongo 3.2 don't yet flush in time
+#         time.sleep(attempt+3) # pymongo 3.2 don't yet flush in time
 
         # remove any entries in merge collection for this query
         self.merge.remove({'qhash':dasquery.qhash})
