@@ -161,6 +161,9 @@ class DASOptionParser:
         self.parser.add_option("--cache", action="store", type="string",
                                default=None, dest="cache", help=msg)
 
+        msg = 'a query cache value'
+        self.parser.add_option("--query-cache", action="store", type="int",
+                               default=0, dest="qcache", help=msg)
         msg = 'List DAS key/attributes, use "all" or specific DAS key value, e.g. site'
         self.parser.add_option("--list-attributes", action="store", type="string",
                                default="", dest="keys_attrs", help=msg)
@@ -270,9 +273,11 @@ def fullpath(path):
     return path
 
 def get_data(host, query, idx, limit, debug, threshold=300, ckey=None,
-        cert=None, capath=None, das_headers=True):
+        cert=None, capath=None, qcache=0, das_headers=True):
     """Contact DAS server and retrieve data for given DAS query"""
     params  = {'input':query, 'idx':idx, 'limit':limit}
+    if  qcache:
+        params['qcache'] = qcache
     path    = '/das/cache'
     pat     = re.compile('http[s]{0,1}://')
     if  not pat.match(host):
@@ -430,6 +435,7 @@ def main():
     cert    = opts.cert
     capath  = opts.capath
     base    = opts.base
+    qcache  = opts.qcache
     check_glidein()
     check_auth(ckey)
     if  opts.keys_attrs:
@@ -439,7 +445,7 @@ def main():
         print('Input query is missing')
         sys.exit(EX_USAGE)
     if  opts.format == 'plain':
-        jsondict = get_data(host, query, idx, limit, debug, thr, ckey, cert, capath)
+        jsondict = get_data(host, query, idx, limit, debug, thr, ckey, cert, capath, qcache)
         cli_msg  = jsondict.get('client_message', None)
         if  cli_msg:
             print("DAS CLIENT WARNING: %s" % cli_msg)
@@ -459,7 +465,7 @@ def main():
                     interval = log(attempt)**5
                     print("Retry in %5.3f sec" % interval)
                     time.sleep(interval)
-                    data = get_data(host, query, idx, limit, debug, thr, ckey, cert, capath)
+                    data = get_data(host, query, idx, limit, debug, thr, ckey, cert, capath, qcache)
                     jsondict = json.loads(data)
                     if  jsondict.get('status', 'fail') == 'ok':
                         found = True
@@ -544,7 +550,7 @@ def main():
                 print(data)
     else:
         jsondict = get_data(\
-                host, query, idx, limit, debug, thr, ckey, cert, capath)
+                host, query, idx, limit, debug, thr, ckey, cert, capath, qcache)
         print(json.dumps(jsondict))
 
 #

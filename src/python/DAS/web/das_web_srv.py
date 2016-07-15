@@ -70,7 +70,8 @@ except Exception as exc:
     print_exc(exc)
 
 DAS_WEB_INPUTS = ['input', 'idx', 'limit', 'collection', 'name', 'system',
-            'reason', 'instance', 'view', 'query', 'fid', 'pid', 'next', 'kwquery']
+    'qcache', 'reason', 'instance', 'view', 'query', 'fid', 'pid', 'next',
+    'kwquery']
 DAS_PIPECMDS = das_aggregators() + das_filters()
 
 # disable default urllib2 proxy
@@ -455,7 +456,7 @@ class DASWebService(DASWebManager):
         """
         return self.dasconfig['keyword_search']['kws_service_on']
 
-    def generate_dasquery(self, uinput, inst, html_mode=True):
+    def generate_dasquery(self, uinput, inst, html_mode=True, qcache=0):
         """
         Check provided input as valid DAS input query.
         Returns status and content (either error message or valid DASQuery)
@@ -494,7 +495,7 @@ class DASWebService(DASWebManager):
         # Generate a DASQuery object, if it fails we catch the exception and
         # wrap it for upper layer (web interface)
         try:
-            dasquery = DASQuery(uinput, instance=inst)
+            dasquery = DASQuery(uinput, instance=inst, qcache=qcache)
         except WildcardMultipleMatchesException as err:
             das_parser_error(uinput, str(err).replace('\n', ''))
             # TODO: hints could be shown here also, but it makes no sense, as
@@ -893,11 +894,13 @@ class DASWebService(DASWebManager):
         inst   = kwargs.get('instance', self.dbs_global)
         uinput = kwargs.get('input', '')
         view   = kwargs.get('view', 'list')
+        qcache = kwargs.get('qcache', 0)
         data   = []
 
         # textual views need text only error messages...
         check, content = self.generate_dasquery(uinput, inst,
-                              html_mode=self._is_web_request(view))
+                              html_mode=self._is_web_request(view),
+                              qcache=qcache)
         if  check:
             head = dict(timestamp=time.time())
             head.update({'status': 'fail',
@@ -1034,6 +1037,7 @@ class DASWebService(DASWebManager):
         time0   = time.time()
         self.adjust_input(kwargs)
         view    = kwargs.get('view', 'list')
+        qcache  = kwargs.get('qcache', 0)
         if  'instance' in uinput:
             form     = self.form(uinput=uinput, view=view)
             content  = 'On DAS web UI please use drop-down menu to specify DBS'
@@ -1044,7 +1048,7 @@ class DASWebService(DASWebManager):
             inst = kwargs.get('instance', self.dbs_global)
         uinput  = kwargs.get('input', '')
         form    = self.form(uinput=uinput, instance=inst, view=view)
-        check, content = self.generate_dasquery(uinput, inst)
+        check, content = self.generate_dasquery(uinput, inst, qcache=qcache)
         if  check:
             if  view == 'list' or view == 'table':
                 return self.page(form + content, ctime=time.time()-time0)

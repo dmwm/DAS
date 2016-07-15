@@ -343,6 +343,9 @@ def checkargs(supported):
             if  checkarg(kwds, 'limit') and not pat.match(str(kwds['limit'])):
                 code  = web_code('Unsupported limit value')
                 raise HTTPError(500, 'DAS error, code=%s' % code)
+            if  checkarg(kwds, 'qcache') and not pat.match(str(kwds['qcache'])):
+                code  = web_code('Unsupported query cache value')
+                raise HTTPError(500, 'DAS error, code=%s' % code)
             if  checkarg(kwds, 'view'):
                 if  kwds['view'] not in \
                         ['list', 'xml', 'json', 'plain', 'table']:

@@ -106,6 +106,7 @@ class DASQuery(object):
         self._filters       = {}
         self._mapreduce     = []
         self._aggregators   = []
+        self._qcache        = 0
         self._flags         = flags
 
         # loop over flags and set available attributes
@@ -184,6 +185,11 @@ class DASQuery(object):
     def services(self):
         "Return list of services which may provide information about this query"
         return self.service_apis_map().keys()
+
+    @property
+    def qcache(self):
+        "qcache property of the DAS query"
+        return int(self._qcache)
 
     @property
     def hashes(self):
@@ -506,7 +512,11 @@ class DASQuery(object):
         "Query string representation"
         if  self._str:
             return self._str
-        msg = """<query='''%s''' instance=%s qhash=%s services=%s>""" \
-            % (self.query, self.instance, self.qhash, self.services)
+        if  self._qcache:
+            msg = """<query='''%s''' instance=%s qhash=%s services=%s qcache=%s>""" \
+                % (self.query, self.instance, self.qhash, self.services, self._qcache)
+        else:
+            msg = """<query='''%s''' instance=%s qhash=%s services=%s>""" \
+                % (self.query, self.instance, self.qhash, self.services)
         self._str = msg
         return msg
