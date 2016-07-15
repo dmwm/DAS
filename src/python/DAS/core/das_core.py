@@ -343,7 +343,7 @@ class DASCore(object):
             # server (in a future it would be better to find programatically
             # this syncdelay value, but it seems pymongo driver does not
             # provide any API for it.
-            for idx in range(1, 7):
+            for idx in range(0, 7):
                 spec = {'qhash':dasquery.qhash, 'das.system':['das']}
                 res = self.rawcache.col.find_one(spec)
                 if  res:
@@ -353,8 +353,8 @@ class DASCore(object):
                     msg = 'qhash %s, das.status=%s, status=%s, wait for update' \
                             % (dasquery.qhash, dbstatus, status)
                     print(dastimestamp('DAS WARNING'), msg)
-                time.sleep(idx*idx)
                 self.rawcache.update_query_record(dasquery, status, reason=reason)
+                time.sleep(idx*idx)
 
         self.logger.info('input query=%s' % query)
         das_timer('DASCore::call', self.verbose)
@@ -406,7 +406,7 @@ class DASCore(object):
         self.logger.info('\n##### merging ######\n')
         update_das_query(dasquery, 'merging')
         das_timer('merge', self.verbose)
-        for attempt in range(1,4): # try couple of times to avoid DB problems
+        for attempt in range(0,4): # try couple of times to avoid DB problems
             time.sleep(attempt)
             status = self.rawcache.merge_records(dasquery, attempt)
             if  status == 'ok':
