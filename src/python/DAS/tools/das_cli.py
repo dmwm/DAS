@@ -70,6 +70,9 @@ class DASOptionParser(object):
         self.parser.add_option("--keylearning-file", action="store", type="string",\
                       default="", dest="kfile",\
              help="create/update KWS keylearning file for given query")
+        msg = 'a query cache value'
+        self.parser.add_option("--query-cache", action="store", type="int",
+                               default=0, dest="qcache", help=msg)
     def getOpt(self):
         """
         Returns parse list of options
@@ -231,11 +234,12 @@ def main():
         limit  = opts.limit
         output = opts.nooutput
         plain  = opts.plain
+        qcache = opts.qcache
 
         if  opts.profile:
             import cProfile # python profiler
             import pstats   # profiler statistics
-            cmd  = 'run(dascore,query,idx,limit,output,plain)'
+            cmd  = 'run(dascore,query,idx,limit,output,plain,qcache)'
             cProfile.runctx(cmd, globals(), locals(), 'profile.dat')
             info = pstats.Stats('profile.dat')
             info.sort_stats('cumulative')

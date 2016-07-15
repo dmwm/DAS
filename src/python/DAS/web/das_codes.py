@@ -44,6 +44,7 @@ DAS_WEB_CODES = [\
         (32 , 'Unsupported interval value'),\
         (33 , 'Unsupported kwds'),\
         (34 , 'Unsupported dbs instance'),\
+        (35 , 'Unsupported query cache value'),\
 ]
 def decode_code(code):
     """Return human readable string for provided code ID"""

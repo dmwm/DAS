@@ -932,6 +932,9 @@ class DASMongocache(object):
         except InvalidOperation:
             pass
 
+        if  dasquery.qcache: # custom DASQuery cache
+            self.update_das_expire(dasquery, expire_timestamp(dasquery.qcache))
+
     def insert_query_record(self, dasquery, header):
         """
         Insert query record into DAS cache.
