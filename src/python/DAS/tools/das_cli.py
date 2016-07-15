@@ -239,7 +239,7 @@ def main():
         if  opts.profile:
             import cProfile # python profiler
             import pstats   # profiler statistics
-            cmd  = 'run(dascore,query,idx,limit,output,plain,qcache)'
+            cmd  = 'run(dascore,query,idx,limit,output,plain)'
             cProfile.runctx(cmd, globals(), locals(), 'profile.dat')
             info = pstats.Stats('profile.dat')
             info.sort_stats('cumulative')
