@@ -230,7 +230,7 @@ def unique_filter(rows):
         old_row = row
     yield row
 
-def extract_value(row, key):
+def extract_value(row, key, base=10):
     """Generator which extracts row[key] value"""
     if  isinstance(row, dict) and key in row:
         if  key == 'creation_time':
@@ -242,7 +242,7 @@ def extract_value(row, key):
         yield row
     if  isinstance(row, list) or isinstance(row, GeneratorType):
         for item in row:
-            for vvv in extract_value(item, key):
+            for vvv in extract_value(item, key, base):
                 yield vvv
 
 def get_value(data, filters, base=10):
@@ -254,7 +254,7 @@ def get_value(data, filters, base=10):
         values = []
         keys = ftr.split('.')
         for key in keys:
-            val = [v for v in extract_value(row, key)]
+            val = [v for v in extract_value(row, key, base)]
             if  key == keys[-1]: # we collect all values at last key
                 values += [json.dumps(i) for i in val]
             else:
