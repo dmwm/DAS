@@ -42,7 +42,7 @@ script:
   
 notifications:
   email: true
-      on_success: never
+#      on_success: never
       on_failure: always
   
 # speedup the build slightly
