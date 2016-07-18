@@ -293,9 +293,6 @@ class testDASQueryParser(unittest.TestCase):
         query = 'date last [20101010,20101012]'
         queries[query] = mongo
 
-        query = 'dataset in [/a/b/c,/c/d/e]' # wrong value in array, should be int
-        queries[query] = mongo
-
         query = 'dataset = /a/b/c dataset.size' # select is not DAS keyword
         queries[query] = mongo
 

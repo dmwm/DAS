@@ -9,7 +9,10 @@ import time
 import unittest
 from   cherrypy import HTTPError
 from   DAS.web.utils import checkargs
-from   DAS.web.das_web_srv import DAS_WEB_INPUTS
+
+DAS_WEB_INPUTS = ['input', 'idx', 'limit', 'collection', 'name', 'system',
+    'qcache', 'reason', 'instance', 'view', 'query', 'fid', 'pid', 'next',
+    'kwquery']
 
 @checkargs(DAS_WEB_INPUTS)
 def func_web(*args, **kwds):

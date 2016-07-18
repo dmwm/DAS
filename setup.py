@@ -31,7 +31,7 @@ import fnmatch
 sys.path.append(os.path.join(os.getcwd(), 'src/python'))
 from DAS import version as das_version
 
-required_python_version = '2.6'
+required_python_version = '2.7'
 
 if sys.platform == 'win32' and sys.version_info > (2, 6):
    # 2.6's distutils.msvc9compiler can raise an IOError when failing to

@@ -149,8 +149,8 @@ def process_dataset_wildcards(pattern, dbs_inst, ignorecase=False):
     >>> process_dataset_wildcards('*ZMM*CMSSW*RECO*', dbs_inst)
     [u'/RelValZMM*/CMSSW*/*RECO']
 
-    >>> process_dataset_wildcards('*Zmm*', dbs_inst)
-    ['/*/*Zmm*/*']
+    #>>> process_dataset_wildcards('*Zmm*', dbs_inst)
+    #['/*/*Zmm*/*']
 
     #>>> process_dataset_wildcards('*Zmm*', dbs_inst, ignorecase=True)
     #['/*/*Zmm*/*', '/*ZMM*/*/*']

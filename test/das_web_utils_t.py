@@ -9,7 +9,7 @@ import json
 import plistlib
 import unittest
 
-from DAS.web.utils import wrap2dasxml, wrap2dasjson, json2html, quote
+from DAS.web.utils import wrap2dasjson, json2html, quote
 from DAS.web.utils import free_text_parser, choose_select_key
 
 class testDASWebUtils(unittest.TestCase):
@@ -21,30 +21,6 @@ class testDASWebUtils(unittest.TestCase):
         set up DAS core module
         """
         debug = 0
-
-    def testDASXML(self):
-        """test quote function"""
-        data = 1
-        result = quote(data)
-        expect = '1'
-        self.assertEqual(expect, result)
-        
-        data = '1'
-        result = quote(data)
-        expect = '1'
-        self.assertEqual(expect, result)
-        
-        data = 'vk test'
-        result = quote(data)
-        expect = 'vk%20test'
-        self.assertEqual(expect, result)
-        
-    def testDASXML(self):
-        """test wrap2dasxml function"""
-        data = {'test': {'foo':1}}
-        expect = wrap2dasxml(data)
-        result = plistlib.writePlistToString(data)
-        self.assertEqual(expect, result)
 
     def testDASJSON(self):
         """test wrap2dasjson function"""

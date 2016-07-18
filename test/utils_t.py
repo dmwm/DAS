@@ -21,7 +21,7 @@ from DAS.utils.utils import splitlist, gen_key_tuples, sort_data
 from DAS.utils.utils import dict_value, merge_dict, adjust_value
 from DAS.utils.utils import json_parser, xml_parser, dict_helper
 from DAS.utils.utils import convert_dot_notation, translate, das_diff
-from DAS.utils.utils import delete_elem, plist_parser, unique_filter
+from DAS.utils.utils import delete_elem, unique_filter
 from DAS.utils.utils import filter_with_filters, aggregator, yield_rows
 from DAS.utils.utils import adjust_mongo_keyvalue, expire_timestamp
 from DAS.utils.utils import genkey, next_day, prev_day, convert2date
@@ -1105,35 +1105,6 @@ class testUtils(unittest.TestCase):
         stream.close()
         stream = file(fname, 'r')
         gen    = json_parser(stream)
-        result = next(gen)
-        expect = {'beer': {'amstel': 'good', 'guiness': 'better'}}
-        self.assertEqual(expect, result)
-
-    def test_plist_parser(self):
-        """
-        Test functionality of plist_parser
-        """
-        plistdata = """<?xml version='1.0' encoding='ISO-8859-1'?>
-<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-        <key>beer</key>
-        <dict>
-                <key>amstel</key>
-                <string>good</string>
-                <key>guiness</key>
-                <string>better</string>
-        </dict>
-</dict>
-</plist>
-"""
-        fdesc  = tempfile.NamedTemporaryFile()
-        fname  = fdesc.name
-        stream = file(fname, 'w')
-        stream.write(plistdata)
-        stream.close()
-        stream = file(fname, 'r')
-        gen    = plist_parser(stream)
         result = next(gen)
         expect = {'beer': {'amstel': 'good', 'guiness': 'better'}}
         self.assertEqual(expect, result)

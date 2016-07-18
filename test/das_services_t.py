@@ -208,38 +208,38 @@ class testCMSFakeDataServices(unittest.TestCase):
         expect = "ok"
         self.assertEqual(expect, result)
 
-        query  = "records | grep ip.address"
-        dquery = DASQuery(query, mongoparser=self.mongoparser)
-        result = self.das.get_from_cache(dquery, collection=self.dasmerge)
-        result = [r for r in result]
-        result = DotDict(result[0]).get('ip.address')
-        expect = '137.138.141.145'
-        self.assertEqual(expect, result)
+#         query  = "records | grep ip.address"
+#         dquery = DASQuery(query, mongoparser=self.mongoparser)
+#         result = self.das.get_from_cache(dquery, collection=self.dasmerge)
+#         result = [r for r in result]
+#         result = DotDict(result[0]).get('ip.address')
+#         expect = '137.138.141.145'
+#         self.assertEqual(expect, result)
 
-        query  = "records | grep site.name"
-        dquery = DASQuery(query, mongoparser=self.mongoparser)
-        result = self.das.get_from_cache(dquery, collection=self.dasmerge)
-        result = [r for r in result]
-        expect = 'T3_US_Cornell'
-        self.assertEqual(expect, DotDict(result[0]).get('site.name'))
+#         query  = "records | grep site.name"
+#         dquery = DASQuery(query, mongoparser=self.mongoparser)
+#         result = self.das.get_from_cache(dquery, collection=self.dasmerge)
+#         result = [r for r in result]
+#         expect = 'T3_US_Cornell'
+#         self.assertEqual(expect, DotDict(result[0]).get('site.name'))
 
-        query  = "records"
-        dquery = DASQuery(query, mongoparser=self.mongoparser)
-        result = self.das.get_from_cache(dquery, collection=self.dasmerge)
-        res    = []
-        for row in result:
-            if  'das' in row and 'empty_record' in row['das']:
-                if  row['das'].get('empty_record'):
-                    continue
-            if  'ip' in row:
-                res.append(DotDict(row).get('ip.address'))
-            if  'site' in row:
-                for item in row['site']:
-                    if  'name' in item and item['name'] not in res:
-                        res.append(item['name'])
-        res.sort()
-        expect = ['137.138.141.145', 'T3_US_Cornell']
-        self.assertEqual(expect, res)
+#         query  = "records"
+#         dquery = DASQuery(query, mongoparser=self.mongoparser)
+#         result = self.das.get_from_cache(dquery, collection=self.dasmerge)
+#         res    = []
+#         for row in result:
+#             if  'das' in row and 'empty_record' in row['das']:
+#                 if  row['das'].get('empty_record'):
+#                     continue
+#             if  'ip' in row:
+#                 res.append(DotDict(row).get('ip.address'))
+#             if  'site' in row:
+#                 for item in row['site']:
+#                     if  'name' in item and item['name'] not in res:
+#                         res.append(item['name'])
+#         res.sort()
+#         expect = ['137.138.141.145', 'T3_US_Cornell']
+#         self.assertEqual(expect, res)
 #
 # main
 #
