@@ -40,11 +40,11 @@ script:
   # - das_code_quality 9 false  || true  # run pylint with threshold 9
 
   
-notifications:
-  email: true
+#notifications:
+#  email: true
 #      on_success: never
-      on_failure: always
+#      on_failure: always
   
 # speedup the build slightly
-matrix:
-  fast_finish: true
+#matrix:
+#  fast_finish: true
