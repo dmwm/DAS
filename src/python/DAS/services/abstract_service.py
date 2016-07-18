@@ -523,10 +523,15 @@ class DASAbstractService(object):
                     if  apiparam in args:
                         args[apiparam] = val
                         found += 1
+            # VK 20160708, wrong statement, it caused to pass
+            # datasets API for query dataset in [path1, path2]
+            # I'll leave block here until I test and verify that
+            # commented out block will not cause other issues
+            #
             # check the case when we only have single condition key
             # and it is the key we look-up
-            if  not found and skeys == [k.split('.')[0] for k in cond.keys()]:
-                found = 1
+#             if  not found and skeys == [k.split('.')[0] for k in cond.keys()]:
+#                 found = 1
             # check if number of keys on cond and args are the same
             if  len(cond.keys()) != found:
                 msg = "--- reject API %s, not all condition keys are covered" \
