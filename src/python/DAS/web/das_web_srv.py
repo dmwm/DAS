@@ -122,6 +122,7 @@ class DASWebService(DASWebManager):
         self.dbs_instances = [] # defined at run-time via self.init()
         self.kws         = None # defined at run-time via self.init()
         self.q_rewriter  = None # defined at run-time via self.init()
+        self.dataset_daemon = None
         self.dbsmgr      = {} # dbs_urls vs dbs_daemons, defined at run-time
         self.daskeyslist = [] # list of DAS keys
         self.init()
