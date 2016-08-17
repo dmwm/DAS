@@ -142,9 +142,17 @@ class DASOptionParser:
         msg  = 'specify private certificate file name, default $X509_USER_PROXY'
         self.parser.add_option("--cert", action="store", type="string",
                                default=x509(), dest="cert", help=msg)
-        msg  = 'specify CA path, default $X509_CERT_DIR'
+        default_ca = os.environ.get("X509_CERT_DIR")
+        if not default_ca or not os.path.exists(default_ca):
+            default_ca = "/etc/grid-security/certificates"
+            if not os.path.exists(default_ca):
+                default_ca = ""
+        if default_ca:
+            msg = 'specify CA path, default currently is %s' % default_ca
+        else:
+            msg = 'specify CA path; defaults to system CAs.'
         self.parser.add_option("--capath", action="store", type="string",
-                               default=os.environ.get("X509_CERT_DIR", ""),
+                               default=default_ca,
                                dest="capath", help=msg)
         msg  = 'specify number of retries upon busy DAS server message'
         self.parser.add_option("--retry", action="store", type="string",
