@@ -9,7 +9,7 @@ python:
 # command to install dependencies
 install: 
   - export PYCURL_SSL_LIBRARY=openssl # one may try: openssl or gnutls
-  - pip install --use-mirrors -r requirements_freezed.txt  # install dependencies
+  - pip install -r requirements_freezed.txt  # install dependencies
   #- pip install --use-mirrors   pylint flake8 # not used yet: coverage
 
   - git clone https://github.com/dmwm/DASMaps
