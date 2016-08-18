@@ -29,7 +29,15 @@ from cherrypy import expose
 from Cheetah.Template import Template
 from Cheetah import Version
 
+# jinja modules
+try:
+    import jinja2
+    JINJA = True
+except:
+    JINJA = False
+
 import DAS.utils.jsonwrapper as json
+from DAS.web.utils import quote
 from json import JSONEncoder
 
 class Page(object):
@@ -86,6 +94,12 @@ class TemplatedPage(Page):
             self.info("Using Cheetah version: %s" % Version)
 
     def templatepage(self, ifile=None, *args, **kwargs):
+	"""Choose template page handler based on templates engine"""
+	if  JINJA and self.templatedir.find("jinja") != -1:
+            return self.templatepage_jinja(ifile, *args, **kwargs)
+        return self.templatepage_cheetah(ifile, *args, **kwargs)
+
+    def templatepage_cheetah(self, ifile=None, *args, **kwargs):
         """
         Template page method.
         """
@@ -101,6 +115,21 @@ class TemplatedPage(Page):
             template = Template(file=templatefile, searchList=search_list)
             return template.respond()
 
+        else:
+            self.warning("%s not found at %s" % (ifile, self.templatedir))
+            return "Template %s not known" % ifile
+
+    def templatepage_jinja(self, ifile=None, *args, **kwargs):
+        """
+        Template page method.
+        """
+	env = jinja2.Environment(loader=jinja2.FileSystemLoader(self.templatedir), quote=quote)
+	for arg in args:
+	    kwargs.update(**arg)
+        tmpl = os.path.join(self.templatedir, ifile + '.tmpl')
+	if  os.path.exists(tmpl):
+	    template = env.get_template(ifile + '.tmpl')
+	    return template.render(kwargs)
         else:
             self.warning("%s not found at %s" % (ifile, self.templatedir))
             return "Template %s not known" % ifile
