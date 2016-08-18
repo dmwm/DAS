@@ -123,9 +123,10 @@ class TemplatedPage(Page):
         """
         Template page method.
         """
-	env = jinja2.Environment(loader=jinja2.FileSystemLoader(self.templatedir), quote=quote)
+	env = jinja2.Environment(loader=jinja2.FileSystemLoader(self.templatedir))
 	for arg in args:
 	    kwargs.update(**arg)
+        kwargs.update(**{"quote":quote})
         tmpl = os.path.join(self.templatedir, ifile + '.tmpl')
 	if  os.path.exists(tmpl):
 	    template = env.get_template(ifile + '.tmpl')
