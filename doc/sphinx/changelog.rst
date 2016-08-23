@@ -5,6 +5,11 @@ Release notes
 
 This release series is targeted to DAS production stability and quality.
 
+- v03.01.XX
+
+  - DAS works with new MongoDB
+  - DAS works with jinja templates
+
 - v03.00.XX
   
   - Re-factor DAS code to tear apart DAS DBS updates and DAS cache cleanups
