@@ -25,16 +25,15 @@ import cherrypy
 from cherrypy import log as cplog
 from cherrypy import expose
 
-# cheetag modules
-from Cheetah.Template import Template
-from Cheetah import Version
-
-# jinja modules
 try:
+    # jinja templates
     import jinja2
     JINJA = True
 except:
     JINJA = False
+    # fallback to cheetah tempalates
+    from Cheetah.Template import Template
+
 
 import DAS.utils.jsonwrapper as json
 from DAS.web.utils import quote
@@ -89,9 +88,12 @@ class TemplatedPage(Page):
         self.templatedir = config.get('templatedir', templatedir)
         self.name = "TemplatedPage"
         verbose = config.get('verbose', 0)
-        if  verbose:
-            self.info("Templates are located in: %s" % self.templatedir)
-            self.info("Using Cheetah version: %s" % Version)
+        if  JINJA:
+            templates = 'JINJA'
+        else:
+            templates = 'Cheetah'
+        self.log("### DAS uses %s templates" % templates, logging.INFO)
+        self.log("Templates are located in: %s" % self.templatedir, logging.INFO)
 
     def templatepage(self, ifile=None, *args, **kwargs):
 	"""Choose template page handler based on templates engine"""
