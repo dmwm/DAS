@@ -1,0 +1,21 @@
+{%- set tag = quote(tag) %}
+{%- set flag = quote(style) %}
+{% if  flag -%}
+{%- set klass="odd" %}
+{% else -%}
+{%- set klass="" %}
+{%- endif -%}
+<tr class="{{klass}}">
+{% for val in rec -%}
+<{{tag}}>
+{% if encode -%}
+{{quote(val)}}
+{% else -%}
+{{val}}
+{%- endif -%}
+</{{tag}}>
+{%- endfor -%}
+{% if record -%}
+<td>{{record}}</td>
+{%- endif -%}
+</tr>

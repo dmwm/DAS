@@ -1,0 +1,288 @@
+{%- set operators = quote(operators) %}
+
+<!-- dbsql_vs_dasql.tmpl -->
+{%- set colspan="text-align: center;border-top: 1px solid black;border-bottom: 1px solid black" %}
+<table class="daskeys">
+
+<tr class="odd">
+<th>
+<b>DBS-QL</b>
+</th>
+<th>
+<b>DAS-QL</b>
+</th>
+</tr>
+
+<tr class="odd">
+<td colspan="2" style="{{colspan}}">
+<b>Query Language syntax</b>
+</td>
+</tr>
+<tr>
+<td>
+FIND &lt;keyword&gt; WHERE &lt;keyword&gt; &lt;op&gt; &lt;value&gt; AND | OR ...
+<br />
+supported operators:
+<em class="box_blue">
+=,&lt;,&gt;, like, not like, in, between
+</em>
+</td>
+<td>
+&lt;keyword&gt; &lt;keyword&gt;=&lt;value&gt; 
+| &lt;filter&gt; &lt;keyword|keyword.attr&gt; &lt;op&gt; &lt;value&gt;
+<br/>
+supported operators: 
+<em class="box_blue">
+{{operators}}
+</em>
+</td>
+</tr>
+
+<tr class="odd">
+<td colspan="2" style="{{colspan}}">
+<b>Find dataset</b>
+</td>
+</tr>
+<tr>
+<td>
+find dataset where dataset like /Cosmics*
+<br />
+find dataset where dataset like /Cosmics* and dataset.status = VALID*
+<br />
+dataset=/Cosmics*/*/*
+<br />
+/Cosmics*/*/*
+</td>
+<td>
+dataset=/Cosmics*/*/*
+</td>
+</tr>
+
+<tr class="odd">
+<td colspan="2" style="{{colspan}}">
+<b>Find file</b>
+</td>
+</tr>
+<tr>
+<td>
+find file where dataset like /Cosmics*
+<br />
+find file where block=/a/b/c#123
+<br />
+file=/a/b/c.root
+</td>
+<td>
+file dataset=/Cosmics*
+<br/>
+file block=/a/b/c#123
+<br/>
+file=/a/b/c.root
+</td>
+</tr>
+
+<tr class="odd">
+<td colspan="2" style="{{colspan}}">
+<b>Find file attributes</b>
+</td>
+</tr>
+<tr>
+<td>
+find file.name, file.size where dataset=/a/b/c and file.size&gt;1
+</td>
+<td>
+file dataset=/a/b/c | grep file.name, file.size, file.size&gt;1
+</td>
+</tr>
+
+<tr class="odd">
+<td colspan="2" style="{{colspan}}">
+<b>Perform query aggregation</b>
+</td>
+</tr>
+<tr>
+<td>
+find sum(file.size), count(file.name) where dataset=/a/b/c
+</td>
+<td>
+file dataset=/a/b/c | sum(file.size), count(file.name)
+</td>
+</tr>
+
+<tr class="odd">
+<td colspan="2" style="{{colspan}}">
+<b>Composite queries, e.g. find dataset, file, lumi info for a given dataset pattern</b>
+</td>
+</tr>
+<tr>
+<td>
+<em style="color:red">
+It is generally bad idea in DBS since it leads to full table scan and slow response
+</em>
+<br/>
+find dataset,file,run where dataset like *Commissioning11*RAW
+</td>
+<td>
+To perform such query you need to break it apart:<br/>
+<em style="color:blue">
+1. Find dataset for a given pattern
+</em>
+<br/>
+dataset=/*/*Commissioning11*/*RAW
+<br/>
+<em style="color:blue">
+2. Find files for a given dataset
+</em>
+<br/>
+file dataset=/a/b/c
+<br/>
+<em style="color:blue">
+3. Find run for a given file
+</em>
+<br/>
+run file=/a/b/c.root
+</td>
+</tr>
+
+<tr class="odd">
+<td colspan="2" style="{{colspan}}">
+<b>Find dataset for a given dataset pattern and release</b>
+</td>
+</tr>
+<tr>
+<td>
+find dataset where dataset like *RelVal* and release=CMSSW_4_2_0
+</td>
+<td>
+dataset dataset=/*/*RelVal*/* release=CMSSW_4_2_0
+</td>
+</tr>
+
+<tr class="odd">
+<td colspan="2" style="{{colspan}}">
+<b>Find site information for a given dataset/block/file/run</b>
+</td>
+</tr>
+<tr>
+<td>
+<em style="color:red">
+In DBS-QL you can find site info for a given dataset/block/file/run, but
+this information does not belong to DBS and will disappear in new version of DBS.
+</em>
+<br/>
+find dataset, site where dataset like /Cosmics/* and run=149011
+</td>
+<td>
+To perform such query you need to break it apart:<br/>
+<em style="color:blue">
+1. Find dataset for a given pattern
+</em>
+<br/>
+dataset dataset=/Cosmics/*/* run=149011
+<br/>
+<em style="color:blue">
+2. Find site information
+</em>
+<br/>
+site dataset=/Cosmics/Run2010B-PromptReco-v2/DQM
+<br/><br/>
+<em style="color:blue">
+In DAS you need to break query apart and work with pieces:
+dataset knows about block/files, block knows about site, file knows about runs, etc.
+This approach scales better and allow faster query look-up.
+</em>
+</td>
+</tr>
+
+<tr class="odd">
+<td colspan="2" style="{{colspan}}">
+<b>Run information</b>
+</td>
+</tr>
+<tr>
+<td>
+DBS provides limited information about run<br/>
+find run where run=1
+</td>
+<td>
+DAS provides full information (aggregated over DBS, Tier0, RunRegistry) about a run<br/>
+run=1
+<br/>
+run date last 12h
+<br/>
+run date last 60m
+<br/>
+run date between [20101010, 20101011]
+<br />
+<br/>
+</td>
+</tr>
+
+<tr class="odd">
+<td colspan="2" style="{{colspan}}">
+<b>Find run for a given dataset and find dataset for a give run</b>
+</td>
+</tr>
+<tr>
+<td>
+find run where dataset=/a/b/c
+<br/>
+find run where dataset=/a/b/c and run&gt;=1 and run&lt;=5
+<br/>
+find dataset where run=1
+</td>
+<td>
+run dataset=/a/b/c
+<br/>
+dataset=/a/b/c run | grep run.run_number&gt;=1, run.run_number&lt;=5
+<br/>
+dataset run=1
+</td>
+</tr>
+
+<tr class="odd">
+<td colspan="2" style="{{colspan}}">
+<b>DAS only queries (DBS does not hold this info)</b>
+</td>
+</tr>
+<tr>
+<td>
+N/A
+</td>
+<td>
+<em style="color:blue">
+Site information
+</em><br/>
+site=T1_CH_CERN
+<br/>
+site=T1_CH_CERN | grep site.admin
+<br/>
+<br/>
+
+<em style="color:blue">
+Jobsummary information
+</em><br/>
+jobsummary date last 24h
+<br/>
+jobsummary user=ValentinKuznetsov
+<br/>
+<br/>
+
+<em style="color:blue">
+Block replica information
+</em><br/>
+block=/a/b/c#123 | grep block.replica
+<br/>
+block=/a/b/c#123 | grep block.replica.se
+<br/>
+<br/>
+
+<em style="color:blue">
+Site monitoring information
+</em><br/>
+monitor | grep monitor.node=T2_EE_Estonia
+
+</td>
+</tr>
+
+</table>
+<!-- end of dbsql_vs_dasql.tmpl -->

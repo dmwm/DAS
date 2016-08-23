@@ -1,0 +1,22 @@
+import FWCore.ParameterSet.Config as cms
+
+maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
+readFiles = cms.untracked.vstring()
+secFiles = cms.untracked.vstring() 
+source = cms.Source ("PoolSource",fileNames = readFiles, secondaryFileNames = secFiles)
+{%- set counter=0 %}
+readFiles.extend( [
+{% for lfn in lfnList -%}
+{% if lfn!=lfnList[-1] and counter < 254 -%}
+       '{{lfn}}',
+{%- else -%}
+       '{{lfn}}' ] );
+{%- set counter=0 %}
+{% if lfn!=lfnList[-1] %}
+readFiles.extend( [
+{%- endif -%}
+{%- endif -%}
+{%- set counter=counter+1 %}
+{% endfor %}
+secFiles.extend( [
+               ] )

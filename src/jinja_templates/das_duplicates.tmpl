@@ -1,0 +1,11 @@
+{%- set uinput = quote(uinput) + ' | unique' %}
+{%- set inst = quote(instance) %}
+
+<!-- das_duplicates.tmpl -->
+<div class="box_red">
+Page contains duplicates, read
+<a href="/das/faq?section=dasql&highlight=duplicates">more</a> or
+<a href="/das/request?idx=0&amp;limit=10&amp;instance={{inst}}&amp;input={{uinput}}">remove</a> them.
+</div>
+<!-- end of das_duplicates.tmpl -->
+

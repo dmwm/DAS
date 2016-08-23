@@ -1,0 +1,28 @@
+{%- set rec_id = quote(rec_id) %}
+{%- set id = quote(id) %}
+{%- set conflict = quote(conflict) %}
+<!-- das_row.tmpl -->
+Sources: {{systems}}
+<a href="javascript:ToggleTag('id_{{id}}', 'link_{{id}}')" id="link_{{id}}">show</a>
+{% if  conflict -%}
+<span class="box_red"><b>conflict:</b> {{conflict}}</span>
+{%- endif -%}
+<div class="hide" id="id_{{id}}">
+{{sanitized_data}}
+</div>
+{% if hints -%}
+{{hints}}
+{#-
+{% for hint in hints -%}
+{%- set inst=hint["inst"] %}
+    {% for item in examples -%}
+        {%- set url=base + '/request' %}
+        {%- set link=url_extend_params(url=url, input=example, instance=inst) %}
+        <li><a href="{{link}}">{{quote(example)}}</a></li>
+    {%- endfor -%}
+{%- endfor -%}
+ #}
+{%- endif -%}
+<br />
+<!-- end of das_row.tmpl -->
+

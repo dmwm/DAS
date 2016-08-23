@@ -1,0 +1,45 @@
+{%- set status=quote(status) %}
+{%- set reason=quote(reason) %}
+<!-- das_noresults.tmpl -->
+<div>
+{% if status == "ok" -%}
+DAS unable to find any results for this query.
+<br/>
+<br/>
+{% elif status == "busy" -%}
+DAS server server is busy processing other requests. Please try later.
+{% elif status == "requested" -%}
+DAS unable to process your query even though it was accepted.
+This may happen due to collision of requests with similar queries.
+Please retry.
+{% elif status == "fail" -%}
+DAS fails to process your query.
+{% else -%}
+DAS unable to process your request.
+{%- endif -%}
+{% if status != "ok" -%}
+<pre>
+{% if reason -%}
+DAS status: '{{status}}', reason='{{reason}}'
+{% else -%}
+DAS status: '{{status}}'
+{%- endif -%}
+</pre>
+{% if info -%}
+{%- set info=quote(info) %}
+<pre>
+DAS server info:
+{{info}}
+</pre>
+{%- endif -%}
+{%- endif -%}
+If you unsatisfied with provided status, feel free to submit DAS
+{%- set tstamp=time.strftime("%d %b %Y %H:%M:%S GMT", time.gmtime()) %}
+{%- set msg="No results, %s (%s)" % (query, tstamp) %}
+{%- set msg=quote(msg) %}
+<a class="box_attention"
+   href="https://github.com/dmwm/DAS/issues/new?title={{msg}}">ticket</a>
+for further investigation.
+</div>
+<hr class="line" />
+<!-- end of das_noresults.tmpl -->

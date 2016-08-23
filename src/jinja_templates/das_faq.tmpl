@@ -1,0 +1,814 @@
+{%- set section = quote(section) %}
+{%- set highlight = quote(highlight) %}
+
+<!-- das_faq.tmpl -->
+<div class="page">
+<div class="normal">
+
+This page summarizes Frequently Asked Questions about DAS. If you can't find
+your question here or required more knowledge about DAS, please refer to
+<b><a href="https://cern.ch/cms-http-group/apidoc/das/current">DAS documentation</a></b> guide.
+<br/>
+<br/>
+We recommend to use Firefox/Safari browsers for better experience with DAS web pages.
+<br/>
+We also recommend to download latest version of
+<a href="/das/cli">DAS client</a> script in order to perform
+outlined in this FAQ DAS queries.
+
+<!-- BEGIN NEW SECTION -->
+<h3>General questions about DAS</h3>
+<a href="javascript:ToggleTag('architecture', 'link_architecture')" id="link_architecture">show</a>
+this section
+<div id="architecture" name="architecture" class="hide">
+
+<div class="navcontainer">
+<ul>
+<li>
+What does DAS stand for?
+</li>
+</ul>
+<p>
+The Data Aggregation Service (DAS) is a CMS project which provides access
+to participating CMS data-services (such as DBS, Phedex, SiteDB, etc), 
+using a simple, flexible query language. It supersedes the 
+<a href="http://cmsweb.cern.ch/dbs_discovery">
+Data Discovery</a> service.
+It represents data from all data-services in a common 
+JSON/XML-format, provides 
+<a href="/das/cli">
+a Command Line Interface (CLI)
+</a>
+and a web-based interface.
+</p>
+
+<ul>
+<li>
+How does DAS know the relationship between objects from different CMS data-services?
+</li>
+</ul>
+<p>
+The various CMS data-services each collect information about a particular domain of CMS
+operations, e.g. PhEDEx holds information about data location and DBS holds information
+about what those data files contain. If we consider all the data-services together
+they represent a complete set of meta-data for our experiment. 
+In almost every case there are overlaps between the information provided by each, and often
+that is the information we most need to know. A typical example is DBS and Run Summary DB.
+In DBS we store processing information about our data, such as
+dataset, blocks, files, runs. In the Run Summary DB we store run specific
+information about each run. Obviously, the common entity between these two services
+is the "run". In DAS, such commonalities are taken into account and one or more keys are
+used to relate one service with another.
+</p>
+
+<ul>
+<li>
+How does DAS aggregate data between different data-services?
+</li>
+</ul>
+<p>
+When a user queries DAS, it analyses the query to find all data services holding
+relevant data, and then invokes the appropriate data-service APIs.
+The responses from each data service are transformed into a common DAS notation,
+and records from different services containing identified common keys are merged.
+For example, if a user queries for a block name, DBS and PhEDEx APIs are both invoked. 
+DBS returns information about the dataset the block belongs to, whereas PhEDEx returns
+information about the file's physical characteristics and current locations. These
+records are merged and the user sees a single document about each block.
+</p>
+
+</div>
+</div>
+<hr class="line" />
+<!-- END OF SECTION -->
+
+<!-- BEGIN NEW SECTION -->
+<h3>DAS command line tool</h3>
+<a href="javascript:ToggleTag('cli', 'link_cli')" id="link_cli">show</a> this section
+<div id="cli" name="cli" class="hide">
+
+<div class="navcontainer">
+<ul>
+<li>
+How I can get DAS command line tool?
+</li>
+</ul>
+<p>
+The DAS command line tool can be downloaded directly from DAS web page.
+Click on <a href="/das/cli">CLI</a> link and save page using your
+browser capabilities. You can also save it as simple as
+<pre class="example">
+curl https://cmsweb.cern.ch/das/cli > das_client.py
+</pre>
+</p>
+
+<ul>
+<li>
+How can I use DAS CLI?
+</li>
+</ul>
+The DAS CLI only requires python (version 2.6 and above). No other dependencies,
+not even CMSSW. Just download and save it in your prefered location
+(I will assume you save it under name das_client.py). Change its
+permission
+<pre class="example">
+chmod a+x das_client.py
+</pre>
+and then invoke its help as
+<pre class="example">
+./das_client.py --help
+</pre>
+
+<b>DAS CLI from DAS 0.9.X release will behave in the following way:</b>
+<pre class="example">
+Usage: das_client.py [options]
+
+Options:
+  -h, --help        show this help message and exit
+  --verbose=VERBOSE verbose output
+  --query=QUERY     specify query for your request
+  --host=HOST       specify host name of DAS cache server, default https://cmsweb.cern.ch
+  --idx=IDX         start index for returned result set, aka pagination, use w/ limit
+  --limit=LIMIT     number of returned results (results per page)
+  --format=FORMAT   specify return data format (json or plain), default json
+</pre>
+Here are few examples of DAS cli usage:
+<pre class="example">
+./das_client.py --query="dataset=/EG/Run2010A*/AOD"
+./das_client.py --query="dataset=/EG/Run2010A*/AOD" --verbose=1
+./das_client.py --query="dataset=/EG/Run2010A*/AOD | grep dataset.name"
+./das_client.py --query="dataset=/EG/Run2010A*/AOD | grep dataset.name" --format=plain
+</pre>
+Please note, the --format option can only be used together with DAS filters, since
+tabulated format requires knowledge of columns (which are fields you specify in a filter).
+<br/>
+<br/>
+
+<b>DAS CLI from DAS 1.0.X release and above has the following syntax:</b>
+<pre class="example">
+Usage: das_client.py [options]
+For more help please visit https://cmsweb.cern.ch/das/faq
+
+Options:
+  -h, --help            show this help message and exit
+  -v VERBOSE, --verbose=VERBOSE
+                        verbose output
+  --query=QUERY         specify query for your request
+  --host=HOST           host name of DAS cache server, default is
+                        https://cmsweb.cern.ch
+  --idx=IDX             start index for returned result set, aka pagination,
+                        use w/ limit (default is 0)
+  --limit=LIMIT         number of returned results (default is 10), use
+                        --limit=0 to show all results
+  --format=FORMAT       specify return data format (json or plain), default
+                        plain.
+  --threshold=THRESHOLD
+                        query waiting threshold in sec, default is 5 minutes
+  --key=CKEY            specify private key file name
+  --cert=CERT           specify private certificate file name
+</pre>
+Its usage is slightly different! By default, it uses <em>plain</em>
+format instead of <em>JSON</em>, and prints out the default record key value, e.g.
+for dataset query it will print dataset.name, therefore usage of DAS filters
+to get list of datasets is not required.
+
+</div>
+</div>
+<hr class="line" />
+<!-- END OF SECTION -->
+
+<!-- BEGIN NEW SECTION -->
+<h3>DAS-QL vs DBS-QL query guide</h3>
+<a href="javascript:ToggleTag('guide_table', 'link_guide_table')" id="link_guide_table">show</a>
+this section
+<div id="guide_table" name="guide_table" class="hide">
+<div class="navcontainer">
+Below we summarize DBS-QL and their equivalent DAS-QL queries. For more information
+please refer to
+<a href="https://twiki.cern.ch/twiki/bin/viewauth/CMS/DASQueryGuide">DASQueryGuide</a>
+twiki page.
+{{guide}}
+</div>
+</div>
+<hr class="line" />
+<!-- END OF SECTION -->
+
+<!-- BEGIN NEW SECTION -->
+<h3>DAS keys description</h3>
+<a href="javascript:ToggleTag('das_keys', 'link_das_keys')" id="link_das_keys">show</a> this section
+<div id="das_keys" name="das_keys" class="hide">
+<div>
+{{daskeys}}
+</div>
+</div>
+<hr class="line" />
+<!-- END OF SECTION -->
+
+<!-- BEGIN NEW SECTION -->
+<h3>DAS queries</h3>
+<a href="javascript:ToggleTag('dasql', 'link_dasql')" id="link_dasql">show</a> this section
+<div id="dasql" name="dasql" class="hide">
+<div class="navcontainer">
+
+For more information about DAS-QL please refer to
+<a href="https://twiki.cern.ch/twiki/bin/viewauth/CMS/DASQueryGuide">DASQueryGuide</a>.
+
+<ul>
+<li>
+<span id="duplicates">
+Why do I see duplicate results and how to avoid them?
+</span>
+</li>
+</ul>
+<p>
+Indeed, in some cases, duplicates can appear in DAS. For instance if
+you perform two consecutive queries:
+</p>
+<div class="example">
+<pre>
+run between [20853,20859]
+run=20853
+</pre>
+</div>
+<p>
+you'll see runs that are duplicate. This happens because input queries are
+different while back-end API used the same set of parameters. Since DAS queries
+are different their hashes will be different too, which leads to two different
+API calls, who will create different records in DAS with different expiration
+timestamps. To avoid this issue you can simple apply the <em>unique</em>
+filter to the output, like
+</p>
+<pre class="example">
+run=20853 | unique
+</pre>
+
+<ul>
+<li>
+Which operators does DAS support?
+</li>
+</ul>
+<p>
+DAS supports the following list of operators
+</p>
+<div class="example">
+{{operators}}
+</div>
+
+<ul>
+<li>
+Can I select/aggregate certain fields in DAS records?
+</li>
+</ul>
+<p>
+Yes, for that you can use pipe "|" in your query. For example
+</p>
+<div class="example">
+file dataset=/a/b/c | grep file.name, file.size
+</div>
+<p>
+will strip out all fields except for file.name and file.size in the result.
+You can also use the following list of aggregate functions
+</p>
+<div class="example">
+{{aggregators}}
+</div>
+<p>
+For example
+</p>
+<div class="example">
+file dataset=/a/b/c | sum(file.size)
+</div>
+<p>
+will return a single record showing the total file size of all files in that dataset. 
+You can also combine filters and aggregators together, for instance
+</p>
+<div class="example">
+file dataset=/a/b/c | grep file.name, file.size | sum(file.size), count(file.name)
+</div>
+
+<ul>
+<li>
+What should I type in the DAS web interface?
+</li>
+</ul>
+<p>
+DAS uses free text-based keyword search queries, so use your common knowledge about
+CMS data, e.g. dataset, block, run. If you're not sure which DAS keys to use,
+please see <a href="/das/services">Services</a> DAS section.
+
+<br />
+Please note that using conditions will make your query a lot faster. A completely wildcard
+query like *block* (equivalent to *block=**) will require huge amounts of data to be fetched
+before any aggregation or filter steps you have specified run. 
+</p>
+
+<ul>
+<li>
+How do I use conditions?
+</li>
+</ul>
+<p>
+Add an equals sign after the DAS key to specify a condition, e.g.
+</p>
+<div class="example">
+site=T1_CH_CERN
+</div>
+<p>
+Note that you can use wildcards in most conditions, and multiple conditions.
+In future there may also be operators other than just = available.
+</p>
+
+<ul>
+<li>
+How do I combine conditions or specify multiple DAS keys?
+</li>
+</ul>
+<p>
+Yes, you can, the following forms
+</p>
+<div class="example">
+site=T1_CH_CERN block=/a/b/c
+</div>
+<p>
+or
+</p>
+<div class="example">
+site=T1_CH_CERN, block=/a/b/c
+</div>
+<p>
+are equivalent.
+</p>
+
+<ul>
+<li>
+Can I use conditions in filters?
+</li>
+</ul>
+<p>
+Yes you can, here is an example:
+</p>
+<div class="example">
+file dataset=/a/b/c | grep file.name, file.size&gt;1, file.size&lt;100
+</div>
+
+<ul>
+<li>
+How do I combine conditions or specify multiple DAS keys?
+</li>
+</ul>
+<p>
+You can combine multiple conditions in a single query, e.g.
+</p>
+<div class="example">
+block site=T1_CH_CERN block=/a/b/c
+</div>
+be sure to specify correct select key for your query, in this case it is a
+<em>block</em> key
+
+<ul>
+<li>
+Does DAS support logical operators for multiple conditions?
+</li>
+</ul>
+<p>
+Right now DAS treats multiple conditions as an AND operation. 
+We do plan to extend the syntax to support at least the OR operator in the near future.
+</p>
+
+<ul>
+<li>
+How do I limit the output to only the fields I want to see?
+</li>
+</ul>
+<p>
+DAS supports a simple grep operation. For example
+</p>
+<div class="example">
+site=T1_CH_CERN | grep site.name
+</div>
+<p>
+will filter out all fields except for site.name.
+You can also provide multiple fields to the grep filter, e.g.
+</p>
+<div class="example">
+block=/a/b/c#123 | grep block.name, block.size
+block=/a/b/c#123 | grep block.name | grep block.size
+</div>
+
+<ul>
+<li>
+How can I sort my results?
+</li>
+</ul>
+<p>
+The sorting is part of DAS query language. Just provide a sort filter, for example
+</p>
+<div class="example">
+file dataset=/a/b/c | sort file.nevents
+</div>
+this query will sort output records by number of events in file. The default
+sort order is ascending. To reverse the sort order use minus sign at the end of
+sort key, e.g.
+<div class="example">
+file dataset=/a/b/c | sort file.nevents-
+</div>
+Please note that you can combined both grep and sort filters together, e.g.
+<div class="example">
+file dataset=/a/b/c | grep file.name, file.nevents | sort file.size
+</div>
+
+<ul>
+<li>
+Why is there a delay before responses to DAS queries?
+</li>
+</ul>
+<p>
+DAS doesn't hold any data you request (unless someone has already requested it),
+instead it has to retrieve data from each relevant data-services and
+place them into its cache, transform and finally merge the data before
+responding to you. The DAS web interface is designed to provide you as much
+feedback as possible, please pay attention to messages appearing next 
+to the spinning wheel.
+</p>
+
+</div>
+</div>
+<hr class="line" />
+<!-- END OF SECTION -->
+
+<!-- BEGIN NEW SECTION -->
+<h3>DAS records</h3>
+<a href="javascript:ToggleTag('dasrecords', 'link_dasrecords')" id="link_dasrecords">show</a>
+this section
+<div id="dasrecords" name="dasrecords" class="hide">
+<div class="navcontainer">
+
+<ul>
+<li>
+What is a DAS record?
+</li>
+</ul>
+<p>
+A DAS record represents aggregated information about a particular entity, e.g. site,
+block, run, from the results of different CMS data-services. For instance, the block
+information is stored in both DBS and PhEDEx data-services. In DAS this information
+is aggregated and stored as a single record. For example, here is a typical DAS record:
+</p>
+<div class="example">
+<pre>
+{
+ "das_id":  [4b2f8fc5e2194ee15500001f, 4b2f8fc2e2194ee155000009],
+ "_id": 4b2f8fc5e2194ee155000020,
+ "site": [
+   {
+    "name": "T1_CH_CERN",
+    "ce": "ce126.cern.ch"
+   },
+   {
+    "admin": {
+       "title": "Site Admin",
+       "surname": "...",
+       "email": "...",
+       "forename": "..."
+      },
+    "name": "T1_CH_CERN"
+   }]
+}
+</pre>
+</div>
+
+<ul>
+<li>
+What do the <b>das_id</b> and <b>id</b> keys represent in a DAS record?
+</li>
+</ul>
+<p>
+The <b>id</b> is a unique identifier of DAS record in the DAS database, while
+<b>das_id</b> refers to the DAS records which contain information about
+URL, api and the parameters used to fetch this data.
+</p>
+
+<ul>
+<li>
+Which data formats are supported?
+</li>
+</ul>
+<p>
+DAS provides XML, JSON and HTML representations of CMS meta-data.
+To use another data-format please select appropriate option from drop-down menu
+on the search page.
+</p>
+
+<ul>
+<li>
+Why do DAS XML/JSON records contain an additional header?
+</li>
+</ul>
+<p>
+All DAS records are represented according to DAS data-specification, see this 
+<a href="https://twiki.cern.ch/twiki/bin/viewauth/CMS/DMWMDataAggregationService">link</a> 
+to read more about it. For simplicity and readability of DAS records in HTML view
+we simply drop this header from shown records.
+</p>
+
+</div>
+</div>
+<hr class="line" />
+<!-- END OF SECTION -->
+
+<!-- BEGIN NEW SECTION -->
+<h3>Examples of common CMS queries</h3>
+<a href="javascript:ToggleTag('cmsqueries', 'link_cmsqueries')" id="link_cmsqueries">show</a>
+this section
+<div id="cmsqueries" name="cmsqueries" class="hide">
+<div class="navcontainer">
+
+<p>
+Here is an incomplete list of queries supported in DAS
+<br/>
+Queries to get Site information
+</p>
+<div class="example">
+<pre>
+T1_CH_CERN
+site=T1_CH_CERN
+site=T1_*
+site=T1_* | grep site.name, site.se
+</pre>
+</div>
+
+<p>
+Dataset queries. <b>PLEASE NOTE:</b> The dataset queries allow usage of
+patterns via wild-card queries, but user must always provides three slashes in
+them, e.g. dataset=/a*/*b*/*c
+</p>
+<div class="example">
+<pre>
+dataset=/*/*ABC*/*
+dataset release=CMSSW_4*
+dataset release=CMSSW_4* datatype=mc
+dataset dataset=/*/*ABC*/* datatype=mc
+dataset dataset=/*/*ABC*/* datatype=mc release=CMSSW_4*
+dataset dataset=/Cosmics/Run2010B*/* site=T1_US_FNAL
+dataset primary_dataset=ZJetToEE_Pt*
+dataset primary_dataset=ZJetToEE_Pt* tier=*GEN*
+dataset tier=*GEN*
+dataset group=Top
+dataset group=Top datatype=mc
+dataset run=148126
+</pre>
+</div>
+Please note, DAS supports <em>status</em> keyword which allows to
+specify dataset status field, e.g. VALID. Here is a few examples:
+<div class="example">
+<pre>
+dataset dataset=/*/*ABC*/* status=VALID*
+dataset status=INVALID
+</pre>
+</div>
+DAS also supports <em>instance</em> keyword to specify DBS instance, e.g.
+<div class="example">
+<pre>
+dataset=/QCD_Pt_*/*_pythia_fall10*/* instance=cms_dbs_ph_analysis_02
+</pre>
+</div>
+
+<p>
+Queries to get run information
+</p>
+<div class="example">
+<pre>
+run=160915
+run=160915 | grep run.bfield
+run between [160915,20859]
+run between [160915,20859] | grep run.run_number
+run date between [20110316, 20110317] | grep run.run_number, run.start_time, run.end_time
+</pre>
+</div>
+
+<p>
+DBS-like queries
+</p>
+<div class="example">
+<pre>
+primary_dataset=Cosmics
+dataset | grep dataset.name
+block dataset=/QCDpt30/Summer08_IDEAL_V9_skim_hlt_v1/USER
+block dataset=/QCDpt30/Summer08_IDEAL_V9_skim_hlt_v1/USER | sum(block.size)
+file dataset=/QCDpt30/Summer08_IDEAL_V9_skim_hlt_v1/USER
+file dataset=/QCDpt30/Summer08_IDEAL_V9_skim_hlt_v1/USER | grep file.name, file.size
+file dataset=/HT/Run2011B-v1/RAW run=176304 lumi=80
+release=CMSSW_2_0_8
+release=CMSSW_2_0_8 | grep release.name, release.algorithm.executable, release.algorithm.name
+</pre>
+</div>
+
+<p>
+Miscellaneous examples:
+</p>
+<div class="example">
+<pre>
+# dataset queries
+dataset primary_dataset=ZJetToEE_Pt* tier=*GEN*
+dataset primary_dataset=ZJetToEE_Pt*
+dataset=/ElectronHad/Run2011A-05Aug2011-v1/AOD
+
+# this should yield warning since reqmgr requires full path
+dataset dataset=/A*/A*herwig/AODSIM
+
+dataset tier=*GEN-SIM-RECO*
+dataset group=Top
+dataset group=local site=T2_CH_CERN
+dataset=*ZMM*
+dataset=/ZMM*/*/*
+dataset=/ZMM*/*/* | sort dataset.nfiles
+dataset=/ZMM*/*/* | sort dataset.nfiles-
+
+# should show hints from global/phys01 instance
+dataset=/ZMM_7TeV*/*/*
+dataset=/ZMM_7TeV*
+
+dataset=/*/Run2013A-PromptReco*/* | sort dataset.name
+dataset=/Cosmics/Run2010B-TkAlCosmics0T*/* site=T1_DE_KIT
+dataset dataset=/Cosmics/Run2010B-TkAlCosmics0T*/* site=T1_DE_KIT
+dataset release=CMSSW_4_2_0 site=T2_EE_Estonia
+dataset release=CMSSW_2_0_8
+dataset dataset=/Cosmics/Run2010B-TkAlCosmics0T-Dec22ReReco_v2/ALCARECO run=149011
+
+# parent/child queries
+parent dataset=/Cosmics/Run2010B-TkAlCosmics0T-Dec22ReReco_v2/ALCARECO
+dataset parent=/Cosmics/Run2010B-v1/RAW site=T1_US_FNAL release=CMSSW_3_9_7
+child dataset=/Cosmics/Run2010B-v1/RAW site=T1_US_FNAL release=CMSSW_3_9_7
+
+dataset block=/ZG_Inclusive_8TeV-madgraph_v2/Summer12_DR53X-PU_S10_START53_V7A-v1/AODSIM#8ce42772-2410-11e2-85d7-003048f02c8a
+
+dataset run=148126
+dataset date=20101103
+dataset date between [20101001, 20101002]
+
+dataset status=PRODUCTION
+dataset file=/store/data/Run2010B/ZeroBias/RAW-RECO/v2/000/145/820/784478E3-52C2-DF11-A0CC-0018F3D0969A.root
+dataset=/ElectronHad/Run2011A-05Aug2011-v1/AOD | grep dataset.nevents, dataset.nblocks, dataset.nfiles
+
+# dbs+phedex query
+dataset release=CMSSW_4_2_8 site=T2_IT_Bari
+dataset site=T2_IT_Bari
+
+# wild-card (underscore) query
+dataset=/RelValZpMM/CMSSW_6_2_0_pre7_*v1/GEN-SIM-RECO
+
+# block queries
+block dataset=/ElectronHad/Run2011A-05Aug2011-v1/AOD
+block=/Cosmics/Run2010B-TkAlCosmics0T* site=T1_DE_KIT
+block=/Cosmics/Run2010B-TkAlCosmics0T* site=T1_DE_KIT*
+# this should yield warning in phedex, since phedex requires full block path
+block block=/Cosmics/Run2010B-TkAlCosmics0T* site=T1_DE_KIT*
+block dataset=/AlCaP0/Run2011A-ALCARECOEcalCalEtaCalib-v4/ALCARECO site=T1_US_FNAL*
+block site=T1_CH_CERN*
+block site=ganymede.hep.kbfi.ee
+block=/EG/Run2010A-Dec4ReReco_v1/AOD#f15ed71e-6491-4f73-a0e3-ac4248a6367d
+block dataset=/SingleElectron/Run2011A-414_preprod_GR_H_V16-v1/RAW run=161311
+block file=/store/data/Run2010B/ZeroBias/RAW-RECO/v2/000/145/820/784478E3-52C2-DF11-A0CC-0018F3D0969A.root
+block dataset=/SingleMu/Run2012A-v1/RAW run in [191226, 191845]
+block dataset=/SingleMu/Run2012A-v1/RAW run between [191840, 191845]
+block dataset=/ElectronHad/Run2011A-05Aug2011-v1/AOD | grep block.name,block.is_open=n | count(block.name)
+block tier=GEN-SIM date between [20120223, 20120224]
+
+# look-up file,run,lumi info for given set of conditions
+run,lumi dataset=/SingleMu/Run2011B-WMu-19Nov2011-v1/RAW-RECO
+run,lumi dataset=/SingleMu/Run2011B-WMu-19Nov2011-v1/RAW-RECO run in [177718, 177053]
+run,lumi block=/SingleMu/Run2011B-WMu-19Nov2011-v1/RAW-RECO#19110c74-1b66-11e1-a98b-003048f02c8a
+run,lumi block=/SingleMu/Run2011B-WMu-19Nov2011-v1/RAW-RECO#19110c74-1b66-11e1-a98b-003048f02c8a run in [177487, 177878]
+
+file,lumi dataset=/SingleMu/Run2011B-WMu-19Nov2011-v1/RAW-RECO
+file,lumi dataset=/SingleMu/Run2011B-WMu-19Nov2011-v1/RAW-RECO run in [177718, 177053]
+file,lumi block=/SingleMu/Run2011B-WMu-19Nov2011-v1/RAW-RECO#19110c74-1b66-11e1-a98b-003048f02c8a
+file,lumi block=/SingleMu/Run2011B-WMu-19Nov2011-v1/RAW-RECO#19110c74-1b66-11e1-a98b-003048f02c8a run in [177487, 177878]
+
+file,run,lumi dataset=/SingleMu/Run2011B-WMu-19Nov2011-v1/RAW-RECO
+file,run,lumi dataset=/SingleMu/Run2011B-WMu-19Nov2011-v1/RAW-RECO run in [177718, 177053]
+file,run,lumi block=/SingleMu/Run2011B-WMu-19Nov2011-v1/RAW-RECO#19110c74-1b66-11e1-a98b-003048f02c8a
+file,run,lumi block=/SingleMu/Run2011B-WMu-19Nov2011-v1/RAW-RECO#19110c74-1b66-11e1-a98b-003048f02c8a run in [177487, 177878]
+
+file,run,lumi dataset=/DoubleMu/Run2012A-22Jan2013-v1/AOD run between [190456,190500]
+
+# IB queries
+file dataset=/SingleMu/Run2011B-WMu-19Nov2011-v1/RAW-RECO run=177718
+file dataset=/SingleMu/Run2011B-WMu-19Nov2011-v1/RAW-RECO run in [177718, 177053]
+file block=/SingleMu/Run2011B-WMu-19Nov2011-v1/RAW-RECO#19110c74-1b66-11e1-a98b-003048f02c8a run=177487
+file block=/SingleMu/Run2011B-WMu-19Nov2011-v1/RAW-RECO#19110c74-1b66-11e1-a98b-003048f02c8a run in [177487,177878]
+file dataset=/SingleMu/Run2011B-WMu-19Nov2011-v1/RAW-RECO run in [177718, 177053] site=T2_IN_TIFR
+file block=/SingleMu/Run2011B-WMu-19Nov2011-v1/RAW-RECO#19110c74-1b66-11e1-a98b-003048f02c8a run in [177487,177878] site=T2_IN_TIFR
+
+# file queries
+file=/store/data/Run2010A/EG/AOD/Dec4ReReco_v1/0031/E26F28FC-4A07-E011-9CF3-0030487F1653.root
+file=/store/data/Run2011A/AlCaP0/ALCARECO/ALCARECOEcalCalEtaCalib-Jun3ReReco-v1/0000/785C8376-518F-E011-B3CC-002618943852.root
+# file from invalid dataset
+dataset dataset=/Z*/*/* status=INVALID
+file=/store/mc/Summer10/Ztautau_M20_CTEQ66-powheg/GEN-SIM-RECO/START36_V9_S09-v1/0026/02579C1B-E276-DF11-949B-00261894380D.root
+
+file block=/EG/Run2010A-Dec4ReReco_v1/AOD#f15ed71e-6491-4f73-a0e3-ac4248a6367d
+file run=148126 dataset=/ZeroBias/Run2010B-Dec4ReReco_v1/RECO
+
+file dataset=/ZeroBias/Run2010B-Skim_logerror-v2/RAW-RECO run=145820 lumi=1
+file,lumi dataset=/ZMM/Summer11-DESIGN42_V11_428_SLHC1-v1/GEN-SIM
+
+file dataset=/AlCaP0/Run2011A-ALCARECOEcalCalEtaCalib-Jun3ReReco-v1/ALCARECO run between [160383,160400]
+file dataset=/AlCaP0/Run2011A-ALCARECOEcalCalEtaCalib-Jun3ReReco-v1/ALCARECO run=160383
+file dataset=/AlCaP0/Run2011A-ALCARECOEcalCalEtaCalib-Jun3ReReco-v1/ALCARECO run=160383 site=T1_US_FNAL
+file dataset=/AlCaP0/Run2011A-ALCARECOEcalCalEtaCalib-Jun3ReReco-v1/ALCARECO run in [160383,162921] site=T1_US_FNAL
+file dataset=/AlCaP0/Run2011A-ALCARECOEcalCalEtaCalib-Jun3ReReco-v1/ALCARECO run=160383 lumi=67
+file dataset=/ElectronHad/Run2011A-05Aug2011-v1/AOD
+file dataset=/Cosmics/Run2010B-TkAlCosmics0T-v1/ALCARECO site=T1_US_FNAL_Buffer
+file dataset=/ElectronHad/Run2011A-05Aug2011-v1/AOD | grep file.name, file.size, file.size>0
+file dataset=/ElectronHad/Run2011A-05Aug2011-v1/AOD | grep file.name, file.size, file.size<2000000000
+file dataset=/ElectronHad/Run2011A-05Aug2011-v1/AOD | grep file.name, file.size, file.size<2000000000 | sort file.size
+file dataset=/ElectronHad/Run2011A-05Aug2011-v1/AOD | grep file.name, file.size, file.size<2000000000 | sort file.size-
+file dataset=/ElectronHad/Run2011A-05Aug2011-v1/AOD | sum(file.size), min(file.size), max(file.size), avg(file.size), median(file.size)
+file dataset=/WGstarToLNu2Tau_TuneZ2_7TeV-madgraph-tauola/Summer11-PU_S4_START42_V11-v1/AODSIM status=INVALID
+
+# look-up not valid files
+file block=/WGstarToLNu2Tau_TuneZ2_7TeV-madgraph-tauola/Summer11-PU_S4_START42_V11-v1/AODSIM#29e86674-fe2d-11e0-a5f0-00221959e69e status=*
+
+# look-up jobsummary information
+jobsummary date last 24h
+jobsummary site=T1_DE_KIT date last 24h
+jobsummary user=AlekoKhukhunaishvili
+jobsummary date between [20110208, 20110209]
+
+# run queries
+run dataset=/Monitor/Commissioning08-v1/RAW
+run block=/SingleElectron/Run2011A-414_preprod_GR_H_V16-v1/RAW#12ac2478-3b25-4a02-a7d4-6f2138f35171
+run file=/store/data/Commissioning11/Commissioning/RAW/v3/000/160/292/E863DF08-024C-E011-B2ED-0030487A3232.root
+run=160915
+run between [160910, 160920]
+run between [160910, 160920] |  sum(run.delivered_lumi), sum(run.nevents), sum(run.nlumis)
+run in [160915,190595]
+run in [160915,190595] | sum(run.delivered_lumi), sum(run.nevents), sum(run.nlumis)
+run between [148124,148126]
+run date = 20110320
+run date between [20101001, 20101002]
+
+# site queries
+site=T2_*
+site=T3_*
+site=T1_CH_CERN
+site dataset=/WJets_matchingup_7TeV-madgraph/Summer10-START36_V10_FastSim-v3/DQM
+site dataset=/QCD_Pt_0to5_TuneZ2_7TeV_pythia6/wteo-qcd_tunez2_pt0to5_pythia_fall10_387-250136cb6ade55a0822a3f1b6b851d5a/USER instance=cms_dbs_ph_analysis_02
+site dataset=/Cosmics/Run2010B-TkAlCosmics0T-v1/ALCARECO
+
+# find site for PRODUCTION dataset
+site dataset=/tt1j_mT_70-alpgen/CMSSW_1_5_2-CSA07-2211/GEN-SIM-DIGI-RECO
+
+# find site info of dataset from local instance (should yield DBS3 origin_site_name)
+site dataset=/SingleLongLivedFlatPt_M_1000_CTau350_cfi_py_GEN_SIM/zhenhu-SingleLongLivedFlatPt_M_1000_CTau350_cfi_py_GEN_SIM-6db2d900755bd45dd25b8bfc112dfb1f/USER instance=prod/phys03
+
+# summary queries
+summary dataset=/Cosmics/Run2010B-TkAlCosmics0T-Dec22ReReco_v2/ALCARECO run=149011
+summary dataset=/Cosmics/Run2010B-TkAlCosmics0T-Dec22ReReco_v2/ALCARECO
+summary block=/Cosmics/Run2010B-TkAlCosmics0T-Dec22ReReco_v2/ALCARECO#ee89be3a-5a9a-46a7-91eb-28c4728f3aaa
+summary dataset=/SingleMu/Run2011B-WMu-19Nov2011-v1/RAW-RECO run in [177718, 177053]
+
+# MCM queries
+mcm prepid=HIG-Summer12-01312
+mcm dataset=/GluGluToHToWWTo2LAndTau2Nu_M-115_8TeV-minloHJJ-pythia6-tauola/Summer12-START53_V7C-v3/GEN
+dataset dataset=/GluGluToHToWWTo2LAndTau2Nu_M-115_8TeV-minloHJJ-pythia6-tauola/Summer12-START53_V7C-v3/GEN
+dataset prepid=TSG-Fall13dr-00015
+mcm dataset=/WToENu_Tune4C_13TeV-pythia8/Fall13dr-tsg_PU40bx25_POSTLS162_V2-v1/GEN-SIM-RAW
+
+# lumi queries
+lumi file=/store/data/Run2010B/ZeroBias/RAW-RECO/v2/000/145/820/784478E3-52C2-DF11-A0CC-0018F3D0969A.root
+lumi file=/store/data/Run2010B/Cosmics/ALCARECO/TkAlCosmics0T-Dec22ReReco_v2/0153/9221DEAF-7223-E011-B79F-002618943886.root run=149011
+lumi block=/ZeroBias/Run2010B-Skim_logerror-v2/RAW-RECO#a14a71ba-055f-4469-9180-4653f8db4fe6
+lumi block=/HPlusPlusHMinusMinusHTo4L_M-300_8TeV-pythia6/Summer12-START53_V7C-v1/GEN-SIM#f69ecdb6-86ad-11e2-8309-003048f0e7dc | count(lumi)
+
+# DBS info queries
+primary_dataset=Cosmics
+release=CMSSW_2_0_8
+config dataset=/Cosmics/Run2010B-TkAlCosmics0T-Dec22ReReco_v2/ALCARECO
+config dataset=/SingleMu/CMSSW_6_2_0_pre4-PRE_61_V1_RelVal_mu2012A-v1/RECO | grep config.global_tag
+dataset=/TrackerTIF/Online-CMSSW_1_1_0/RAW
+release dataset=/ElectronHad/Run2011A-05Aug2011-v1/AOD
+release file=/store/data/Run2011A/ElectronHad/AOD/05Aug2011-v1/0000/00157DBB-0AC0-E011-AB7A-0019BB3DE6F4.root
+
+</pre>
+</div>
+
+</div>
+</div>
+<!-- END OF SECTION -->
+
+
+</div> <!-- end of class="normal" -->
+</div> <!-- end of class="page" -->
+
+<script text="text/javascript">
+{% if section -%}
+ShowTag('{{section}}')
+{%- endif -%}
+{% if highlight -%}
+$('$highlight').addClassName('box_attention').show()
+{%- endif -%}
+</script>
+<!-- end of das_faq.tmpl -->
+

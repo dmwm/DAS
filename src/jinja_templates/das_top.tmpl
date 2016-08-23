@@ -1,0 +1,54 @@
+{%- set base=quote(base) %}
+<!DOCTYPE HTML>
+<!-- das_top.tmpl -->
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head profile="http://www.w3.org/2005/11/profile">
+    <title>CMS Data Aggregation Service</title>
+
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta http-equiv="Content-Language" content="en-us" />
+    <meta http-equiv="Content-Script-Type" content="text/javascript" />
+    <meta http-equiv="imagetoolbar" content="no" />
+    <meta name="author" content="Valentin Kuznetsov (vkuznet at gmail dot com)" />
+    <meta name="MSSmartTagsPreventParsing" content="true" />
+    <meta name="ROBOTS" content="ALL" />
+    <meta name="Copyright" content="(CC) 2009, CMS collaboration." />
+    <meta name="Rating" content="General" />
+
+    <link rel="icon" type="image/png" href="{{base}}/images/cms_logo.png" />
+    <link rel="stylesheet" type="text/css" href="{{base}}/css/?f=das.css"/>
+
+    <link rel="search" type="application/opensearchdescription+xml" href="{{base}}/opensearch" title="CMS DAS" />
+    <script type="text/javascript" src="{{base}}/js/?f=prototype.js&amp;f=utils.js&amp;f=ajax_utils.js"></script>
+    <!-- YUI stuff -->
+    <link rel="stylesheet" type="text/css" href="{{base}}/css/?resource=yui&amp;f=build/fonts/fonts-min.css&amp;f=build/container/assets/skins/sam/container.css&amp;f=build/autocomplete/assets/skins/sam/autocomplete.css&amp;f=build/paginator/assets/skins/sam/paginator.css&amp;f=build/datatable/assets/skins/sam/datatable.css" />
+
+    <script type="text/javascript" src="{{base}}/js/?resource=yui&amp;f=build/yahoo-dom-event/yahoo-dom-event.js&amp;f=build/container/container-min.js&amp;f=build/datasource/datasource-min.js&amp;f=build/connection/connection-min.js&amp;f=build/yahoo/yahoo-min.js&amp;f=build/cookie/cookie-min.js&amp;f=build/json/json-min.js&amp;f=build/autocomplete/autocomplete-min.js&amp;f=build/element/element-min.js&amp;f=build/paginator/paginator-min.js&amp;f=build/datatable/datatable-min.js"></script>
+</head>
+<body class="yui-skin-sam">
+
+<div id="banner">
+<table>
+<tr><td>
+<img src="{{base}}/images/cms_logo.jpg" alt="CMS" width="30" style="border:none" />
+</td><td>
+<h3>Data Aggregation System (DAS):
+<a href="{{base}}/">Home</a>
+| <a id="das_top_srv" href="{{base}}/services">Services</a>
+| <a id="das_top_keys" href="{{base}}/keys">Keys</a>
+| <a id="das_top_bug" href="https://github.com/dmwm/DAS/issues">Bug report</a>
+| <a id="das_top_status" href="{{base}}/status">Status</a>
+| <a id="das_top_cli" href="{{base}}/cli">CLI</a>
+| <a id="das_top_faq" href="{{base}}/faq">FAQ</a>
+| <a id="das_top_cli" href="javascript:FlipTag('das_cards')">Help</a>
+</h3>
+</td></tr>
+</table>
+</div>
+<!--<hr class="line" /> -->
+<script type="text/javascript">
+function wait() {
+    plage_img('_response', '{{base}}/images/loading.gif', 'please wait');
+}
+</script>
+<!-- end of das_top.tmpl -->

@@ -8,6 +8,7 @@ Description: Abstract interface to represent DAS records
 """
 
 # system modules
+import cgi
 import time
 import urllib
 import pprint
@@ -191,12 +192,12 @@ class DASRepresentation(DASWebManager):
             url   = "%s/request?%s" \
                     % (self.base, urllib.urlencode(params, doseq=True))
             page += self.templatepage('das_pagination', \
-                nrows=total, idx=idx, limit=limit, url=url)
+                nrows=total, idx=idx, limit=limit, url=url, cgi=cgi, str=str)
         else:
             # distinguish the case when no results vs no API calls
             info = head.get('das_server', None)
             info = pprint.pformat(info) if info else None
-            page = self.templatepage('das_noresults', query=uinput,
+            page = self.templatepage('das_noresults', query=uinput, time=time,
                     status=head.get('status', None),
                     reason=head.get('reason', None),
                     info=info, apilist=head.get('apilist', None))

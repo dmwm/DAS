@@ -1,0 +1,22 @@
+<!-- das_filters.tmpl -->
+<div>
+<form action="javascript:AddFilters()" name="das_filters">
+<label for="filters"><span class="label">
+Add filter/aggregator function to the query:</span></label>
+<select id="filters">
+{% for filter in filters -%}
+{%- set filter = quote(filter) %}
+<option class="sand" value="{{filter}}">{{filter}}</option>
+{%- endfor -%}
+</select>
+<select id="das_keys">
+{% for key in das_keys -%}
+{%- set key = quote(key) %}
+<option class="sand" value="{{key}}">{{key}}</option>
+{%- endfor -%}
+</select>
+<input type="submit" value="+" class="btn borders big" />
+<input type="button" value="Clear" class="btn borders" onclick="javascript:ClearFilters()" />
+</form>
+</div>
+<!-- end of das_filters.tmpl -->

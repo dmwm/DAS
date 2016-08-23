@@ -1,0 +1,30 @@
+{%- set js_kws_host = jsonize(kws_host) %}
+
+<link rel="stylesheet" href="/das/css/?f=opentip.css&f=kwsearch.css" />
+<script src="/das/js/?f=opentip-prototype-excanvas.min.js&f=kwdsearch.js" type="text/javascript"></script>
+
+<div id="kws-suggestions">
+    <br />
+    <b>Please wait... in few seconds DAS will suggest some valid queries for you.</b>
+    <br /><br />
+</div>
+
+{#- this will pass all the default params including user's input #}
+{#- instance is a mandatory KWS param, so it doesn't have to worry about defaults #}
+{%- set kws_params_json = jsonize(url_extend_params_as_dict(instance=inst)) %}
+<script type="text/javascript">
+// TODO: it must a setting
+var KWS_HOST = {{js_kws_host}}; //e.g. "https://localhost"
+new Ajax.Request(KWS_HOST + "/das/kws_async", {
+    method: "get",
+    parameters: {{kws_params_json}},
+    onSuccess: function(transport) {
+      $("kws-suggestions").update(transport.responseText);
+    initialize_kws_results.defer();
+    },
+    onFailure: function(err) {
+        $("kws-suggestions").update("can not to load " +
+                "the suggestions at the moment...")
+    }
+});
+</script>

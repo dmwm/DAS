@@ -1,0 +1,27 @@
+{%- set lfn = quote(lfn) %}
+<!-- filemover.tmpl -->
+CMS provides several ways to download invidual LFNs:
+<ul>
+<li>
+using
+<a href="https://twiki.cern.ch/twiki/bin/view/Main/HdfsXrootdUsage">xrootd</a>
+CMS tool. Here is an example how you can do it (you may use any CMSSW release):
+<pre>
+source /afs/cern.ch/cms/cmsset_default.sh
+source /afs/cern.ch/cms/LCG/LCG-2/UI/cms_ui_env.sh
+cmsrel CMSSW_6_0_0
+cd CMSSW_6_0_0
+cmsenv
+xrdcp root://cms-xrd-global.cern.ch/{{lfn}} /some/local/path
+</pre>
+</li>
+<li>
+opened directly in CMSSW with:
+<pre>
+fileNames = cms.untracked.vstring('root://cms-xrd-global.cern.ch/{{lfn}}')
+</pre>
+</li>
+<li>via FileMover (<span style="color:red">this service will be discontinued in mid-spring</span>):
+<a href="/filemover/request?lfn={{lfn}}&external=1">Download</a>
+</li>
+<!-- filemover.tmpl -->

@@ -1,0 +1,11 @@
+<!-- das_colors.tmpl -->
+<div id="colors">
+Sources:&nbsp;
+{% for key, val in colors.items() -%}
+{%- set system=quote(key) %}
+{%- set colour=quote(val) %}
+<span style="color:white;background-color:{{colour}};padding-left:7px;padding-right:7px;padding-bottom:3px">{{system}}</span>
+&nbsp;
+{%- endfor -%}
+</div>
+<!-- end of das_colors.tmpl -->

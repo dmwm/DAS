@@ -1,0 +1,20 @@
+{%- set query = quote(query) %}
+{%- set mongo_query = quote(mongo_query) %}
+{%- set loose_query = quote(loose_query) %}
+{%- set enc_query = quote(enc_query) %}
+{%- set enc_query_hash = quote(enc_query_hash) %}
+{%- set service_map = quote(service_map) %}
+
+<!-- das_query_info.tmpl -->
+<table class="daskeys">
+<tr><th>Key</th><th>Value</th></tr>
+<tr><td><b>DAS-QL query</b></td><td>{{query}}</td></tr>
+<tr><td><b>Mongo query</b></td><td>{{mongo_query}}</td></tr>
+<tr><td><b>Loose query</b></td><td>{{loose_query}}</td></tr>
+<tr><td><b>Encoded query</b></td><td>{{enc_query}}</td></tr>
+<tr><td><b>enc_query hash</b></td><td>{{enc_query_hash}}</td></tr>
+<tr><td><b>Services</b></td><td>{{service_map}}</td></tr>
+</table>
+
+<!-- end of das_query_info.tmpl -->
+

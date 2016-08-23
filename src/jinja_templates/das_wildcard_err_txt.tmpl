@@ -1,0 +1,12 @@
+{#- P.S. we need no quoting in text mode... #}
+Input query contains a wild-card statement which is ambiguous:
+{{msg}}
+
+{% if suggest -%}
+Suggested queries:
+{% for query in suggest -%}
+    {{query}}
+{%- endfor -%}
+{%- endif -%}
+
+For easier query debuging, please use the DAS web interface first.

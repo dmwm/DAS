@@ -1,0 +1,18 @@
+{#- the outputs of this template are clear text which will be  #}
+{#- later sanitized (quoted) in the das_error template #}
+
+DAS (or underlying services) do not support this query yet.
+
+Still you can run multiple queries and combine their results:
+
+{{q1_str}}
+for each result:
+    {{q2_str}}  (replace {{pk_to_replace}} with value of {{pk}} from first query)
+
+Combination of the two queries will give the results expected,
+except for aggregations which have to be implemented manually.
+
+{% if cli_docs: -%}
+See documentation on Command Line Interface:
+{{cli_docs}}
+{%- endif -%}

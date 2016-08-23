@@ -1,0 +1,91 @@
+{%- set base=quote(base) %}
+{%- set width=quote(width) %}
+{%- set height=quote(height) %}
+{%- set max_width=cards| count*width %}
+
+{% if show -%}
+{%- set klass="show" %}
+{% else -%}
+{%- set klass="hide" %}
+{%- endif -%}
+<!-- das__cards.tmpl -->
+<style type="text/css" media="screen">
+#slide_container {
+    font-family: "Tahoma", "Lucida Sans", sans-serif;
+    width:{{width}}px;
+    height:{{height}}px;
+    overflow:hidden;
+    position:relative;
+}
+#slide_cards {
+    position:absolute;
+    left:0px;
+    width:{{max_width}}px; /* should be N-times of width of slide_container, N=number of cards*/
+    -webkit-transition: opacity 1.0s ease-in-out;
+    -moz-transition: opacity 1.0s ease-in-out;
+    -o-transition: opacity 1.0s ease-in-out;
+    -ms-transition: opacity 1.0s ease-in-out;
+    -transition: opacity 1.0s ease-in-out; /*opacity, all*/
+}
+#slide_cards span {
+    padding:0;
+    margin:0;
+    float:left;
+    width:{{width}}px;
+    /*height:{{height}}px;*/ /* Seems like I don't need it */
+}
+</style>
+
+<div class="{{klass}}" id="das_cards" name="das_cards">
+<table align="center">
+</tr>
+<tr><td>
+<a href="javascript:Transition(-{{width}})" style="background-color:#fff">
+<img src="{{base}}/images/left.png" alt="left" style="border:0;">
+</a>
+</td>
+<td>
+<div id="slide_container">
+    <div id="slide_cards">
+
+        <!-- sliding cards -->
+{% for idx in range(0, cards| count) -%}
+{%- set card=cards[idx] %}
+{%- set pos=idx*width %}
+{%- set cwidth=width %}
+<div style="position:absolute;left:{{pos}}px;width:{{cwidth}}px;">{{card}}</div>
+{%- endfor -%}
+        <!-- end of sliding cards -->
+
+    </div>
+</div>
+</td>
+<td>
+<a href="javascript:Transition({{width}})" style="background-color:#fff">
+<img src="{{base}}/images/right.png" alt="right" style="border:0;">
+</a>
+</td></tr>
+</table>
+</div>
+
+<script type="text/javascript" charset="utf-8">
+function Transition(pos) {
+    var doc  = document.getElementById('slide_cards');
+    var left = doc.style.left; 
+    var val  = 0;
+    if  (left) {
+        val = parseInt(left.replace('px', ''));
+    }
+    var new_pos = val+pos;
+    if  (new_pos>0) {
+        new_pos = -{{max_width}}+new_pos;
+    }
+    if  (new_pos==(-{{max_width}})) {
+        new_pos = 0;
+    }
+    doc.style.left = new_pos + 'px';
+    //doc.style.left = val + pos + 'px';
+}
+</script>
+
+<!-- end of das__cards.tmpl -->

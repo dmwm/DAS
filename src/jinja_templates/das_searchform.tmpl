@@ -1,0 +1,175 @@
+{%- set base = quote(base) %}
+{%- set inst = quote(instance) %}
+{%- set view = quote(view) %}
+<!-- das_searchform.tmpl -->
+
+<form action="{{base}}/request" method="get" name="das_search" id="das_search" class="das_form">
+<table>
+<tr>
+<td class="right">
+results format:
+<select id="view" name="view">
+{%- set init_views = ['list', 'plain', 'table', 'json'] %}
+{{- "" if  init_views.remove(view)}}
+{%- set views = [view] + init_views %}
+{% for v in views -%}
+<option class="sand" value="{{v}}">{{v}}</option>
+{%- endfor -%}
+</select>,
+</td>
+<td class="left">
+&nbsp;
+<select id="limit" name="limit">
+<option class="sand" value="50">50</option>
+<option class="sand" value="100">100</option>
+<option class="sand" value="150">150</option>
+</select>
+results/page,
+</td>
+<td class="right">
+&nbsp; 
+dbs instance
+<select id="instance" name="instance">
+{{- "" if  init_dbses.remove(inst)}}
+{%- set dbses = [inst] + init_dbses %}
+{% for d in dbses -%}
+<option class="sand" value="{{d}}">{{d}}</option>
+{%- endfor -%}
+</select>
+,
+</td>
+<td class="right">
+&nbsp;
+autocompletion
+<select id="ac_enable" onchange="ac_select_change();">
+<option class="sand" value="true">enable</option>
+<option class="sand" value="false">disable</option>
+</select>
+</td>
+<td class="right">
+&nbsp;
+<input type="submit" value="Search" class="btn borders" />
+<input type="button" class="btn borders" onclick="javascript:ac_init();clear_input()" value="Reset" />
+</td>
+</tr>
+</table>
+<div class="autocomplete">
+<input type="text" name="input" id="input" style="width:100%;" />
+<div id="ac_container"></div>
+</div>
+<span>
+<a href="javascript:FlipTag('das_keys_desc');"><b>Show DAS keys description</b></a>
+</span>
+</form>
+<div class="right">
+<img src="{{base}}/images/mongodb_logo.png" alt="Powered by MongoDB" width="5%" />
+</div>
+
+<script type="text/javascript">
+//<![CDATA[
+updateInput('{{input}}', '{{inst}}');
+function dbs_inst() {
+   var doc = document.getElementById('instance');
+   return doc.value;
+}
+
+ac = null;
+ac_datasrc = null;
+
+function set_autocomplete(enable) {
+	if (enable) {
+                YAHOO.util.Cookie.set("autocomplete", "true");
+		ac_datasrc = new YAHOO.util.XHRDataSource("{{base}}/autocomplete");
+		ac_datasrc.responseType = YAHOO.util.XHRDataSource.TYPE_JSARRAY;
+		ac_datasrc.responseSchema = { fields: ["value", "css", "info"]};
+		ac = new YAHOO.widget.AutoComplete("input", "ac_container", ac_datasrc);
+		ac.animVert = false;
+		ac.animHoriz = false;
+		ac.maxResultsDisplayed = 10;
+		ac.minQueryLength = 1;
+		ac.queryDelay = 0.1;
+		ac.autoHighlight = false;
+		ac.forceSelection = false;
+		ac.typeAhead = false;
+		ac.useShadow = true;
+		ac.resultTypeList = false;
+		ac.formatResult = function(oResultData, sQuery, sResultMatch) {
+			var markup = ["<div style='position:relative;padding:0'>",
+						  "<div class='", oResultData.css, 
+						  "'></div><div><span class='ac-suggest'>",
+						  sResultMatch, "</span><span class='ac-extra'>", 
+						  oResultData.info, "</span></div></div>"];
+			return (markup.join(" "));
+		};
+		ac.applyLocalFilter = false;
+		ac.queryMatchContains = false;
+                ac.generateRequest = function(sQuery) {
+                    return '?dbs_instance='+dbs_inst()+'&query='+sQuery;
+                };
+	} else {
+                YAHOO.util.Cookie.set("autocomplete", "false");
+		if (! (ac === undefined || ac === null)) {
+			ac.destroy();
+			ac = null;
+			ac_datasrc = null;
+		}
+	}
+};
+
+function ac_select_change() {
+    var enable = ($("ac_enable").value == "true");
+    set_autocomplete(enable);
+};
+function clear_input() {
+    // clear input field
+    var doc = document.getElementById('input');
+    doc.value = "";
+}
+function ac_init() {
+    // get cookie for autocomplete and follow its value
+    var ac_cookie = (YAHOO.util.Cookie.get("autocomplete") == "true");
+    var doc = document.getElementById("ac_enable");
+    doc.options.length=0;
+    if  (ac_cookie) {
+        doc.options[0] = new Option("enable", "true", false, false);
+        doc.options[1] = new Option("disable", "false", false, false);
+        doc.options[0].className = "sand";
+        doc.options[1].className = "sand";
+    } else {
+        doc.options[0] = new Option("disable", "false", false, false);
+        doc.options[1] = new Option("enable", "true", false, false);
+        doc.options[0].className = "sand";
+        doc.options[1].className = "sand";
+    }
+    set_autocomplete(ac_cookie);
+};
+ac_init();
+//]]>
+</script>
+<!-- end of das_searchform.tmpl -->
+
+{#- Please note the cards are sanitized in das_cards template #}
+{{cards}}
+<div class="hide" id="das_keys_desc">
+<div class="overlay all-side-shadow">
+<div align="right"><a href="javascript:HideTag('das_keys_desc')"><b>Hide</b></a></div>
+<h3>DAS keys description</h3>
+The following is a list of DAS keys which can be used to form your DAS query
+{{daskeys}}
+</div>
+</div>
+
+<script type="text/javascript">
+function HideDasKeys(e) {
+    var element = Event.element(e);
+    if (e.keyCode == Event.KEY_ESC) {
+        HideTag('das_keys_desc');
+    }
+}
+document.observe('keydown', HideDasKeys);
+// It should observe given tag (code below), but somehow does not
+//$('das_keys_desc').observe('keydown', HideDasKeys);
+</script>
+
+<div id="response" name="response" class="results"> <!-- we close this tag in das_bottom.tmpl -->
+

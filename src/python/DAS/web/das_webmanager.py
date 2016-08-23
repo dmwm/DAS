@@ -9,6 +9,7 @@ __author__ = "Valentin Kuznetsov"
 
 # system modules
 import os
+import time
 import sys
 
 # cherrypy modules
@@ -129,7 +130,7 @@ class DASWebManager(TemplatedPage):
         """
         Provide footer for all web pages
         """
-        return self.templatepage('das_bottom', div=div, version=DAS.version)
+        return self.templatepage('das_bottom', div=div, version=DAS.version, time=time)
 
     def page(self, content, _ctime=None, _response=False):
         """

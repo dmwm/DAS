@@ -1,0 +1,11 @@
+{%- set base=quote(base) %}
+<?xml version="1.0"?>
+<OpenSearchDescription xmlns="http://a9.com/-/spec/opensearch/1.1/"
+                       xmlns:moz="http://www.mozilla.org/2006/browser/search/">
+<ShortName>DAS search</ShortName>
+<Description>CMS DAS Search</Description>
+<Image type="image/png">{{base}}/images/cms_logo.png</Image>
+<Url type="text/html" method="get"
+     template="{{base}}/?input={searchTerms}&amp;view=list&amp;show=json"/>
+<moz:SearchForm>{{base}}</moz:SearchForm>
+</OpenSearchDescription>

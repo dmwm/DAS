@@ -1,0 +1,147 @@
+
+<!-- das_services.tmpl -->
+<div class="page">
+<b>DBS instances</b><br />
+DAS supports the following DBS instances:
+<table class="daskeys">
+{%- set counter=0 %}
+{% for dbs in dbses -%}
+{% if dbs==dbs_global -%}
+{%- set msg="<b>default DBS instance</b>" %}
+{% elif dbs.startswith('prod') %}
+{%- set msg="<em>production DBS instance</em>" %}
+{% elif dbs.startswith('int') %}
+{%- set msg="<em>integration DBS instance</em>" %}
+{% elif dbs.startswith('dev') %}
+{%- set msg="<em>development DBS instance</em>" %}
+{% else -%}
+{%- set msg="" %}
+{%- endif -%}
+{% if counter%2 -%}
+{%- set style="odd" %}
+{% else -%}
+{%- set style="" %}
+{%- endif -%}
+{%- set counter+=1 %}
+<tr class="{{quote(style)}}">
+<td>{{quote(dbs)}}</td><td>&nbsp;&nbsp;&nbsp;&nbsp;{{msg}}</td>
+</tr>
+{%- endfor -%}
+</table>
+On web UI you can choose your favorite one via drop-down menu.
+For DAS CLI you can use them together with your DAS query using
+<b>instance</b> DAS keyword, for example:
+<pre>
+dataset dataset=/ZMM*/*/* instance=prod/global
+dataset dataset=/ZMM*/*/* instance=prod/phys03
+</pre>
+
+<b>DAS mapping</b><br />
+DAS provides a mapping between query keys, e.g. block, site and 
+their representation in DAS records. Use this table to identify
+what a given DAS key will be transformed to when querying relevant CMS data services.
+<div class="normal">
+<table class="daskeys">
+<tr>
+<th>DAS keys\services</th>
+{%- set systems=dasdict.keys() %}
+{% for system in systems -%}
+<th>{{quote(system)}}</th> 
+{%- endfor -%}
+</tr>
+{%- set counter=0 %}
+{% for daskey in daskeys -%}
+{% if counter%2 -%}
+{%- set style="odd" %}
+{% else -%}
+{%- set style="" %}
+{%- endif -%}
+{%- set counter+=1 %}
+<tr class="{{quote(style)}}">
+<td>{{quote(daskey)}}</td>
+{% for system in systems -%}
+{%- set sysdict=dasdict[system]['keys'] %}
+{% if sysdict.has_key(daskey) -%}
+<td>
+{%- set uikeys=dasdict[system]['keys'][daskey] %}
+{% for uikey in uikeys -%}
+{% if  uikey!=uikeys[-1] -%}
+{{quote(uikey)}},
+{% else -%}
+{{quote(uikey)}}
+{%- endif -%}
+{%- endfor -%}
+</td>
+{% else -%}
+<td>&#8212;</td>
+{%- endif -%}
+{%- endfor -%}
+</tr>
+{%- endfor -%}
+</table>
+
+<br />
+<b>Please note:</b> DAS also provide a special key <b>records</b> which can be
+used with any DAS condition to look-up all records in DAS cache for that condition.
+
+</div>
+
+<p></p>
+
+<b>Data-services APIs</b>
+<div class="normal">
+<table class="daskeys">
+<tr style="text-align:left">
+{% for system in systems -%}
+<th>{{quote(system)}}</th> 
+{%- endfor -%}
+</tr>
+
+<tr style="vertical-align:text-top">
+{% for system in systems -%}
+{%- set apilist=dasdict[system]['apis'] %}
+{{- "" if  apilist.sort()}}
+<td>
+{% for api in apilist[:-1] -%}
+<a href="/das/api?system={{urllib.quote_plus(system)}}&name={{urllib.quote_plus(api)}}">{{quote(api)}}</a>, <br />
+{%- endfor -%}
+<a href="/das/api?system={{urllib.quote_plus(system)}}&name={{urllib.quote_plus(apilist[-1])}}">{{quote(apilist[-1])}}</a>
+</td>
+{%- endfor -%}
+</tr>
+</table>
+</div>
+
+<p></p>
+
+<!--
+<b>Map/reduce functions</b><br />
+The following set of functions have been defined in DAS as map/reduce operations over
+DAS records. You can use them with pipes to your queries, e.g. 
+<pre>
+block=/a/b* | sum(block.replica.size)
+</pre>
+<div class="normal">
+<ul>
+{% for row in mapreduce -%}
+{%- set id=quote(row['_id']) %}
+<li>
+{{quote(row['name'])}},
+<a href="javascript:ToggleTag('{{id}}', 'link_{{id}}')" id="link_{{id}}">show</a>
+<div class="hide" id="{{id}}">
+<pre>
+Map function:
+{{quote(row['map'])}}
+
+Reduce function:
+{{quote(row['reduce'])}}
+</div>
+</li>
+{%- endfor -%}
+</ul>
+</div>
+-->
+
+</div>
+<!-- end of das_services.tmpl -->
+

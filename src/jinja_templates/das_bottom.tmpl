@@ -1,0 +1,22 @@
+{%- set version = quote(version) %}
+{%- set timestamp = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime()) %}
+{% if div -%}
+</div> <!-- end of _response tag -->
+{%- endif -%}
+<!-- das_bottom.tmpl -->
+<hr class="line" />
+<div class="results">
+<table width="100%" class="small">
+<tr>
+<td align="left">
+DAS version: {{version}}
+</td>
+<td align="right">
+{{timestamp}}
+</td>
+</tr>
+</table>
+</div> <!-- end of id="results" -->
+<!-- end of das_bottom.tmpl -->
+</body>
+</html>

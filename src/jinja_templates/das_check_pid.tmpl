@@ -1,0 +1,15 @@
+{%- set base = quote(base) %}
+{%- set view = quote(view) %}
+{%- set pid= quote(pid) %}
+{%- set uinput= quote(uinput) %}
+{%- set base = quote(base) %}
+{%- set method = quote(method) %}
+{%- set interval = quote(interval) %}
+<!-- das_check_pid.tmpl -->
+<img src="{{base}}/images/loading.gif" alt="loading"/>
+request PID={{pid}}, please wait...
+<a href="/das/?{{urllib.urlencode({'input':uinput})}}">stop</a> request
+<script type="text/javascript">
+setTimeout('ajaxCheckPid("{{base}}", "{{method}}", "{{pid}}", "{{interval}}")', {{interval}})
+</script>
+<!-- enf of das_check_pid.tmpl -->

@@ -1,0 +1,49 @@
+<!-- das_keys.tmpl -->
+<div>
+{% for row in daskeys -%}
+{%- set das=quote(row["das"]).split('.')[0] %}
+<ul>
+
+<li>
+<b>{{das}}</b> {{quote(row.get("description", "N/A"))}}
+
+{%- set link=row["link"] %}
+{% if link -%}
+<br/>
+Relationships:
+<ul style="list-style: none;margin-left: 0;padding-left: 1em;">
+
+{% for rec in link -%}
+<li>&raquo;&nbsp;
+{%- set query=quote(rec["query"]) %}
+{%- set name=quote(rec["name"]).lower() %}
+{%- set val="<em>"+query.split('=')[0].split(' ')[-1]+"_value"+"</em>" %}
+{{name}} via query: {{query.replace("%s", val)}}
+</li>
+{%- endfor -%}
+
+</ul>
+{%- endif -%}
+
+{%- set examples=row.get("examples", []) %}
+{% if examples -%}
+<br/>
+Examples:
+<ul style="list-style: none;margin-left: 0;padding-left: 1em;">
+
+{% for doc in examples -%}
+<li>&raquo;&nbsp;
+<em>{{doc}}</em>
+</li>
+{%- endfor -%}
+
+</ul>
+{%- endif -%}
+</li>
+
+</ul>
+{%- endfor -%}
+</div>
+<br />
+<!-- end of das_keys.tmpl -->
+

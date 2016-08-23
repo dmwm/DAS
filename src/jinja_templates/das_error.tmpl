@@ -1,0 +1,13 @@
+{%- set msg = quote(msg) %}
+
+<!-- das_error.tmpl -->
+An error has occurred while processing your request:
+<pre>
+{{msg}}
+</pre>
+Please submit a bug report 
+{%- set details=quote(msg) %}
+{%- set msg=details.replace('/', '%2F') %}
+<a class="box_attention" href="https://github.com/dmwm/DAS/issues">ticket</a>.
+<!-- end of das_error.tmpl -->
+

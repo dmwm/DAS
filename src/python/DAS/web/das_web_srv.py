@@ -12,12 +12,14 @@ __author__ = "Valentin Kuznetsov"
 # system modules
 import os
 import re
+import cgi
 import time
+import urllib
 import cherrypy
 import threading
 import pprint
 
-
+from json import dumps as jsonize
 from datetime import date
 from urlparse import urlparse, parse_qsl
 from cherrypy import expose, HTTPError
@@ -37,6 +39,8 @@ from DAS.utils.utils import getarg
 from DAS.utils.url_utils import disable_urllib2Proxy
 from DAS.utils.ddict import DotDict
 from DAS.utils.utils import genkey, print_exc, dastimestamp, dasprint
+from DAS.utils.url_utils import url_extend_params
+from DAS.utils.url_utils import url_extend_params_as_dict
 from DAS.utils.thread import start_new_thread, dumpstacks
 from DAS.utils.das_db import db_gridfs
 from DAS.utils.task_manager import TaskManager, PluginTaskManager
@@ -230,8 +234,9 @@ class DASWebService(DASWebManager):
         """
         Define footer for all DAS web pages
         """
+        tstamp = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime())
         return self.templatepage('das_bottom', div=response_div, base=self.base,
-                version=DAS.version)
+                version=DAS.version, time=time)
 
     def page(self, content, ctime=None, response_div=True):
         """
@@ -240,7 +245,7 @@ class DASWebService(DASWebManager):
         page  = self.top()
         page += content
         page += self.templatepage('das_bottom', ctime=ctime,  base=self.base,
-                                  version=DAS.version, div=response_div)
+                                  version=DAS.version, div=response_div, time=time)
         return page
 
     @expose
@@ -367,7 +372,8 @@ class DASWebService(DASWebManager):
         mapreduce = [r for r in self.dasmgr.rawcache.get_map_reduce()]
         page = self.templatepage('das_services', dasdict=dasdict,
                         dbses=self.dbs_instances, dbs_global=self.dbs_global,
-                        daskeys=list(daskeys), mapreduce=mapreduce)
+                        daskeys=list(daskeys), mapreduce=mapreduce,
+                        urllib=urllib)
         return self.page(page, response_div=False)
 
     @expose
@@ -482,6 +488,8 @@ class DASWebService(DASWebManager):
             if show_kws:
                 kws = self.templatepage('kwdsearch_via_ajax',
                                         uinput=uinput,
+                                        jsonize=jsonize,
+                                        url_extend_params_as_dict=url_extend_params_as_dict,
                                         inst=inst or self.dbs_global,
                                         kws_host=self._get_kws_host())
             # render the appropriate template (html vs text mode)
@@ -502,7 +510,8 @@ class DASWebService(DASWebManager):
             # TODO: hints could be shown here also, but it makes no sense, as
             # they are shown only when no matches are found
             return 1, error_msg(str(err), tmpl='das_wildcard_err',
-                                suggest=err.options.values)
+                                suggest=err.options.values,
+                                url_extend_params=url_extend_params)
         except WildcardMatchingException as err:
             das_parser_error(uinput, str(type(err)) + ' ' + str(err))
             kwds = {'input':uinput, 'instance':inst}
@@ -510,6 +519,7 @@ class DASWebService(DASWebManager):
             page = error_msg(str(err))
             for hint in hints:
                 page += self.templatepage('hint',
+                        url_extend_params=url_extend_params,
                         hint=hint, base=self.base, dbs=self.dbs_global)
             return 1, page
         except Exception as err:
@@ -566,8 +576,12 @@ class DASWebService(DASWebManager):
             uinput = uinput.replace("'", '"')
         if  not instance:
             instance = self.dbs_global
+        hcards = help_cards(self.base)
+        width = 900
+        height = 220
         cards = self.templatepage('das_cards', base=self.base, show=cards, \
-                width=900, height=220, cards=help_cards(self.base))
+                width=width, height=height, max_width=len(hcards)*width, \
+                cards=hcards, enumerate=enumerate)
         daskeys = self.templatepage('das_keys', daskeys=self.daskeyslist)
         page  = self.templatepage('das_searchform', input=uinput, \
                 init_dbses=list(self.dbs_instances), daskeys=daskeys, \
@@ -666,7 +680,8 @@ class DASWebService(DASWebManager):
                 url   = '/das/records?'
                 if  nresults:
                     page = self.templatepage('das_pagination', \
-                        nrows=nresults, idx=idx, limit=limit, url=url)
+                        nrows=nresults, idx=idx, limit=limit, url=url, \
+                        cgi=cgi, str=str)
                 else:
                     page = 'No results found, nresults=%s' % nresults
                 page += res
@@ -1011,7 +1026,7 @@ class DASWebService(DASWebManager):
             filename = DotDict(rec).get('file.name')
             if  filename not in lfns:
                 lfns.append(filename)
-        page = self.templatepage('das_files_py', lfnList=lfns, pfnList=[])
+        page = self.templatepage('das_files_py', lfnList=lfns, pfnList=[], isinstance=isinstance, list=list)
         cherrypy.response.headers['Content-Type'] = "text/plain"
         return page
 
@@ -1086,7 +1101,7 @@ class DASWebService(DASWebManager):
             return page
         if  self.taskmgr.is_alive(pid):
             page = self.templatepage('das_check_pid', method='check_pid',
-                    uinput=uinput, view=view,
+                    uinput=uinput, view=view, urllib=urllib,
                     base=self.base, pid=pid, interval=self.interval)
         elif status == None:
             # DAS was busy and query expired since status==None
@@ -1095,7 +1110,7 @@ class DASWebService(DASWebManager):
                 self.taskmgr.remove(pid)
                 return self.empty_return(dasquery, 'fail', 'request expired')
             page = self.templatepage('das_check_pid', method='check_pid',
-                    uinput=uinput, view=view,
+                    uinput=uinput, view=view, urllib=urllib,
                     base=self.base, pid=pid, interval=self.interval)
         else:
             self.reqmgr.remove(pid)
@@ -1109,7 +1124,7 @@ class DASWebService(DASWebManager):
     def status(self):
         """Return list of all current requests in DAS queue"""
         requests = [r for r in self.reqmgr.items()]
-        page = self.templatepage('das_status', requests=requests)
+        page = self.templatepage('das_status', requests=requests, time=time)
         return self.page(page)
 
     @expose

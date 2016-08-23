@@ -1,0 +1,27 @@
+{%- set base = quote(base) %}
+{%- set msg = quote(msg) %}
+<!-- das_ambiguous.tmpl -->
+<div> <!-- main div -->
+
+<div class="das-ambigous">
+<h4>DAS is unable to interpret your query:</h4>
+<pre>
+{{msg}}</pre>
+</div>
+
+{{kws}}
+
+
+For more information please use <a href="{{base}}/faq">FAQ</a> page; review
+<b>DAS query guide:</b>
+<a href="javascript:ToggleTag('dbsql_vs_dasql', 'link_dbsql_vs_dasql')" id="link_dbsql_vs_dasql">show</a>
+or submit a bug report
+{%- set details=quote(msg) %}
+{%- set msg=details.replace('/', '%2F') %}
+<a class="box_attention" href="https://github.com/dmwm/DAS/issues/new">ticket</a>.
+<div id="dbsql_vs_dasql" name="dbsql_vs_dasql" class="hide">
+{{guide}}
+</div>
+</div> <!-- end of main div -->
+<!-- end of das_ambiguous.tmpl -->
+

@@ -1,0 +1,27 @@
+
+{%- set title=quote(hint['title']) %}
+
+<div class="hint-block">
+    <b>{{title}}</b><br/>
+    {% if 'descr' in hint -%}
+        {%- set descr=quote(hint['descr']) %}
+        <p>{{descr}}</p>
+    {%- endif -%}
+    {% for result in hint['results'] -%}
+        {% if 'inst' in result.keys() %}
+            {%- set inst=quote(result['inst']) %}
+        {% else %}
+            {%- set inst=quote(dbs) %}
+        {% endif %}
+        <ul class="result">
+        Results in: <em>{{inst}}</em> instance
+        <br/>
+        {% for example in result.get('examples', []) -%}
+        {%- set url=base + '/request' %}
+        {%- set link=url_extend_params(url=url, input=example, instance=inst) %}
+        <li><a href="{{link}}">{{quote(example)}}</a></li>
+        {%- endfor -%}
+        </ul>
+    {%- endfor -%}
+
+</div>

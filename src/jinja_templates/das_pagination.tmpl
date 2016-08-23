@@ -1,0 +1,61 @@
+{%- set url=cgi.escape(url) %}
+<!-- url here is quoted in a code -->
+<!-- das_pagination.tmpl -->
+<div id="results">
+
+<div class="left">
+<table width="100%" class="normal">
+<tr>
+<td align="left">
+Showing
+{% if not limit -%}
+all records
+</td>
+</tr>
+{% else -%}
+{%- set total = idx+limit %}
+{% if total>nrows -%}
+{%- set total=nrows %}
+{%- endif -%}
+{%- set from_res=idx+1 %}
+{%- set to_res=idx+limit %}
+{% if to_res > nrows -%}
+{%- set to_res=nrows %}
+{%- endif -%}
+{{from_res}}&#8212;{{to_res}} records out of {{nrows}}.
+</td>
+<td align="right">
+<div id="paginator">
+{#- first #}
+{%- set newUrl = url + "&amp;idx=0&amp;limit=" + limit| string %}
+&lt;<a href="{{newUrl}}">first</a> |
+{#- prev #}
+{% if  idx -%}
+{%- set prev=idx-limit %}
+{% else -%}
+{%- set prev=idx %}
+{%- endif -%}
+{%- set newUrl = url + "&amp;idx=" + prev| string + "&amp;limit=" + limit| string %}
+<a href="{{newUrl}}">prev</a> |
+{#- next #}
+{% if  idx+limit < nrows -%}
+{%- set next=idx+limit %}
+{% else -%}
+{%- set next=(nrows/limit)*limit %}
+{%- endif -%}
+{%- set newUrl = url + "&amp;idx=" + next| string + "&amp;limit=" + limit| string %}
+<a href="{{newUrl}}">next</a> |
+{#- last #}
+{%- set last=(nrows/limit)*limit %}
+{%- set newUrl = url + "&amp;idx=" + last| string + "&amp;limit=" + limit| string %}
+<a href="{{newUrl}}">last</a>&gt;
+</div>
+</td>
+</tr>
+{%- endif -%}
+</table>
+
+</div> <!-- end of align="left" -->
+
+</div> <!-- end of id="div_results" -->
+<!-- end of das_pagination.tmpl -->

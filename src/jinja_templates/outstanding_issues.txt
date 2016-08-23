@@ -1,0 +1,381 @@
+____________________________________________________________________________________________________
+Could not fully convert file: src/templates/das_searchform.tmpl
+__________________________________________________________________________________________
+In lines: 14 - 18: #try expression could not be converted 
+
+Old code:
+#try
+#silent $init_views.remove($view)
+#except
+#pass
+#end try
+Results:
+-------------------------
+Need to remove try catch statements
+#try
+{{- "" if  init_views.remove(view)}}
+#except
+
+#end try
+--------------------------------------------------
+In lines: 38 - 42: #try expression could not be converted 
+
+Old code:
+#try
+#silent $init_dbses.remove($inst)
+#except
+#pass
+#end try
+Results:
+-------------------------
+Need to remove try catch statements
+#try
+{{- "" if  init_dbses.remove(inst)}}
+#except
+
+#end try
+--------------------------------------------------
+____________________________________________________________________________________________________
+Could not fully convert file: src/templates/hint.tmpl
+__________________________________________________________________________________________
+In lines: 13 - 17: #try expression could not be converted 
+
+Old code:
+        #try
+            #set inst=$quote($result['inst'])
+        #except
+            #set inst=$quote($dbs)
+        #end try
+Results:
+-------------------------
+Need to remove try catch statements
+        #try
+            {%- set inst=quote(result['inst']) %}
+        #except
+            {%- set inst=quote(dbs) %}
+        #end try
+____________________________________________________________________________________________________
+Could not fully convert file: src/templates/kwdsearch_results.tmpl
+__________________________________________________________________________________________
+In lines: 1 - 1: #import, #from expression could not be converted 
+
+Old code:
+#from DAS.web.utils import quote
+Results:
+-------------------------
+Import was removed
+Need to add imported object to environment to use as normal placeholder
+--------------------------------------------------
+In lines: 15 - 90: #if expression could not be converted 
+
+Old code:
+{% if proposed_queries: -%}
+<div id="filter-by-entity">
+{% if hi_score_result_types -%}
+
+    <div class="select-result-type">
+            <span class="tooltip">Filter by entity:
+                <span class="classic">You may filter suggestions by the entity they return</span></span>
+                    &nbsp;<span class="rt-filters">
+                        #for index, rt in enumerate($hi_score_result_types):
+{% if index != 0 then ', &nbsp;' else '&nbsp;' -%}
+<a onclick="filterByResultType('$rt', this)" href="#" class="rt-$rt">$rt</a>#slurp
+                        #end for
+                    </span>
+        </div>
+
+{%- endif -%}
+
+</div>
+
+
+{% if not is_ajax -%}
+    <link rel="stylesheet" href="/das/css/?f=kwsearch.css" />
+    <script src="/das/js/?f=kwdsearch.js" type="text/javascript"></script>
+{%- endif -%}
+
+
+<div id="kws-results-container">
+    <div id="kws-entry-points">
+        <h4>Coloring of query suggestions:</h4>
+        <span class="q-res-type">entity to be retrieved</span> <br />
+        <span class="q-field-name">filter (an input to service(s))</span> <br />
+        <span class="q-post-filter-field-name">expensive filter (applied only after retrieving all data)</span>
+        <br />
+    </div>
+
+
+    <div id="kws-results-listing"> <!-- main div -->
+        <!-- list proposed queries along with their scores -->
+        #for $item in $proposed_queries:
+            #set query_escaped = $quote($item.result)
+            #set nl_query_escaped = $quote($item.query_in_words)
+
+            <div class="kws-result result-with-entity-${item.entity}">
+
+               <div class="score-bar" style="width: ${item.bar.max_w}px;">
+                         <div class="score-bar-inner score-bar-inner-${item.bar.style}" style="width: ${item.bar.w}px;"></div>
+                         {% if show_score: -%}
+                         <span class="score-num">
+                                #echo "%.2f" % $item.bar.score
+                         </span>
+                         {%- endif -%}
+               </div>
+
+               <a class="kws-link" href="$item.link" target="_blank"
+                  data-ot="Explanation: &lt;br/&gt; $nl_query_escaped"
+                  data-ot-style="drop">$item.query_html</a>
+               {% if 0: -%}
+                <a class="debug" data-ot="$item.trace">debug</a>
+               {%- endif -%}
+            </div>
+
+        #end for
+
+    </div> <!-- end of main div -->
+</div>
+
+
+{% if not is_ajax -%}
+<script type="text/javascript">
+    jQuery(initialize_kws_results);
+</script>
+{%- endif -%}
+{%- endif -%}  ## end of "if $proposed_queries:"
+<!-- end of kwdsearch_results.tmpl -->
+
+Results:
+-------------------------
+Could not find end of if statement
+{% if proposed_queries: -%}
+<div id="filter-by-entity">
+{% if hi_score_result_types -%}
+
+    <div class="select-result-type">
+            <span class="tooltip">Filter by entity:
+                <span class="classic">You may filter suggestions by the entity they return</span></span>
+                    &nbsp;<span class="rt-filters">
+                        {% for index, rt in enumerate(hi_score_result_types): -%}
+{% if index != 0 then ', &nbsp;' else '&nbsp;' -%}
+<a onclick="filterByResultType('{{rt}}', this)" href="#" class="rt-{{rt}}">{{rt}}</a>
+                        {%- endfor -%}
+                    </span>
+        </div>
+
+{%- endif -%}
+
+</div>
+
+
+{% if not is_ajax -%}
+    <link rel="stylesheet" href="/das/css/?f=kwsearch.css" />
+    <script src="/das/js/?f=kwdsearch.js" type="text/javascript"></script>
+{%- endif -%}
+
+
+<div id="kws-results-container">
+    <div id="kws-entry-points">
+        <h4>Coloring of query suggestions:</h4>
+        <span class="q-res-type">entity to be retrieved</span> <br />
+        <span class="q-field-name">filter (an input to service(s))</span> <br />
+        <span class="q-post-filter-field-name">expensive filter (applied only after retrieving all data)</span>
+        <br />
+    </div>
+
+
+    <div id="kws-results-listing"> <!-- main div -->
+        <!-- list proposed queries along with their scores -->
+        {% for item in proposed_queries: -%}
+            {%- set query_escaped = quote(item.result) %}
+            {%- set nl_query_escaped = quote(item.query_in_words) %}
+
+            <div class="kws-result result-with-entity-{{item.entity}}">
+
+               <div class="score-bar" style="width: {{item.bar.max_w}}px;">
+                         <div class="score-bar-inner score-bar-inner-{{item.bar.style}}" style="width: {{item.bar.w}}px;"></div>
+                         {% if show_score: -%}
+                         <span class="score-num">
+                                {{echo1}}
+                         </span>
+                         {%- endif -%}
+               </div>
+
+               <a class="kws-link" href="{{item.link}}" target="_blank"
+                  data-ot="Explanation: &lt;br/&gt; {{nl_query_escaped}}"
+                  data-ot-style="drop">{{item.query_html}}</a>
+               {% if 0: -%}
+                <a class="debug" data-ot="{{item.trace}}">debug</a>
+               {%- endif -%}
+            </div>
+
+        {%- endfor -%}
+
+    </div> <!-- end of main div -->
+</div>
+
+
+{% if not is_ajax -%}
+<script type="text/javascript">
+    jQuery(initialize_kws_results);
+</script>
+{%- endif -%}
+{%- endif -%}  {#- end of "if {{proposed_queries}}:" #}
+<!-- end of kwdsearch_results.tmpl -->
+
+--------------------------------------------------
+In lines: 23 - 23: enumerate( expression could not be converted 
+
+Old code:
+                        {% for index, rt in enumerate(hi_score_result_types): -%}
+Results:
+-------------------------
+Need to add enumerate to environment to use as a normal placeholder
+                        {% for index, rt in enumerate(hi_score_result_types): -%}
+--------------------------------------------------
+In lines: 25 - 90: #slurp expression could not be converted 
+
+Old code:
+<a onclick="filterByResultType('{{rt}}', this)" href="#" class="rt-{{rt}}">{{rt}}</a>
+                        {%- endfor -%}
+                    </span>
+        </div>
+
+{%- endif -%}
+
+</div>
+
+
+{% if not is_ajax -%}
+    <link rel="stylesheet" href="/das/css/?f=kwsearch.css" />
+    <script src="/das/js/?f=kwdsearch.js" type="text/javascript"></script>
+{%- endif -%}
+
+
+<div id="kws-results-container">
+    <div id="kws-entry-points">
+        <h4>Coloring of query suggestions:</h4>
+        <span class="q-res-type">entity to be retrieved</span> <br />
+        <span class="q-field-name">filter (an input to service(s))</span> <br />
+        <span class="q-post-filter-field-name">expensive filter (applied only after retrieving all data)</span>
+        <br />
+    </div>
+
+
+    <div id="kws-results-listing"> <!-- main div -->
+        <!-- list proposed queries along with their scores -->
+        #for $item in $proposed_queries:
+            #set query_escaped = $quote($item.result)
+            #set nl_query_escaped = $quote($item.query_in_words)
+
+            <div class="kws-result result-with-entity-${item.entity}">
+
+               <div class="score-bar" style="width: ${item.bar.max_w}px;">
+                         <div class="score-bar-inner score-bar-inner-${item.bar.style}" style="width: ${item.bar.w}px;"></div>
+                         {% if show_score: -%}
+                         <span class="score-num">
+                                #echo "%.2f" % $item.bar.score
+                         </span>
+                         {%- endif -%}
+               </div>
+
+               <a class="kws-link" href="$item.link" target="_blank"
+                  data-ot="Explanation: &lt;br/&gt; $nl_query_escaped"
+                  data-ot-style="drop">$item.query_html</a>
+               {% if 0: -%}
+                <a class="debug" data-ot="$item.trace">debug</a>
+               {%- endif -%}
+            </div>
+
+        #end for
+
+    </div> <!-- end of main div -->
+</div>
+
+
+{% if not is_ajax -%}
+<script type="text/javascript">
+    jQuery(initialize_kws_results);
+</script>
+{%- endif -%}
+{%- endif -%}  ## end of "if $proposed_queries:"
+<!-- end of kwdsearch_results.tmpl -->
+
+Results:
+-------------------------
+<a onclick="filterByResultType('{{rt}}', this)" href="#" class="rt-{{rt}}">{{rt}}</a>
+                        {%- endfor -%}
+                    </span>
+        </div>
+
+{%- endif -%}
+
+</div>
+
+
+{% if not is_ajax -%}
+    <link rel="stylesheet" href="/das/css/?f=kwsearch.css" />
+    <script src="/das/js/?f=kwdsearch.js" type="text/javascript"></script>
+{%- endif -%}
+
+
+<div id="kws-results-container">
+    <div id="kws-entry-points">
+        <h4>Coloring of query suggestions:</h4>
+        <span class="q-res-type">entity to be retrieved</span> <br />
+        <span class="q-field-name">filter (an input to service(s))</span> <br />
+        <span class="q-post-filter-field-name">expensive filter (applied only after retrieving all data)</span>
+        <br />
+    </div>
+
+
+    <div id="kws-results-listing"> <!-- main div -->
+        <!-- list proposed queries along with their scores -->
+        {% for item in proposed_queries: -%}
+            {%- set query_escaped = quote(item.result) %}
+            {%- set nl_query_escaped = quote(item.query_in_words) %}
+
+            <div class="kws-result result-with-entity-{{item.entity}}">
+
+               <div class="score-bar" style="width: {{item.bar.max_w}}px;">
+                         <div class="score-bar-inner score-bar-inner-{{item.bar.style}}" style="width: {{item.bar.w}}px;"></div>
+                         {% if show_score: -%}
+                         <span class="score-num">
+                                {{echo1}}
+                         </span>
+                         {%- endif -%}
+               </div>
+
+               <a class="kws-link" href="{{item.link}}" target="_blank"
+                  data-ot="Explanation: &lt;br/&gt; {{nl_query_escaped}}"
+                  data-ot-style="drop">{{item.query_html}}</a>
+               {% if 0: -%}
+                <a class="debug" data-ot="{{item.trace}}">debug</a>
+               {%- endif -%}
+            </div>
+
+        {%- endfor -%}
+
+    </div> <!-- end of main div -->
+</div>
+
+
+{% if not is_ajax -%}
+<script type="text/javascript">
+    jQuery(initialize_kws_results);
+</script>
+{%- endif -%}
+{%- endif -%}  {#- end of "if {{proposed_queries}}:" #}
+<!-- end of kwdsearch_results.tmpl -->
+
+--------------------------------------------------
+In lines: 63 - 63: #echo expression could not be converted 
+
+Old code:
+                                #echo "%.2f" % $item.bar.score
+Results:
+-------------------------
+#Echo was replaced with: echo{number} Need to add echo object to environment
+Example: #echo 1+2; > {{echo1}} > def echo1(): return 1+2
+                                {{echo1}}
+--------------------------------------------------
+____________________________________________________________________________________________________

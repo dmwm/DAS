@@ -1,0 +1,32 @@
+{%- set msg = quote(msg) %}
+
+<!-- das_wildcard_err.tmpl -->
+<div> <!-- main div -->
+    <div class="das-ambigous">
+    Input query contains a wildcard statement which is ambiguous:<br />
+<pre>
+{{msg}}
+</pre>
+    </div>
+{% if suggest -%}
+Suggested queries:
+<ul>
+{% for query in suggest -%}
+  {%- set query=quote(query) %}
+  {#- url_extend_params returns a link with urlencoded params #}
+  {%- set link=url_extend_params(url=base + '/request', input=query) %}
+  <li><a href="{{link}}">{{query}}</a></li>
+{%- endfor -%}
+</ul>
+{%- endif -%}
+For more information please use <a href="{{base}}/faq">FAQ</a> page; review
+<b>DAS query guide:</b>
+<a href="javascript:ToggleTag('dbsql_vs_dasql', 'link_dbsql_vs_dasql')" id="link_dbsql_vs_dasql">show</a>
+or submit a bug report
+<a href="https://github.com/dmwm/DAS/issues/new">here</a>.
+<div id="dbsql_vs_dasql" name="dbsql_vs_dasql" class="hide">
+{{guide}}
+</div>
+</div> <!-- end of main div -->
+<!-- end of das_wildcard_err.tmpl -->
+

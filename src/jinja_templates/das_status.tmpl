@@ -1,0 +1,23 @@
+<!-- das_status.tmpl -->
+<h3>DAS request queue:</h3>
+{%- set nreq = requests| count %}
+{% if nreq -%}
+<div>Total: {{nreq}} requests</div>
+<ul>
+{% for row in requests -%}
+{%- set tstamp=time.strftime("%Y%m%d %H:%M:%S GMT", time.gmtime(row['ts'])) %}
+{%- set pid=quote(row['_id']) %}
+<li>{{pid}} placed on {{tstamp}}
+<ul>
+{% for key, val in row['kwds'].items() -%}
+<li>{{quote(key)}}: {{quote(val)}}</li>
+{%- endfor -%}
+</ul>
+</li>
+{%- endfor -%}
+</ul>
+{% else -%}
+request queue is empty
+{%- endif -%}
+<!-- end of das_status.tmpl -->
+

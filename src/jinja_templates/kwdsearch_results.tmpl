@@ -1,0 +1,88 @@
+
+{% if proposed_queries: -%}
+<b>Did you mean any of the queries below?</b><br />
+{%- endif -%}
+
+{% if err: -%}
+        <div class="kws-timeout">
+            Due to complexity of your query or high load on the server,
+            we are able to show only a subset of all suggestions (which
+            may be useless).</div>
+{%- endif -%}
+
+
+{% if proposed_queries: -%}
+<div id="filter-by-entity">
+{% if hi_score_result_types -%}
+
+    <div class="select-result-type">
+            <span class="tooltip">Filter by entity:
+                <span class="classic">You may filter suggestions by the entity they return</span></span>
+                    &nbsp;<span class="rt-filters">
+                        {% for index, rt in enumerate(hi_score_result_types): -%}
+{% if index != 0 then ', &nbsp;' else '&nbsp;' -%}
+<a onclick="filterByResultType('{{rt}}', this)" href="#" class="rt-{{rt}}">{{rt}}</a>
+                        {%- endfor -%}
+                    </span>
+        </div>
+
+{%- endif -%}
+
+</div>
+
+
+{% if not is_ajax -%}
+    <link rel="stylesheet" href="/das/css/?f=kwsearch.css" />
+    <script src="/das/js/?f=kwdsearch.js" type="text/javascript"></script>
+{%- endif -%}
+
+
+<div id="kws-results-container">
+    <div id="kws-entry-points">
+        <h4>Coloring of query suggestions:</h4>
+        <span class="q-res-type">entity to be retrieved</span> <br />
+        <span class="q-field-name">filter (an input to service(s))</span> <br />
+        <span class="q-post-filter-field-name">expensive filter (applied only after retrieving all data)</span>
+        <br />
+    </div>
+
+
+    <div id="kws-results-listing"> <!-- main div -->
+        <!-- list proposed queries along with their scores -->
+        {% for item in proposed_queries: -%}
+            {%- set query_escaped = quote(item.result) %}
+            {%- set nl_query_escaped = quote(item.query_in_words) %}
+
+            <div class="kws-result result-with-entity-{{item.entity}}">
+
+               <div class="score-bar" style="width: {{item.bar.max_w}}px;">
+                         <div class="score-bar-inner score-bar-inner-{{item.bar.style}}" style="width: {{item.bar.w}}px;"></div>
+                         {% if show_score: -%}
+                         <span class="score-num">
+                                {{echo1}}
+                         </span>
+                         {%- endif -%}
+               </div>
+
+               <a class="kws-link" href="{{item.link}}" target="_blank"
+                  data-ot="Explanation: &lt;br/&gt; {{nl_query_escaped}}"
+                  data-ot-style="drop">{{item.query_html}}</a>
+               {% if 0: -%}
+                <a class="debug" data-ot="{{item.trace}}">debug</a>
+               {%- endif -%}
+            </div>
+
+        {%- endfor -%}
+
+    </div> <!-- end of main div -->
+</div>
+
+
+{% if not is_ajax -%}
+<script type="text/javascript">
+    jQuery(initialize_kws_results);
+</script>
+{%- endif -%}
+{%- endif -%}  {#- end of "if {{proposed_queries}}:" #}
+<!-- end of kwdsearch_results.tmpl -->
+

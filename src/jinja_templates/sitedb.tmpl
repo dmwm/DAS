@@ -1,0 +1,9 @@
+{%- set item = quote(item) %}
+{%- set api = quote(api) %}
+<!-- sitedb.tmpl -->
+{% if api == "sites" -%}
+<a href="/sitedb/prod/sites/{{item}}">SiteDB</a>
+{% elif api == "people" -%}
+<a href="/sitedb/prod/people/{{item}}">SiteDB</a>
+{%- endif -%}
+<!-- sitedb.tmpl -->
