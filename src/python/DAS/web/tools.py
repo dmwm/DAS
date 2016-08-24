@@ -25,18 +25,14 @@ import cherrypy
 from cherrypy import log as cplog
 from cherrypy import expose
 
-CHEETAH=False
 try:
     from Cheetah.Template import Template
-    CHEETAH=True
 except:
     pass
 try:
     import jinja2
-    JINJA = True
-    CHEETAH=False
 except:
-    JINJA = False
+    pass
 
 import DAS.utils.jsonwrapper as json
 from DAS.web.utils import quote
@@ -91,7 +87,8 @@ class TemplatedPage(Page):
         self.templatedir = config.get('templatedir', templatedir)
         self.name = "TemplatedPage"
         verbose = config.get('verbose', 0)
-        if  JINJA:
+        self.jinja = True if 'jinja2' in sys.modules.keys() else False
+        if  self.jinja:
             templates = 'JINJA'
         else:
             templates = 'Cheetah'
@@ -100,7 +97,7 @@ class TemplatedPage(Page):
 
     def templatepage(self, ifile=None, *args, **kwargs):
         """Choose template page handler based on templates engine"""
-        if  JINJA and self.templatedir.find("jinja") != -1:
+        if  self.jinja and self.templatedir.find("jinja") != -1:
             return self.templatepage_jinja(ifile, *args, **kwargs)
         return self.templatepage_cheetah(ifile, *args, **kwargs)
 
