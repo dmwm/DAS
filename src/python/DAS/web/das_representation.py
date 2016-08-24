@@ -7,10 +7,15 @@ Author: Valentin Kuznetsov <vkuznet@gmail.com>
 Description: Abstract interface to represent DAS records
 """
 
+import sys
+# python 3
+if  sys.version.startswith('3.'):
+    import urllib.parse as urllib
+else:
+    import urllib
 # system modules
 import cgi
 import time
-import urllib
 import pprint
 
 # mongodb modules

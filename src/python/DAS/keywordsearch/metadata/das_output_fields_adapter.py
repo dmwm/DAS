@@ -38,7 +38,7 @@ def result_contained_errors(rec):
 def get_titles_by_field(dascore):
     """returns a dict of titles taken from presentation cache"""
     titles_by_field = {}
-    for titles in dascore.mapping.presentationcache.itervalues():
+    for titles in dascore.mapping.presentationcache.values():
         for entry in titles:
             field_name = entry['das']
             field_title = entry['ui']

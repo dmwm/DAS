@@ -8,10 +8,15 @@ Description: CMS DAS records representation
 """
 from __future__ import print_function
 
+import sys
+# python 3
+if  sys.version.startswith('3.'):
+    import urllib.parse as urllib
+else:
+    import urllib
 # system modules
 import time
 import json
-import urllib
 from itertools import groupby
 
 # mongodb modules

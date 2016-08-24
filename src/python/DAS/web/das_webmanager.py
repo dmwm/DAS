@@ -7,6 +7,11 @@ DAS web server.
 
 __author__ = "Valentin Kuznetsov"
 
+import sys
+# python 3
+if  sys.version.startswith('3.'):
+    basestring = str
+
 # system modules
 import os
 import time

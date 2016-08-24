@@ -11,8 +11,11 @@ __author__ = "Gordon Ball and Valentin Kuznetsov"
 
 import os
 import sys
-import ply.lex
-import ply.yacc
+try:
+    import ply.lex
+    import ply.yacc
+except:
+    pass
 import re
 
 from   DAS.utils.utils import das_dateformat, print_exc

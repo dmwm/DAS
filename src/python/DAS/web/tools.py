@@ -25,15 +25,18 @@ import cherrypy
 from cherrypy import log as cplog
 from cherrypy import expose
 
+CHEETAH=False
 try:
-    # jinja templates
+    from Cheetah.Template import Template
+    CHEETAH=True
+except:
+    pass
+try:
     import jinja2
     JINJA = True
+    CHEETAH=False
 except:
     JINJA = False
-    # fallback to cheetah tempalates
-    from Cheetah.Template import Template
-
 
 import DAS.utils.jsonwrapper as json
 from DAS.web.utils import quote
@@ -96,8 +99,8 @@ class TemplatedPage(Page):
         self.log("Templates are located in: %s" % self.templatedir, logging.INFO)
 
     def templatepage(self, ifile=None, *args, **kwargs):
-	"""Choose template page handler based on templates engine"""
-	if  JINJA and self.templatedir.find("jinja") != -1:
+        """Choose template page handler based on templates engine"""
+        if  JINJA and self.templatedir.find("jinja") != -1:
             return self.templatepage_jinja(ifile, *args, **kwargs)
         return self.templatepage_cheetah(ifile, *args, **kwargs)
 
@@ -125,14 +128,14 @@ class TemplatedPage(Page):
         """
         Template page method.
         """
-	env = jinja2.Environment(loader=jinja2.FileSystemLoader(self.templatedir))
-	for arg in args:
-	    kwargs.update(**arg)
+        env = jinja2.Environment(loader=jinja2.FileSystemLoader(self.templatedir))
+        for arg in args:
+            kwargs.update(**arg)
         kwargs.update(**{"quote":quote})
         tmpl = os.path.join(self.templatedir, ifile + '.tmpl')
-	if  os.path.exists(tmpl):
-	    template = env.get_template(ifile + '.tmpl')
-	    return template.render(kwargs)
+        if  os.path.exists(tmpl):
+            template = env.get_template(ifile + '.tmpl')
+            return template.render(kwargs)
         else:
             self.warning("%s not found at %s" % (ifile, self.templatedir))
             return "Template %s not known" % ifile

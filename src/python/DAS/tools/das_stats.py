@@ -119,7 +119,7 @@ def collector(dbhost, dbport, logdb, logcol, date):
     else:
         min_date, max_date = mgr.dates()
         dates = dateobj(max_date) - dateobj(min_date)
-        for delta in xrange(0, dates.days+1):
+        for delta in range(0, dates.days+1):
             datestr = dateobj(min_date) + datetime.timedelta(days=delta)
             date = int(str(datestr).replace('-', ''))
             for coll in ['web', 'cache', 'merge']:

@@ -9,6 +9,13 @@ from __future__ import print_function
 
 __author__ = "Valentin Kuznetsov"
 
+import sys
+
+# python 3
+if  sys.version.startswith('3.'):
+    unicode = str
+    basestring = str
+
 # system modules
 import logging
 import threading
@@ -177,7 +184,10 @@ class Root(object):
         print("### DAS server runs with %s threads" \
                 % threading.active_count())
         threads = threading.enumerate()
-        threads.sort()
+        try:
+            threads.sort()
+        except:
+            pass
         for thr in threads:
             print(thr)
         if  blocking:

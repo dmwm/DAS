@@ -8,16 +8,25 @@ from __future__ import print_function
 
 __author__ = "Valentin Kuznetsov"
 
-from   types import NoneType
+import sys
+# python 3
+if  sys.version.startswith('3.'):
+    long = int
+    basestring = str
+    NoneType = type(None)
+    from urllib.parse import quote_plus
+    import urllib.parse as urllib
+else:
+    from types import NoneType
+    from urllib import quote_plus
+    import urllib
 import sys
 import cgi
 import time
-import urllib
 import hashlib
 import cherrypy
 from   cherrypy import HTTPError
 from   json import JSONEncoder
-from   urllib import quote_plus
 from   bson.objectid import ObjectId
 
 # DAS modules
@@ -195,7 +204,10 @@ def gen_color(system):
         bkg, col = '#CCFF66', 'black'
     else:
         keyhash = hashlib.md5()
-        keyhash.update(system)
+        try:
+            keyhash.update(system)
+        except TypeError: # python3
+            keyhash.update(system.encode('ascii'))
         bkg, col = '#%s' % keyhash.hexdigest()[:6], 'white'
     return bkg, col
 
@@ -402,7 +414,7 @@ def json2html(idict, pad="", ref=None):
         test = isinstance(val, int) or isinstance(val, float) or\
                 isinstance(val, long) or \
                 (isinstance(val, basestring) and \
-                    pat.match(val.encode('ascii', 'ignore')))
+                    pat.match(str(val.encode('ascii', 'ignore'))))
         return test
 
     width = 100
@@ -455,7 +467,7 @@ def json2html(idict, pad="", ref=None):
             ppp  = pad
             if  not nline:
                 ppp  = ''
-            for idx in xrange(0, len(val)):
+            for idx in range(0, len(val)):
                 item = val[idx]
                 if  isinstance(item, dict):
                     sss += json2html(item, pad, ref=key)
@@ -530,7 +542,7 @@ def json2html(idict, pad="", ref=None):
                 sss += """: <a href="%s">%s</a>""" % (val, val)
             else:
                 sss += """: <code class="string">"%s"</code>""" % quote(val)
-        if  key != idict.keys()[-1]:
+        if  key != list(idict.keys())[-1]:
             sss += ',' + newline
         else:
             sss += ""

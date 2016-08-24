@@ -14,6 +14,15 @@ import sys
 import pwd
 if  sys.version_info < (2, 6):
     raise Exception("DAS requires python 2.6 or greater")
+# python 3
+if  sys.version.startswith('3.'):
+    import urllib.request as urllib2
+    import http.client as httplib
+    import http.cookiejar as cookielib
+else:
+    import urllib2
+    import httplib
+    import cookielib
 
 DAS_CLIENT = 'das-client/1.1::python/%s.%s' % sys.version_info[:2]
 
@@ -23,9 +32,6 @@ import ssl
 import time
 import json
 import urllib
-import urllib2
-import httplib
-import cookielib
 from   optparse import OptionParser
 from   math import log
 from   types import GeneratorType
@@ -61,7 +67,7 @@ class HTTPSClientAuthHandler(urllib2.HTTPSHandler):
             urllib2.HTTPSHandler.__init__(self)
         self.key = key
         self.cert = cert
-	self.capath = capath
+        self.capath = capath
 
     def https_open(self, req):
         """Open request method"""
@@ -315,8 +321,8 @@ def get_data(host, query, idx, limit, debug, threshold=300, ckey=None,
         data = fdesc.read()
         fdesc.close()
     except urllib2.HTTPError as error:
-	print(error.read())
-	sys.exit(1)
+        print(error.read())
+        sys.exit(1)
 
     pat = re.compile(r'^[a-z0-9]{32}')
     if  data and isinstance(data, str) and pat.match(data) and len(data) == 32:
@@ -471,7 +477,7 @@ def main():
                 % (jsondict.get('status'), jsondict.get('reason', 'N/A')))
             if  opts.retry:
                 found = False
-                for attempt in xrange(1, int(opts.retry)):
+                for attempt in range(1, int(opts.retry)):
                     interval = log(attempt)**5
                     print("Retry in %5.3f sec" % interval)
                     time.sleep(interval)

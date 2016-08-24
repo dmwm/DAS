@@ -215,7 +215,7 @@ def runjob(nclients, host, method, params, headers, idx, limit,
     w_lock = multiprocessing.Lock()
 
     processes = []
-    for _ in xrange(0, nclients):
+    for _ in range(0, nclients):
         if dasquery:
             ### REPLACE THIS PART with your set of parameter
             if dasquery.find('=') == -1:
@@ -334,21 +334,21 @@ def main():
     # perform action
     array = []
     if nclients <= 10:
-        array += xrange(1, nclients + 1)
+        array += range(1, nclients + 1)
     if 10 < nclients <= 100:
-        array = chain(xrange(1, 10),
-                      xrange(10, nclients + 1, 10))
+        array = chain(range(1, 10),
+                      range(10, nclients + 1, 10))
     if 100 < nclients <= 1000:
-        array = chain(xrange(1, 10),
-                      xrange(10, 100, 10),
-                      xrange(100, nclients + 1, 100))
+        array = chain(range(1, 10),
+                      range(10, 100, 10),
+                      range(100, nclients + 1, 100))
 
     # allow to specify the starting nclients
     array = ifilter(lambda x: x >= minclients, array)
 
     for nclients in array:
         sys.stdout.write("Run job with %s clients" % nclients)
-        for _ in xrange(repeat):
+        for _ in range(repeat):
             runjob(nclients, host, method, params, headers, idx, limit,
                    debug, logname, dasquery)
             sys.stdout.write('.')

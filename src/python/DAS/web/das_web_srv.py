@@ -14,14 +14,23 @@ import os
 import re
 import cgi
 import time
-import urllib
 import cherrypy
 import threading
 import pprint
+import sys
+
+# python 3
+if  sys.version.startswith('3.'):
+    unicode = str
+    basestring = str
+    from urllib.parse import urlparse, parse_qsl
+    import urllib.parse as urllib
+else:
+    from urlparse import urlparse, parse_qsl
+    import urllib
 
 from json import dumps as jsonize
 from datetime import date
-from urlparse import urlparse, parse_qsl
 from cherrypy import expose, HTTPError
 from cherrypy import response, tools
 from cherrypy.lib.static import serve_file
@@ -130,7 +139,7 @@ class DASWebService(DASWebManager):
         self.dbsmgr      = {} # dbs_urls vs dbs_daemons, defined at run-time
         self.daskeyslist = [] # list of DAS keys
         self.init()
-	self.dbs_init(config)
+        self.dbs_init(config)
 
         # Monitoring thread which performs auto-reconnection
         thname = 'dascore_monitor'
@@ -760,7 +769,7 @@ class DASWebService(DASWebManager):
             # check that we got what we expected
             data = [r for r in data]
             if  nres and not len(data):
-                for retry in xrange(1, 3, 5):
+                for retry in range(1, 3, 5):
                     msg = 'retry in %s sec' % retry
                     dasprint(dastimestamp('DAS WARNING '), msg, dasquery)
                     time.sleep(retry) # retry one more time
