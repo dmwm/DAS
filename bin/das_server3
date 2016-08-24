@@ -1,0 +1,152 @@
+#!/bin/sh
+
+usage(){
+    echo $usage
+    echo "Usage: das_server {start|stdout|stop|status|restart}"
+    echo "       start  : load DAS maps and start DAS service"
+    echo "       stdout : start DAS service without loading DAS maps"
+    echo "       stop   : stop DAS service"
+    echo "       status : report status of DAS service"
+    echo "       restart: restart DAS service"
+}
+if [ $# != 1 ]; then
+    usage
+    exit 1
+fi
+
+# use global variable to assign MongoDB status
+mongo_status="no"
+
+# helper function to check MongoDB status
+check4db() {
+    port=8230
+#    mongo_cmd=`mongo --verbose --port $port $DASMAPS_DIR/clean_mapping.js | egrep -i "fail|error"`
+#    if  [ -n "$mongo_cmd" ]; then
+#        mongo_status="no"
+#        return
+#    fi
+#    mongo=`mongostat --noheaders -n 1 --port $port --discover 2>&1`
+#    mongo_ok=`echo $mongo | tail -1 | grep $port`
+    mongo_ok=`pymongostat | awk '{z=split($0,a," "); print a[z]}'`
+    if  [ -n "$mongo_ok" ]; then
+        mongo_status="ok"
+        return
+    fi
+    mongo_status="no"
+    return
+}
+
+# helper function to wait for MongoDB appearance
+# it will incrementally increase waiting time with 20 iterations (~3minute)
+wait4db() {
+    local counter=0
+    # check if mongodb is running
+    while [  $counter -lt 20 ]; do
+        check4db
+        if [ "$mongo_status" == "ok" ]; then
+            return
+        fi
+        let counter=counter+1
+        echo "MongoDB is not running, check in $counter sec"
+        sleep $counter
+    done
+    check4db
+    if [ "$mongo_status" == "no" ]; then
+        echo "MongoDB is not running, unable to start DAS server"
+        exit 1
+    fi
+}
+
+# find out where DAS is installed on a system
+dasroot=`python3 -c "import DAS; print('/'.join(DAS.__file__.split('/')[:-1]))"`
+
+# DAS start-up command
+das_start="python3 -u $dasroot/web/das_server.py"
+
+# variable to retrieve status of last command
+RETVAL=$?
+
+das_server_status()
+{
+    local pid=`ps auxwww | grep das_server.py | grep -v grep | awk 'BEGIN{ORS=" "} {print $2}'`
+
+    if  [ -z $pid ]; then
+        echo "DAS is not running"
+        return
+    fi
+    if  [ `uname` == "Darwin" ]; then
+        nth=`ps -M -p $pid | grep -v USER | wc -l | awk '{print $1}'`
+    else
+        nth=`ps -L -p $pid | grep -v PID | wc -l | awk '{print $1}'`
+    fi
+    echo "DAS server runs with $nth threads"
+    if [ ! -z "${pid}" ]; then
+        echo "DAS service is running, pid=${pid}"
+        ps -f -wwww -p ${pid}
+    else
+        echo "DAS service is not running"
+    fi
+}
+stop_das(){
+    echo "Stop DAS service..."
+    local pid=`ps auxwww | grep das_server.py | grep -v grep | awk 'BEGIN{ORS=" "} {print $2}'`
+    if [ -n "${pid}" ]; then
+        kill -9 ${pid}
+    fi
+}
+start_das(){
+    echo "Start DAS service..."
+    $das_start
+}
+start_das_cli(){
+    echo "Start DAS CLI service..."
+    $das_start --config=$DAS_CONFIG_CLI
+}
+load_maps_start_das(){
+    if [ -z `env | grep DASMAPS_DIR` ]; then
+        echo "Envinronment DASMAPS_DIR is not set"
+        exit 1
+    fi
+    if [ ! -d $DASMAPS_DIR ]; then
+        echo "DAS map directory DASMAPS_DIR=$DASMAPS_DIR does not exists"
+        exit 1
+    fi
+    echo "Update DAS maps from $DASMAPS_DIR"
+    das_js_import $DASMAPS_DIR
+    echo "Start DAS service..."
+    $das_start
+}
+
+case "$1" in
+ restart)
+    stop_das
+    wait4db
+    start_das
+    ;;
+ stdout)
+    stop_das
+    wait4db
+    start_das
+    ;;
+ start)
+    stop_das
+    wait4db
+    load_maps_start_das
+    ;;
+ start_cli)
+    start_das_cli
+    ;;
+ status)
+    das_server_status
+    ;;
+ stop)
+    stop_das
+    ;;
+ *)
+    usage
+    exit 1
+    ;;
+esac
+
+exit $RETVAL
+
