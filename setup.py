@@ -243,6 +243,7 @@ data_files   = [
                 ('DAS/web/css', datafiles('src/css')),
                 ('DAS/web/images', datafiles('src/images')),
                 ('DAS/web/templates', datafiles('src/templates')),
+                ('DAS/web/jinja_templates', datafiles('src/jinja_templates')),
                ]
 license      = "CMS experiment software"
 classifiers  = [
