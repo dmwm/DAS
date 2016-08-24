@@ -13,6 +13,7 @@ __email__ = "vkuznet@gmail.com"
 
 # system modules
 import os
+import sys
 import types
 import logging
 
