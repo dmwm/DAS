@@ -9,6 +9,7 @@ This release series is targeted to DAS production stability and quality.
 
   - DAS works with new MongoDB
   - DAS works with jinja templates
+  - DAS runs under python3
 
 - v03.00.XX
   
