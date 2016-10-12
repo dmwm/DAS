@@ -25,6 +25,8 @@ class OptionParser():
             dest="config", default="", help="DAS configuration file")
         self.parser.add_argument("--verbose", action="store_true",
             dest="verbose", default=False, help="verbose mode")
+        self.parser.add_argument("--profile", action="store_true",\
+            dest="profile", help="profile output")
 
 def dbs_update(dasconfig, verbose=False):
     """Start DBS daemon if it is requested via DAS configuration"""
@@ -54,7 +56,17 @@ def main():
     optmgr  = OptionParser()
     opts = optmgr.parser.parse_args()
     dasconfig = das_readconfig(opts.config)
-    dbs_update(dasconfig, opts.verbose)
+    verbose = opts.verbose
+    if  opts.profile:
+        import cProfile # python profiler
+        import pstats   # profiler statistics
+        cmd  = 'dbs_update(dasconfig,verbose)'
+        cProfile.runctx(cmd, globals(), locals(), 'profile.dat')
+        info = pstats.Stats('profile.dat')
+        info.sort_stats('cumulative')
+        info.print_stats()
+    else:
+        dbs_update(dasconfig, verbose)
 
 if __name__ == '__main__':
     main()
