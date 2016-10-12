@@ -10,8 +10,8 @@ __author__ = "Valentin Kuznetsov"
 
 import time
 import json
+import argparse
 from pprint import pformat
-from optparse import OptionParser
 from DAS.core.das_core import DASCore
 from DAS.core.das_query import DASQuery
 from DAS.utils.utils import dump
@@ -27,57 +27,52 @@ class DASOptionParser(object):
     DAS cli option parser
     """
     def __init__(self):
-        self.parser = OptionParser()
-        self.parser.add_option("-v", "--verbose", action="store",\
-                                          type="int", default=0,\
+        self.parser = argparse.ArgumentParser(prog='PROG')
+        self.parser.add_argument("-v", "--verbose", action="store",\
+                                          type=int, default=0,\
                                           dest="verbose",\
              help="verbose output")
-        self.parser.add_option("--profile", action="store_true",\
+        self.parser.add_argument("--profile", action="store_true",\
                                           dest="profile",\
              help="profile output")
-        self.parser.add_option("-q", "--query", action="store", type="string",\
+        self.parser.add_argument("-q", "--query", action="store", type=str,\
                                           default="", dest="query",\
              help="specify query for your request.")
-        self.parser.add_option("--hash", action="store_true", dest="hash",\
+        self.parser.add_argument("--hash", action="store_true", dest="hash",\
              help="look-up MongoDB-QL query and its hash")
-        self.parser.add_option("--services", action="store_true",\
+        self.parser.add_argument("--services", action="store_true",\
                                           dest="services",\
              help="return a list of supported data services")
-        self.parser.add_option("--keys", action="store",\
+        self.parser.add_argument("--keys", action="store",\
                                           dest="service",\
              help="return set of keys for given data service")
-        self.parser.add_option("--print-config", action="store_true",\
+        self.parser.add_argument("--print-config", action="store_true",\
                                           dest="dasconfig",\
              help="print current DAS configuration")
-        self.parser.add_option("--no-format", action="store_true",\
+        self.parser.add_argument("--no-format", action="store_true",\
                                           dest="plain",\
              help="return unformatted output, useful for scripting")
-        self.parser.add_option("--idx", action="store", type="int",\
+        self.parser.add_argument("--idx", action="store", type=int,\
                                           default=0, dest="idx",\
              help="start index for returned result set, aka pagination, use w/ limit")
-        self.parser.add_option("--limit", action="store", type="int",\
+        self.parser.add_argument("--limit", action="store", type=int,\
                                           default=0, dest="limit",\
              help="limit number of returned results")
-        self.parser.add_option("--no-output", action="store_true",\
+        self.parser.add_argument("--no-output", action="store_true",\
                                           dest="nooutput",\
              help="run DAS workflow but don't print results")
-        self.parser.add_option("--no-results", action="store_true",\
+        self.parser.add_argument("--no-results", action="store_true",\
                                           dest="noresults",\
              help="run DAS workflow but don't write results into the cache")
-        self.parser.add_option("--js-file", action="store", type="string",\
+        self.parser.add_argument("--js-file", action="store", type=str,\
                       default="", dest="jsfile",\
              help="create/update KWS js file for given query")
-        self.parser.add_option("--keylearning-file", action="store", type="string",\
+        self.parser.add_argument("--keylearning-file", action="store", type=str,\
                       default="", dest="kfile",\
              help="create/update KWS keylearning file for given query")
         msg = 'a query cache value'
-        self.parser.add_option("--query-cache", action="store", type="int",
+        self.parser.add_argument("--query-cache", action="store", type=int,
                                default=0, dest="qcache", help=msg)
-    def getOpt(self):
-        """
-        Returns parse list of options
-        """
-        return self.parser.parse_args()
 
 def iterate(input_results):
     """Just iterate over generator, but don't print it out"""
@@ -182,8 +177,8 @@ def run(dascore, query, idx, limit, nooutput, plain):
 
 def main():
     "Main function"
-    optmgr = DASOptionParser()
-    opts, _ = optmgr.getOpt()
+    optmgr  = DASOptionParser()
+    opts = optmgr.parser.parse_args()
 
     t0 = time.time()
     query = opts.query
