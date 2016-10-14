@@ -22,7 +22,7 @@ if  PYMVER == '2':
             self.psize = kwds.get('psize', 300)
         def opts(self):
             "Return MongoClient options"
-            return dict(w=self.write, max_pool_size=self.psize, fsync=True)
+            return dict(w=self.write, max_pool_size=self.psize)
 elif  PYMVER == '3':
     from pymongo.cursor import CursorType
     PYMONGO_OPTS = {'cursor_type': CursorType.EXHAUST}
@@ -34,6 +34,6 @@ elif  PYMVER == '3':
             self.psize = kwds.get('psize', 300)
         def opts(self):
             "Return MongoClient options"
-            return dict(w=self.write, maxPoolSize=self.psize, fsync=True)
+            return dict(w=self.write, maxPoolSize=self.psize)
 else:
     raise Exception('Unsupported pymongo version, %s' % pymongo_version)

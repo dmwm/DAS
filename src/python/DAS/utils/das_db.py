@@ -89,7 +89,7 @@ class DBConnection(object):
         self.thr      = lifetime
         self.retry    = retry
         self.psize    = pool_size
-        self.mongo_opts = MongoOpts(w=1, psize=self.psize, fsync=True).opts()
+        self.mongo_opts = MongoOpts(w=1, psize=self.psize).opts()
 
     def genkey(self, uri):
         "Generate unique key"
