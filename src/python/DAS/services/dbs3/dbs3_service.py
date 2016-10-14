@@ -516,6 +516,12 @@ class DBS3Service(DASAbstractService):
                     kwds['detail'] = True
                 else:
                     kwds['detail'] = False
+            if  api == 'datasets':
+                if  kwds['dataset'].startswith('/'):
+                    _, prim, proc, tier = kwds['dataset'].split('/')
+                    if  prim == '*' and proc == '*':
+                        kwds['data_tier_name'] = tier
+                        del kwds['dataset']
             if  'cdate' in kwds:
                 min_date = None
                 max_date = None
