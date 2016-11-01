@@ -276,6 +276,8 @@ def get_file_run_lumis(url, api, args, verbose=0):
         key = 'run'
     if  api.startswith('file_lumi'):
         key = 'file'
+    if  api.startswith('file_run'):
+        key = 'file_run'
     if  api.startswith('file_run_lumi'):
         key = 'file_run'
     for row in process_lumis_with(key, gen):
@@ -424,6 +426,7 @@ class DBS3Service(DASAbstractService):
         if  api == 'run_lumi4dataset' or api == 'run_lumi4block' or \
             api == 'file_lumi4dataset' or api == 'file_lumi4block' or \
             api == 'file_run_lumi4dataset' or api == 'file_run_lumi4block' or \
+            api == 'file_run4dataset' or api == 'file_run4block' or \
             api == 'block_run_lumi4dataset' or \
             api == 'file4dataset_run_lumi' or \
             api == 'blocks4tier_dates' or api == 'dataset4block' or \
