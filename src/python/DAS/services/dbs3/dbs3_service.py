@@ -525,6 +525,11 @@ class DBS3Service(DASAbstractService):
                     if  prim == '*' and proc == '*':
                         kwds['data_tier_name'] = tier
                         del kwds['dataset']
+                    elif  kwds['dataset'].find('*') != -1:
+                        kwds['primary_ds_name'] = prim
+                        kwds['processed_ds_name'] = proc
+                        kwds['data_tier_name'] = tier
+                        del kwds['dataset']
             if  'cdate' in kwds:
                 min_date = None
                 max_date = None

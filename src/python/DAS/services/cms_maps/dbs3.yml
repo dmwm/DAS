@@ -98,6 +98,7 @@ params : {
         "dataset":"optional",
         "primary_ds_name":"optional",
         "primary_ds_type":"optional",
+        "processed_ds_name":"optional",
         "detail":"True",
         "dataset_access_type": "VALID",
         "data_tier_name":"optional",
