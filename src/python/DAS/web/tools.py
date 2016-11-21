@@ -84,7 +84,7 @@ class TemplatedPage(Page):
         Page.__init__(self)
         templatedir  = os.environ.get('DAS_TMPLPATH', '')
         if  not templatedir or not os.path.isdir(templatedir):
-            templatedir = '%s/%s' % (__file__.rsplit('/', 1)[0], 'templates')
+            templatedir = '%s/%s' % (__file__.rsplit('/', 1)[0], 'jinja_templates')
         self.templatedir = config.get('templatedir', templatedir)
         self.name = "TemplatedPage"
         verbose = config.get('verbose', 0)
