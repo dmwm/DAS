@@ -82,9 +82,9 @@ class TemplatedPage(Page):
     """
     def __init__(self, config):
         Page.__init__(self)
-        templatedir = '%s/%s' % (__file__.rsplit('/', 1)[0], 'templates')
-        if  not os.path.isdir(templatedir):
-            templatedir  = os.environ['DAS_TMPLPATH']
+        templatedir  = os.environ.get('DAS_TMPLPATH', '')
+        if  not templatedir or not os.path.isdir(templatedir):
+            templatedir = '%s/%s' % (__file__.rsplit('/', 1)[0], 'templates')
         self.templatedir = config.get('templatedir', templatedir)
         self.name = "TemplatedPage"
         verbose = config.get('verbose', 0)
