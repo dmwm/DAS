@@ -90,6 +90,7 @@ class DBConnection(object):
         self.retry    = retry
         self.psize    = pool_size
         self.mongo_opts = MongoOpts(w=1, psize=self.psize).opts()
+        print("### pymongo version %s" % pymongo.version)
 
     def genkey(self, uri):
         "Generate unique key"
