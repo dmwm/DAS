@@ -259,8 +259,8 @@ classifiers  = [
 
 def main():
     if sys.version < required_python_version:
-        s = "I'm sorry, but %s %s requires Python %s or later."
-        print(s % (name, version, required_python_version))
+        s = "I'm sorry, but %s %s requires Python %s or later. Found %s"
+        print(s % (name, version, required_python_version, sys.version))
         sys.exit(1)
 
     # set default location for "data_files" to
