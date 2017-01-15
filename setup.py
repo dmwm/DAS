@@ -16,7 +16,11 @@ import os
 import subprocess
 from unittest import TextTestRunner, TestLoader
 from glob import glob
-from os.path import splitext, basename, join as pjoin, walk
+if  sys.version.startswith('3.'):
+    from os.path import splitext, basename, join as pjoin
+    from os import walk
+else:
+    from os.path import splitext, basename, join as pjoin, walk
 from distutils.core import setup
 from distutils.cmd import Command
 from distutils.command.build_ext import build_ext
