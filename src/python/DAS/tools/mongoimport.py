@@ -12,6 +12,7 @@ import json
 import optparse
 
 # MongoDB modules
+import pymongo
 from pymongo import MongoClient
 
 class OptionParser():
