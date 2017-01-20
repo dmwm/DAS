@@ -96,7 +96,7 @@ stop_das(){
 }
 start_das(){
     echo "Start DAS service..."
-    $das_start
+    $das_start --config=$DAS_CONFIG
 }
 start_das_cli(){
     echo "Start DAS CLI service..."
@@ -114,7 +114,7 @@ load_maps_start_das(){
     echo "Update DAS maps from $DASMAPS_DIR"
     das_js_import $DASMAPS_DIR
     echo "Start DAS service..."
-    $das_start
+    $das_start --config=$DAS_CONFIG
 }
 
 case "$1" in
