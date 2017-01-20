@@ -194,7 +194,7 @@ class DASMongoDB(object):
             coll.drop() # capped collection use drop
         else:
             if  pymongo.version.startswith('3.'): # pymongo 3.X
-                coll.delete_many()
+                coll.delete_many({})
             else:
                 coll.remove({}) # normal collections use remove
             coll.drop_indexes()
