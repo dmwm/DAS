@@ -35,6 +35,7 @@ echo "##### DAS & KWS maps parameters #####"
 echo "DASMAPS_DIR       : $DASMAPS_DIR"
 echo "MONGODB_HOST      : $DAS_MONGO_HOST"
 echo "MONGODB_PORT      : $DAS_MONGO_PORT"
+echo "DAS_CONFIG        : $DAS_CONFIG"
 
 # figure out which md5sum utility exists
 MD5CMD=$(for cmd in md5 md5sum; do type $cmd >/dev/null 2>&1 && echo $cmd && break; done);

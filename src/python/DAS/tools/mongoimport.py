@@ -45,7 +45,10 @@ def mongoimport(host, port, dbname, cname, fjs):
     for _, line in enumerate(open(fjs, 'r')):
         line = line.replace('\n', '')
         docs.append(json.loads(line))
-    col.insert(docs)
+    if  pymongo.version.startswith('3.'): # pymongo 3.X
+        coll.insert_many(spec)
+    else:
+        col.insert(docs)
 
 def main():
     "Main function"

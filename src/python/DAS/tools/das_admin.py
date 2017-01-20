@@ -19,6 +19,7 @@ from DAS.utils.das_config import das_readconfig
 from DAS.utils.utils import print_exc
 
 # monogo db modules
+import pymongo
 from pymongo import MongoClient
 
 class PrintManager:
@@ -192,7 +193,10 @@ class DASMongoDB(object):
         if  dbname == 'parser':
             coll.drop() # capped collection use drop
         else:
-            coll.remove({}) # normal collections use remove
+            if  pymongo.version.startswith('3.'): # pymongo 3.X
+                coll.delete_many()
+            else:
+                coll.remove({}) # normal collections use remove
             coll.drop_indexes()
 
     def fetch(self, spec, fields, db=None, system=None, pretty=False):
@@ -231,7 +235,10 @@ class DASMongoDB(object):
             spec['das.system'] = system
         msg = "Found %s expired documents" % self.cache.find(spec).count()
         try:
-            self.cache.remove(spec)
+            if  pymongo.version.startswith('3.'): # pymongo 3.X
+                coll.delete_many(spec)
+            else:
+                self.cache.remove(spec)
             msg += ", delete operation [OK]"
             print(msg)
         except Exception as exc:
