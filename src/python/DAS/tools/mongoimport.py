@@ -47,7 +47,7 @@ def mongoimport(host, port, dbname, cname, fjs):
         line = line.replace('\n', '')
         docs.append(json.loads(line))
     if  pymongo.version.startswith('3.'): # pymongo 3.X
-        coll.insert_many(spec)
+        col.insert_many(spec)
     else:
         col.insert(docs)
 
