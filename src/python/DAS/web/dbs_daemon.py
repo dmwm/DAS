@@ -20,6 +20,7 @@ except ImportError:
 import itertools
 
 # MongoDB modules
+import pymongo
 from pymongo.errors import InvalidOperation
 from pymongo import ASCENDING
 
@@ -75,7 +76,10 @@ class DBSDaemon(object):
             create_indexes(self.col, indexes)
 
             if not self.preserve_on_restart:
-                self.col.remove()
+                if  pymongo.version.startswith('3.'): # pymongo 3.X
+                    self.col.delete_many({})
+                else:
+                    self.col.remove()
         except Exception as _exp:
             pass
 
@@ -102,10 +106,13 @@ class DBSDaemon(object):
             msg = ''
             if  not dbc.count():
                 try: # perform bulk insert operation
-                    while True:
-                        if  not dbc.insert(\
-                                itertools.islice(gen, self.cache_size)):
-                            break
+                    if  pymongo.version.startswith('3.'): # pymongo 3.X
+                        res = dbc.insert_many(gen)
+                    else:
+                        while True:
+                            if  not dbc.insert(\
+                                    itertools.islice(gen, self.cache_size)):
+                                break
                 except InvalidOperation as err:
                     # please note we need to inspect error message to
                     # distinguish InvalidOperation from generate exhastion
@@ -115,7 +122,12 @@ class DBSDaemon(object):
                 except Exception as err:
                     pass
                 # remove records with old ts
-                dbc.remove({'ts':{'$lt':time0-self.expire}})
+                spec = {'ts':{'$lt':time0-self.expire}}
+                if  pymongo.version.startswith('3.'): # pymongo 3.X
+                    dbc.delete_many(spec)
+                else:
+                    dbc.remove(spec)
+#                 dbc.remove({'ts':{'$lt':time0-self.expire}})
                 msg = 'inserted'
             else: # we already have records, update their ts
                 for row in gen:

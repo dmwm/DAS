@@ -12,6 +12,8 @@ import json
 import time
 import argparse
 
+import pymongo
+
 # DAS modules
 from DAS.utils.das_db import db_connection
 from DAS.utils.das_config import das_readconfig
@@ -39,7 +41,10 @@ def cleanup(dasconfig, verbose=False):
         if  verbose:
             ndocs = conn[dbname][col].find(spec).count()
             msgs.append('%s.%s %s docs' % (dbname, col, ndocs))
-        conn[dbname][col].remove(spec)
+        if  pymongo.version.startswith('3.'): # pymongo 3.X
+            conn[dbname][col].delete_many(spec)
+        else:
+            conn[dbname][col].remove(spec)
     if  verbose:
         tstamp = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(time.time()))
         print('%s %s %s' % (tstamp, json.dumps(spec), ' '.join(msgs)))
