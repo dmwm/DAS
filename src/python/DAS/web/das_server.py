@@ -35,8 +35,11 @@ import cherrypy
 from DAS.utils.das_config import das_readconfig
 
 # WMCore modules
-from WMCore.WebTools.FrontEndAuth import FrontEndAuth
-from WMCore.Configuration import Configuration, ConfigSection
+try:
+    from WMCore.WebTools.FrontEndAuth import FrontEndAuth
+    from WMCore.Configuration import Configuration, ConfigSection
+except ImportError:
+    pass
 
 class NullAuth(cherrypy.Tool):
     """
@@ -100,15 +103,22 @@ class Root(object):
             pass
         security = self.config['security']
         secconfig = SecConfig()
-        secsection = ConfigSection('security')
+        try:
+            secsection = ConfigSection('security')
+        except NameError:
+            pass
         for key, val in security.items():
             setattr(secconfig, key, val)
         if  security.get('module', '') == '':
-            print("### DAS behind NullAuth, should NOT be used in production")
             cherrypy.tools.secmodv2 = NullAuth(secconfig)
+            print("### DAS behind NullAuth, should NOT be used in production")
         else:
-            print("### DAS behind FrontEndAuth")
-            cherrypy.tools.secmodv2 = FrontEndAuth(secconfig)
+            try:
+                cherrypy.tools.secmodv2 = FrontEndAuth(secconfig)
+                print("### DAS behind FrontEndAuth")
+            except ImportError:
+                cherrypy.tools.secmodv2 = NullAuth(secconfig)
+                print("### DAS behind NullAuth, should NOT be used in production")
             cherrypy.config.update({'tools.secmodv2.on': True,
                         'tools.secmodv2.role': security.get('role', ''),
                         'tools.secmodv2.group': security.get('group' ''),

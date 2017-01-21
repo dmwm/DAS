@@ -23,10 +23,6 @@ from cherrypy import expose, response, tools
 from cherrypy.lib.static import serve_file
 from cherrypy import config as cherryconf
 
-#try:
-#    from WMCore.WebTools.Page import exposecss, exposejs, TemplatedPage
-#except:
-#    from DAS.web.tools import exposecss, exposejs, TemplatedPage
 import DAS
 from DAS.web.tools import exposecss, exposejs, TemplatedPage
 from DAS.web.utils import checkargs
