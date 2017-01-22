@@ -7,6 +7,8 @@ DAS option's class
 
 __author__ = "Gordon Ball"
 
+import sys
+
 class DASOption(object):
     """
     Class representing a single DAS option, independent of storage
