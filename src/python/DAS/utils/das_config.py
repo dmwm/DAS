@@ -364,7 +364,7 @@ class _DASConfigSingleton(object):
         self.das_config = None
         self.das_config_debug = None
 
-    def config(self, fname=None, debug=False):
+    def config(self, fname=None, debug=True):
         """Return DAS config"""
         if  debug:
             if not self.das_config_debug:
@@ -378,7 +378,7 @@ class _DASConfigSingleton(object):
 # ensure unique name for singleton object
 DAS_CONFIG_SINGLETON = _DASConfigSingleton()
 
-def das_readconfig(fname=None, debug=False):
+def das_readconfig(fname=None, debug=True):
     """
     Return DAS configuration
     """

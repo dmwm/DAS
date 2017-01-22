@@ -8,13 +8,13 @@ from __future__ import print_function
 import getopt
 import sys
 from pymongo.uri_parser import parse_uri
-from DAS.utils.das_config import das_readconfig
+from DAS.utils.das_config import das_readconfig_helper
 
 
-def get_mongo_uri():
+def get_mongo_uri(dasconfig):
     """ read dasconfig and return mongodb host and port (as dict) """
     # use debug=False to suppress printouts about DAS config
-    uri = das_readconfig(debug=False)['mongodb']['dburi'][0]
+    uri = dasconfig['mongodb']['dburi'][0]
     parsed_uri = parse_uri(uri)
     host, port = parsed_uri['nodelist'][0]
     return dict(mongo_host=host, mongo_port=port)
@@ -29,10 +29,11 @@ def main():
         exit(1)
     else:
         opts = [opt_name for opt_name, _ in optlist]
+        dasconfig = das_readconfig_helper(debug=False) # suppress printouts abotu DAS config
         if '--mongo_host' in opts:
-            print(get_mongo_uri()['mongo_host'])
+            print(get_mongo_uri(dasconfig)['mongo_host'])
         elif '--mongo_port' in opts:
-            print(get_mongo_uri()['mongo_port'])
+            print(get_mongo_uri(dasconfig)['mongo_port'])
 
 if __name__ == '__main__':
     main()
