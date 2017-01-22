@@ -332,17 +332,15 @@ def das_readconfig_helper(fname=None, debug=False):
     # read first CMS python configuration file
     # if not fall back to standard python cfg file
     try:
+        print("### Reading DAS configuration from %s" % dasconfig)
         configdict = read_wmcore(dasconfig)
-        if  debug:
-            print("### Reading DAS configuration from %s" % dasconfig)
     except Exception as err:
+        print('Unable to read_wmcore DAS CMS configuration,', str(err))
         try:
+            print("### Reading DAS configuration from %s" % dasconfig)
             configdict = read_configparser(dasconfig)
-            if  debug:
-                print("### Reading DAS configuration from %s" % dasconfig)
         except Exception as exp:
-            print('Unable to read DAS cfg configuration,', str(exp))
-            print('Unable to read DAS CMS configuration,', str(err))
+            print('Unable to read_configparser DAS cfg configuration,', str(exp))
             configdict = read_configparser(None)
     if  not configdict:
         msg = 'Unable to read DAS configuration'
