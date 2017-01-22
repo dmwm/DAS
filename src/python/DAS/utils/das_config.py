@@ -322,7 +322,7 @@ def read_wmcore(filename):
                 configdict[option.section][option.name] = value
     return configdict
 
-def das_readconfig_helper(fname=None, debug=False):
+def das_readconfig_helper(fname=None, debug=True):
     """
     Read DAS configuration file and store DAS parameters into returning
     dictionary.
@@ -332,15 +332,19 @@ def das_readconfig_helper(fname=None, debug=False):
     # read first CMS python configuration file
     # if not fall back to standard python cfg file
     try:
-        print("### Reading DAS configuration from %s" % dasconfig)
+        if  debug:
+            print("### Reading DAS configuration from %s" % dasconfig)
         configdict = read_wmcore(dasconfig)
     except Exception as err:
-        print('Unable to read_wmcore DAS CMS configuration,', str(err))
+        if  debug:
+            print('Unable to read_wmcore DAS CMS configuration,', str(err))
         try:
-            print("### Reading DAS configuration from %s" % dasconfig)
+            if  debug:
+                print("### Reading DAS configuration from %s" % dasconfig)
             configdict = read_configparser(dasconfig)
         except Exception as exp:
-            print('Unable to read_configparser DAS cfg configuration,', str(exp))
+            if  debug:
+                print('Unable to read_configparser DAS cfg configuration,', str(exp))
             configdict = read_configparser(None)
     if  not configdict:
         msg = 'Unable to read DAS configuration'

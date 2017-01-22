@@ -13,7 +13,8 @@ from DAS.utils.das_config import das_readconfig
 
 def get_mongo_uri():
     """ read dasconfig and return mongodb host and port (as dict) """
-    uri = das_readconfig()['mongodb']['dburi'][0]
+    # use debug=False to suppress printouts about DAS config
+    uri = das_readconfig(debug=False)['mongodb']['dburi'][0]
     parsed_uri = parse_uri(uri)
     host, port = parsed_uri['nodelist'][0]
     return dict(mongo_host=host, mongo_port=port)

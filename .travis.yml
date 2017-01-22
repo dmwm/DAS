@@ -2,7 +2,7 @@ language: python
 services: mongodb
 python:
   - "2.7"
-  - "3.6"
+#   - "3.6"
   
 # TODO: install YUI via pip, but this is not (?) needed for unit tests  
 
