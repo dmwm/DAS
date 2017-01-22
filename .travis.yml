@@ -30,6 +30,11 @@ install:
   - mongo --port "${MONGO_PORT}" "dbs" --eval "db.dropDatabase();"
   - mongoimport --port "${MONGO_PORT}" --db "dbs" --collection "prod/global" --file test/dataset_noid.js
 
+# wait for mongodb connection
+before_script:
+  - sleep 15
+  - mongo mydb_test --eval 'db.addUser("travis", "test");'
+
 # command to run tests
 script: 
   - source ./init_env.sh

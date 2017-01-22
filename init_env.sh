@@ -8,6 +8,3 @@ export DAS_CSSPATH=$DAS_ROOT/web/css
 export DAS_IMAGESPATH=$DAS_ROOT/web/images
 # TODO: YUI is not yet installed automatically
 export YUI_ROOT=$DAS_ROOT/web/js/yui
-
-# make changes for Travis
-sed -i -e "s,8230,27017,g" $DAS_ROOT/etc/das.cfg
