@@ -55,7 +55,10 @@ class DASOption(object):
             and config.has_option(self.section, self.name):
             value = None
             if self.type == 'string':
-                value = config.get(self.section, self.name, True)
+                if  sys.version.startswith('3.'):
+                    value = config.get(self.section, self.name)
+                else:
+                    value = config.get(self.section, self.name, True)
             elif self.type == 'int':
                 value = config.getint(self.section, self.name)
             elif self.type == 'float':
@@ -63,7 +66,10 @@ class DASOption(object):
             elif self.type == 'bool':
                 value = config.getboolean(self.section, self.name)
             elif self.type == 'list':
-                value = config.get(self.section, self.name, True).split(',')
+                if  sys.version.startswith('3.'):
+                    value = config.get(self.section, self.name).split(',')
+                else:
+                    value = config.get(self.section, self.name, True).split(',')
 
             if self.validator and not self.validator(value):
                 msg = "Validation failed for option: %s.%s=%s" % \
