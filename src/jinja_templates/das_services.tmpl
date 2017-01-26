@@ -22,7 +22,7 @@ DAS supports the following DBS instances:
 {% else -%}
 {%- set style="" %}
 {%- endif -%}
-{%- set counter+=1 %}
+{%- set counter=counter+1 %}
 <tr class="{{quote(style)}}">
 <td>{{quote(dbs)}}</td><td>&nbsp;&nbsp;&nbsp;&nbsp;{{msg}}</td>
 </tr>
@@ -56,7 +56,7 @@ what a given DAS key will be transformed to when querying relevant CMS data serv
 {% else -%}
 {%- set style="" %}
 {%- endif -%}
-{%- set counter+=1 %}
+{%- set counter=counter+1 %}
 <tr class="{{quote(style)}}">
 <td>{{quote(daskey)}}</td>
 {% for system in systems -%}
