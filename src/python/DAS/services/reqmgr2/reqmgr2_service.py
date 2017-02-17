@@ -30,17 +30,33 @@ def get_ids(url, params, dataset, verbose=False):
     for row in json_parser(source, None):
         for rec in row.get('rows', []):
             doc = rec['doc']
+            found = 0
             if  not doc:
                 continue
             if  'ProcConfigCacheID' in doc:
-                ids.append(doc['ProcConfigCacheID'])
-            elif 'ConfigCacheID' in doc:
-                ids.append(doc['ConfigCacheID'])
-            elif 'SkimConfigCacheID' in doc:
-                ids.append(doc['SkimConfigCacheID'])
-            else:
+                if doc['ProcConfigCacheID']:
+                    ids.append(doc['ProcConfigCacheID'])
+                    found += 1
+            if 'ConfigCacheID' in doc:
+                if doc['ConfigCacheID']:
+                    ids.append(doc['ConfigCacheID'])
+                    found += 1
+            if 'SkimConfigCacheID' in doc:
+                if doc['SkimConfigCacheID']:
+                    ids.append(doc['SkimConfigCacheID'])
+                    found += 1
+            if 'StepOneConfigCacheID' in doc:
+                if doc['StepOneConfigCacheID']:
+                    ids.append(doc['StepOneConfigCacheID'])
+                    found += 1
+            if 'StepTwoConfigCacheID' in doc:
+                if doc['StepTwoConfigCacheID']:
+                    ids.append(doc['StepTwoConfigCacheID'])
+                    found += 1
+            if  not found:
                 if  'id' in rec and 'key' in rec and rec['key'] == dataset:
-                    ids.append(rec['id'])
+                    if rec['id']:
+                        ids.append(rec['id'])
     return ids
 
 def findReqMgrIds(dataset, base='https://cmsweb.cern.ch', verbose=False):
@@ -87,10 +103,10 @@ def configs(url, args, verbose=False):
             ids.append(item)
             ids_types[item] = rtype
     # for hash ids find configs via ReqMgr2 REST API
-    urls = [rurl(base, i) for i in ids if len(i) == 32]
+    urls = [rurl(base, i) for i in ids if i and len(i) == 32]
     # for non-hash ids probe to find configs in showWorkload
     req_urls = ['%s/couchdb/reqmgr_workload_cache/%s' \
-            % (base, i) for i in ids if len(i) != 32]
+            % (base, i) for i in ids if i and len(i) != 32]
     if  req_urls:
         gen  = urlfetch_getdata(req_urls, CKEY, CERT, headers)
         config_urls = []
