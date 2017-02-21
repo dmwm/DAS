@@ -33,25 +33,9 @@ def get_ids(url, params, dataset, verbose=False):
             found = 0
             if  not doc:
                 continue
-            if  'ProcConfigCacheID' in doc:
-                if doc['ProcConfigCacheID']:
-                    ids.append(doc['ProcConfigCacheID'])
-                    found += 1
-            if 'ConfigCacheID' in doc:
-                if doc['ConfigCacheID']:
-                    ids.append(doc['ConfigCacheID'])
-                    found += 1
-            if 'SkimConfigCacheID' in doc:
-                if doc['SkimConfigCacheID']:
-                    ids.append(doc['SkimConfigCacheID'])
-                    found += 1
-            if 'StepOneConfigCacheID' in doc:
-                if doc['StepOneConfigCacheID']:
-                    ids.append(doc['StepOneConfigCacheID'])
-                    found += 1
-            if 'StepTwoConfigCacheID' in doc:
-                if doc['StepTwoConfigCacheID']:
-                    ids.append(doc['StepTwoConfigCacheID'])
+            for key in doc.keys():
+                if key.endswith("ConfigCacheID"):
+                    ids.append(doc[key])
                     found += 1
             if  not found:
                 if  'id' in rec and 'key' in rec and rec['key'] == dataset:
