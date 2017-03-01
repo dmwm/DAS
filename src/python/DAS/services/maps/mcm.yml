@@ -22,17 +22,17 @@ das_map : [
     {"das_key": "dataset", "rec_key":"dataset.name", "api_arg":"dataset",
      "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+"},
 ]
----
-urn : mcm4dataset2
-url : "https://cms-pdmv.cern.ch/mcm/public/restapi/requests/produces"
-expire : 600
-params : {"dataset": "required"}
-lookup : dataset
-das_map : [
-    {"das_key": "mcm", "rec_key": "mcm.prepid"},
-    {"das_key": "dataset", "rec_key":"dataset.name", "api_arg":"dataset",
-     "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+"},
-]
+#---
+#urn : mcm4dataset2
+#url : "https://cms-pdmv.cern.ch/mcm/public/restapi/requests/produces"
+#expire : 600
+#params : {"dataset": "required"}
+#lookup : dataset
+#das_map : [
+#    {"das_key": "mcm", "rec_key": "mcm.prepid"},
+#    {"das_key": "dataset", "rec_key":"dataset.name", "api_arg":"dataset",
+#     "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+"},
+#]
 ---
 urn : dataset4mcm
 url : "https://cms-pdmv.cern.ch/mcm/public/restapi/requests/output"
