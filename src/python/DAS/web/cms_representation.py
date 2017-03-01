@@ -563,6 +563,8 @@ class CMSRepresentation(DASRepresentation):
                                 if  inst == self.dbs_global:
                                     links.append(self.templatepage(\
                                         'phedex_subscription', path=path))
+                                    links.append(self.templatepage(\
+                                        'xsecdb', primds=path.split('/')[1]))
                         except:
                             pass
                     if  pkey and pkey == 'release.name':
