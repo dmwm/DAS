@@ -13,10 +13,6 @@ import os
 import time
 import calendar
 import datetime
-try:
-    import xmlrpclib
-except:
-    pass
 import urllib
 import DAS.utils.jsonwrapper as json
 from   DAS.services.abstract_service import DASAbstractService
