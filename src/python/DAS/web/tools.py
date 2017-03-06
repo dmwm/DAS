@@ -37,6 +37,7 @@ except:
 
 import DAS.utils.jsonwrapper as json
 from DAS.web.utils import quote
+from DAS.utils.url_utils import url_extend_params, url_extend_params_as_dict
 from json import JSONEncoder
 
 class Page(object):
@@ -129,7 +130,11 @@ class TemplatedPage(Page):
         env = jinja2.Environment(loader=jinja2.FileSystemLoader(self.templatedir))
         for arg in args:
             kwargs.update(**arg)
-        kwargs.update(**{"quote":quote})
+        # Add DAS function to jinja template environment that they'll be
+        # visible and usable in jinja tempaltes
+        das_funcs = {"quote":quote, 'url_extend_params':url_extend_params,
+                "url_extend_params_as_dict":url_extend_params_as_dict}
+        kwargs.update(**das_funcs)
         tmpl = os.path.join(self.templatedir, ifile + '.tmpl')
         if  os.path.exists(tmpl):
             template = env.get_template(ifile + '.tmpl')
