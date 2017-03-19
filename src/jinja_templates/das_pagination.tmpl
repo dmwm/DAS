@@ -41,12 +41,15 @@ all records
 {% if  idx+limit < nrows -%}
 {%- set next=idx+limit %}
 {% else -%}
-{%- set next=(nrows/limit)*limit %}
+{%- set next=idx %}
 {%- endif -%}
 {%- set newUrl = url + "&amp;idx=" + next| string + "&amp;limit=" + limit| string %}
 <a href="{{newUrl}}">next</a> |
 {#- last #}
-{%- set last=(nrows/limit)*limit %}
+{%- set last=nrows-limit %}
+{% if last < 0 -%}
+{%- set last=0 %}
+{%- endif -%}
 {%- set newUrl = url + "&amp;idx=" + last| string + "&amp;limit=" + limit| string %}
 <a href="{{newUrl}}">last</a>&gt;
 </div>
