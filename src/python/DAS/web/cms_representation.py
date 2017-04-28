@@ -26,7 +26,7 @@ from bson.objectid import ObjectId
 from DAS.core.das_ql import das_aggregators, das_filters, das_record_keys
 from DAS.core.das_query import DASQuery
 from DAS.utils.ddict import DotDict
-from DAS.utils.utils import print_exc, getarg, size_format, access
+from DAS.utils.utils import print_exc, getarg, size_format, access, convert2ranges
 from DAS.utils.utils import identical_data_records, dastimestamp, sort_rows
 from DAS.web.utils import das_json, quote, gen_color, not_to_link
 from DAS.web.tools import exposetext
@@ -273,6 +273,13 @@ def adjust_values(func, gen, links, pkey):
         if  set(tdict.keys()) & set(result_keys) == set(result_keys):
             page += '%s(%s)=%s' \
                 % (tdict['function'], tdict['key'], tdict['result'])
+        elif sorted(tdict.keys()) == sorted(['Luminosity number', 'Run number']):
+            page += 'Run number: %s, Luminosity ranges: %s' \
+                    % (tdict['Run number'], convert2ranges(rdict['Luminosity number']))
+        elif sorted(tdict.keys()) == sorted(['Events', 'Luminosity number', 'Run number']):
+            page += 'Run number: %s, Luminosity ranges: %s' \
+                    % (tdict['Run number'], convert2ranges(rdict['Luminosity number']))
+            page += lumi_evts(rdict)
         else:
             rlist = ["%s: %s" \
                 % (k[0].capitalize()+k[1:], v) for k, v in to_show]
@@ -282,6 +289,24 @@ def adjust_values(func, gen, links, pkey):
     if  links:
         page += '<br />' + ', '.join(links)
     return page
+
+def lumi_evts(rdict):
+    "Helper function to show lumi-events pairs suitable for web UI"
+    run = rdict['Run number']
+    lumis = rdict['Luminosity number']
+    events = rdict['Events']
+    pdict = dict(zip(lumis, events))
+    pkeys = [str(k) for k in pdict.keys()]
+    tag = 'id_%s_%s' % (run, ''.join(pkeys))
+    link = 'link_%s_%s' % (run, ''.join(pkeys))
+    out = """&nbsp;<em>lumis/events pairs</em>\
+    <a href="javascript:ToggleTag('%s', '%s')" id="%s">show</a>""" \
+            % (tag, link, link)
+    out += '<div class="hide" id="%s" name="%s">' % (tag, tag)
+    for idx, lumi in enumerate(sorted(pdict.keys())):
+        out += 'Lumi: %s, Events %s<br/>' % (lumi, pdict[lumi])
+    out += "</div>"
+    return out
 
 class CMSRepresentation(DASRepresentation):
     """

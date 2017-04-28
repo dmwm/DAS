@@ -222,6 +222,12 @@ provided by DBS/CondDB/LumiDB systems",
         {"das": "lumi.run_number", "ui": "Run number"},
         {"das": "lumi.start_event", "ui": "Start event"},
         {"das": "lumi.end_event", "ui": "End event"},
+        {"das": "lumi.nevents", "ui": "Events"},
+        ],
+events : [
+        {"das": "events.number", "ui": "Events", "link":[],
+         "description":"number of events either in a give lumi or file",
+        },
         ],
 tier : [
         {"das":"tier.name", "ui":"Tier name",

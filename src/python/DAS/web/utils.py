@@ -598,6 +598,8 @@ def das_json(dasquery, record, pad='', full=False):
         return das_json_full(record, pad)
     if  isinstance(pval, list) and len(pval) != len(srvs):
         return das_json_full(record, pad)
+    if  not isinstance(pval, list):
+        return das_json_full(record, pad)
     try:
         page = '<div class="code">'
         for idx in range(0, len(srvs)):

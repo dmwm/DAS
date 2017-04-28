@@ -52,7 +52,7 @@ def process_lumis_with(ikey, gen):
         if  'error' in row:
             yield row
             continue
-        lfn, run, lumi = row
+        lfn, run, lumi, events = row
         if  ikey == 'file':
             key = lfn
         elif  ikey == 'run':
@@ -60,24 +60,32 @@ def process_lumis_with(ikey, gen):
         elif  ikey == 'file_run' or 'block_run':
             key = (lfn, run) # here lfn refers either to lfn or block
         if  isinstance(lumi, list):
-            for ilumi in lumi:
-                odict.setdefault(key, []).append(ilumi)
+            for idx, ilumi in enumerate(lumi):
+                evts = events[idx]
+                odict.setdefault(key, []).append((ilumi, evts))
         else:
-            odict.setdefault(key, []).append(ilumi)
-    for key, lumi_list in odict.items():
-        lumi_list.sort()
-        lumis = convert2ranges(lumi_list)
+            odict.setdefault(key, []).append((lumi, events))
+    for key, values in odict.items():
+#         lumi_list.sort()
+#         lumis = convert2ranges(lumi_list)
+        lumis = []
+        nevts = []
+        for lumi, evt in values:
+            lumis.append(lumi)
+            nevts.append(evt)
+#         lumis = convert2ranges(lumis)
+#         nevts = convert2ranges(nevts)
         if  ikey == 'file':
-            yield {'file':{'name':key}, 'lumi':{'number':lumis}}
+            yield {'file':{'name':key}, 'lumi':{'number':lumis}, 'events':{'number':nevts}}
         elif  ikey == 'run':
-            yield {'run':{'run_number':key}, 'lumi':{'number':lumis}}
+            yield {'run':{'run_number':key}, 'lumi':{'number':lumis}, 'events':{'number':nevts}}
         elif  ikey == 'file_run':
             lfn, run = key
-            yield {'run':{'run_number':run}, 'lumi':{'number':lumis},
+            yield {'run':{'run_number':run}, 'lumi':{'number':lumis}, 'events':{'number':nevts},
                    'file':{'name': lfn}}
         elif  ikey == 'block_run':
             blk, run = key
-            yield {'run':{'run_number':run}, 'lumi':{'number':lumis},
+            yield {'run':{'run_number':run}, 'lumi':{'number':lumis}, 'events':{'number':nevts},
                    'block':{'name': blk}}
 
 def dbs_find(entity, url, kwds, verbose=0):
@@ -154,12 +162,22 @@ def block_run_lumis(url, blocks, runs=None, verbose=0):
             for row in json.loads(rec['data']):
                 run = row['run_num']
                 lumilist = row['lumi_section_num']
+                eventlist = row.get('event_count', [])
                 key = (blk, run)
-                for lumi in lumilist:
-                    odict.setdefault(key, []).append(lumi)
-    for key, lumis in odict.items():
+                for idx, lumi in enumerate(lumilist):
+                    if  len(eventlist) > 0:
+                        evts = eventlist[idx]
+                    else:
+                        evts = 'NA'
+                    odict.setdefault(key, []).append((lumi, evts))
+    for key, values in odict.items():
         blk, run = key
-        yield blk, run, lumis
+        lumis = []
+        evts = []
+        for lumi, evt in values:
+            lumis.append(lumi)
+            evts.append(evt)
+        yield blk, run, lumis, evts
 
 def file_run_lumis(url, blocks, runs=None, valid=None, verbose=0):
     """
@@ -193,12 +211,22 @@ def file_run_lumis(url, blocks, runs=None, valid=None, verbose=0):
                 run = row['run_num']
                 lfn = row['logical_file_name']
                 lumilist = row['lumi_section_num']
+                eventlist = row.get('event_count', [])
                 key = (lfn, run)
-                for lumi in lumilist:
-                    odict.setdefault(key, []).append(lumi)
-    for key, lumis in odict.items():
+                for idx, lumi in enumerate(lumilist):
+                    if  len(eventlist) > 0:
+                        evts = eventlist[idx]
+                    else:
+                        evts = 'NA'
+                    odict.setdefault(key, []).append((lumi, evts))
+    for key, values in odict.items():
         lfn, run = key
-        yield lfn, run, lumis
+        lumis = []
+        evts = []
+        for lumi, evt in values:
+            lumis.append(lumi)
+            evts.append(evt)
+        yield lfn, run, lumis, evts
 
 def get_api(url):
     "Extract from DBS3 URL the api name"
@@ -280,6 +308,8 @@ def get_file_run_lumis(url, api, args, verbose=0):
         key = 'file_run'
     if  api.startswith('file_run_lumi'):
         key = 'file_run'
+    if  api.startswith('file_run_lumi_events'):
+        key = 'file_run'
     for row in process_lumis_with(key, gen):
         yield row
 
@@ -297,14 +327,14 @@ def get_file4dataset_run_lumi(url, api, args, verbose=0):
     blocks = dbs_find('block', url, args, verbose)
     valid = 1 if args.get('validFileOnly', '') else 0
     gen = file_run_lumis(url, blocks, runs, valid, verbose)
-    for lfn, _run, lumi in gen:
+    for lfn, _run, lumi, _evts in gen:
         if  lumi == ilumi:
             yield lfn
 
 def get_lumis4block_run(url, api, args, verbose=0):
     "Get lumi numbers for given block/run parameters"
     for row in get_file_run_lumis(url, api, args, verbose):
-        yield dict(lumi=row['lumi'])
+        yield dict(lumi=row['lumi'], events=['events'])
 
 ### helper functions for get_blocks4tier_dates
 def process(gen):
@@ -430,6 +460,10 @@ class DBS3Service(DASAbstractService):
             api == 'block_run_lumi4dataset' or \
             api == 'file4dataset_run_lumi' or \
             api == 'blocks4tier_dates' or api == 'dataset4block' or \
+            api == 'run_lumi_evts4dataset' or api == 'run_lumi_evts4block' or \
+            api == 'file_lumi_evts4dataset' or api == 'file_lumi_evts4block' or \
+            api == 'file_run_lumi_evts4dataset' or api == 'file_run_lumi_evts4block' or \
+            api == 'block_run_lumi_evts4dataset' or \
             api == 'lumi4block_run':
             time0 = time.time()
             dbs_url = '/'.join(url.split('/')[:-1])

@@ -1477,6 +1477,13 @@ def aggregator(dasquery, results, expire):
     """
     High-level API, DAS aggregator function.
     """
+    # do not aggregate records when dasquery contains multiple select keys, e.g.
+    # file,run,lumi
+    if  dasquery._mongo_query.get('fields', []) > 1:
+        for rec in results:
+            yield rec
+        return
+
     old_rec = None
     for rec in aggregator_helper(results, expire):
         das_id = rec.pop('das_id')

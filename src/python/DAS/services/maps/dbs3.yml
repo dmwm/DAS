@@ -677,6 +677,135 @@ das_map : [
      "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+#[0-9a-zA-Z-]"},
 ]
 ---
+urn : run_lumi_evts4dataset
+url : "https://cmsweb.cern.ch/dbs/prod/global/DBSReader/filelumis"
+format : JSON
+expire : 3600
+params : {"dataset":"required", "run_num": "optional"}
+lookup : run,lumi,events
+das_map : [
+    {"das_key":"run", "rec_key":"run.run_number", "api_arg":"run_num",
+     "pattern": "^\\d+$|.*\\[\\s*\\d+\\s*[,\\s*\\d+\\s*]*\\].*|{.*\\d+.*\\d+}"},
+    {"das_key":"lumi", "rec_key":"lumi.number", "api_arg":"lumi"},
+    {"das_key":"events", "rec_key":"events.number", "api_arg":"events"},
+    {"das_key":"dataset", "rec_key":"dataset.name", "api_arg":"dataset",
+     "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+"},
+]
+---
+urn : run_lumi_evts4block
+url : "https://cmsweb.cern.ch/dbs/prod/global/DBSReader/filelumis"
+format : JSON
+expire : 3600
+params : {"block_name":"required", "run_num": "optional"}
+lookup : run,lumi,events
+das_map : [
+    {"das_key":"run", "rec_key":"run.run_number", "api_arg":"run_num",
+     "pattern": "^\\d+$|.*\\[\\s*\\d+\\s*[,\\s*\\d+\\s*]*\\].*|{.*\\d+.*\\d+}"},
+    {"das_key":"lumi", "rec_key":"lumi.number", "api_arg":"lumi"},
+    {"das_key":"events", "rec_key":"events.number", "api_arg":"events"},
+    {"das_key":"block", "rec_key":"block.name", "api_arg":"block_name",
+     "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+#[0-9a-zA-Z-]"},
+]
+---
+urn : file_lumi_evts4dataset
+url : "https://cmsweb.cern.ch/dbs/prod/global/DBSReader/filelumis"
+format : JSON
+expire : 3600
+params : {"dataset":"required", "run_num": "optional", "validFileOnly": "optional"}
+lookup : file,lumi,events
+das_map : [
+    {"das_key":"file", "rec_key":"file.name"},
+    {"das_key":"run", "rec_key":"run.run_number", "api_arg":"run_num",
+     "pattern": "^\\d+$|.*\\[\\s*\\d+\\s*[,\\s*\\d+\\s*]*\\].*|{.*\\d+.*\\d+}"},
+    {"das_key":"lumi", "rec_key":"lumi.number", "api_arg":"lumi"},
+    {"das_key":"events", "rec_key":"events.number", "api_arg":"events"},
+    {"das_key":"dataset", "rec_key":"dataset.name", "api_arg":"dataset",
+     "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+"},
+    {"das_key": "status", "rec_key":"status.name", "api_arg":"validFileOnly"},
+]
+---
+urn : file_lumi_evts4block
+url : "https://cmsweb.cern.ch/dbs/prod/global/DBSReader/filelumis"
+format : JSON
+expire : 3600
+params : {"block_name":"required", "run_num": "optional", "ValidFileOnly": "optional"}
+lookup : file,lumi,events
+das_map : [
+    {"das_key":"file", "rec_key":"file.name"},
+    {"das_key":"run", "rec_key":"run.run_number", "api_arg":"run_num",
+     "pattern": "^\\d+$|.*\\[\\s*\\d+\\s*[,\\s*\\d+\\s*]*\\].*|{.*\\d+.*\\d+}"},
+    {"das_key":"lumi", "rec_key":"lumi.number", "api_arg":"lumi"},
+    {"das_key":"events", "rec_key":"events.number", "api_arg":"events"},
+    {"das_key":"block", "rec_key":"block.name", "api_arg":"block_name",
+     "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+#[0-9a-zA-Z-]"},
+    {"das_key": "status", "rec_key":"status.name", "api_arg":"validFileOnly"},
+]
+---
+urn : file_run_lumi_evts4dataset
+url : "https://cmsweb.cern.ch/dbs/prod/global/DBSReader/filelumis"
+format : JSON
+expire : 3600
+params : {"dataset":"required", "run_num": "optional", "validFileOnly": "optional"}
+lookup : file,run,lumi,events
+das_map : [
+    {"das_key":"file", "rec_key":"file.name"},
+    {"das_key":"run", "rec_key":"run.run_number", "api_arg":"run_num",
+     "pattern": "^\\d+$|.*\\[\\s*\\d+\\s*[,\\s*\\d+\\s*]*\\].*|{.*\\d+.*\\d+}"},
+    {"das_key":"lumi", "rec_key":"lumi.number", "api_arg":"lumi"},
+    {"das_key":"events", "rec_key":"events.number", "api_arg":"events"},
+    {"das_key":"dataset", "rec_key":"dataset.name", "api_arg":"dataset",
+     "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+"},
+    {"das_key": "status", "rec_key":"status.name", "api_arg":"validFileOnly"},
+]
+---
+urn : file_run_lumi_evts4block
+url : "https://cmsweb.cern.ch/dbs/prod/global/DBSReader/filelumis"
+format : JSON
+expire : 3600
+params : {"block_name":"required", "run_num": "optional", "validFileOnly": "optional"}
+lookup : file,run,lumi,events
+das_map : [
+    {"das_key":"file", "rec_key":"file.name"},
+    {"das_key":"run", "rec_key":"run.run_number", "api_arg":"run_num",
+     "pattern": "^\\d+$|.*\\[\\s*\\d+\\s*[,\\s*\\d+\\s*]*\\].*|{.*\\d+.*\\d+}"},
+    {"das_key":"lumi", "rec_key":"lumi.number", "api_arg":"lumi"},
+    {"das_key":"events", "rec_key":"events.number", "api_arg":"events"},
+    {"das_key":"block", "rec_key":"block.name", "api_arg":"block_name",
+     "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+#[0-9a-zA-Z-]"},
+    {"das_key": "status", "rec_key":"status.name", "api_arg":"validFileOnly"},
+]
+---
+urn : block_run_lumi_evts4dataset
+url : "https://cmsweb.cern.ch/dbs/prod/global/DBSReader/filelumis"
+format : JSON
+expire : 3600
+params : {"dataset":"required", "run_num": "optional"}
+lookup : block,run,lumi,events
+das_map : [
+    {"das_key":"block", "rec_key":"block.name"},
+    {"das_key":"run", "rec_key":"run.run_number", "api_arg":"run_num",
+     "pattern": "^\\d+$|.*\\[\\s*\\d+\\s*[,\\s*\\d+\\s*]*\\].*|{.*\\d+.*\\d+}"},
+    {"das_key":"lumi", "rec_key":"lumi.number", "api_arg":"lumi"},
+    {"das_key":"events", "rec_key":"events.number", "api_arg":"events"},
+    {"das_key":"dataset", "rec_key":"dataset.name", "api_arg":"dataset",
+     "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+"},
+]
+---
+urn : lumi_evts4block_run
+url : "https://cmsweb.cern.ch/dbs/prod/global/DBSReader/filelumis"
+format : JSON
+expire : 3600
+params : {"block_name":"required", "run_num": "optional"}
+lookup : lumi,events
+das_map : [
+    {"das_key":"lumi", "rec_key":"lumi.number", "api_arg":"lumi"},
+    {"das_key":"events", "rec_key":"events.number", "api_arg":"events"},
+    {"das_key":"run", "rec_key":"run.run_number", "api_arg":"run_num",
+     "pattern": "^\\d+$|.*\\[\\s*\\d+\\s*[,\\s*\\d+\\s*]*\\].*|{.*\\d+.*\\d+}"},
+    {"das_key":"block", "rec_key":"block.name", "api_arg":"block_name",
+     "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+#[0-9a-zA-Z-]"},
+]
+---
 urn : file4dataset_run_lumi
 url : "https://cmsweb.cern.ch/dbs/prod/global/DBSReader/filelumis"
 format : JSON
