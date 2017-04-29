@@ -31,6 +31,7 @@ from DAS.utils.utils import identical_data_records, dastimestamp, sort_rows
 from DAS.web.utils import das_json, quote, gen_color, not_to_link
 from DAS.web.tools import exposetext
 from DAS.web.das_representation import DASRepresentation
+from DAS.utils.regex import int_number_pattern
 
 def make_args(key, val, inst):
     """
@@ -299,13 +300,20 @@ def lumi_evts(rdict):
     pkeys = [str(k) for k in pdict.keys()]
     tag = 'id_%s_%s' % (run, ''.join(pkeys))
     link = 'link_%s_%s' % (run, ''.join(pkeys))
+    hout = '<div class="hide" id="%s" name="%s">' % (tag, tag)
+    tot_evts = 0
+    for idx, lumi in enumerate(sorted(pdict.keys())):
+        evts = pdict[lumi]
+        if  evts != 'NA' and evts and int_number_pattern.match(evts):
+            tot_evts += int(evts)
+        hout += 'Lumi: %s, Events %s<br/>' % (lumi, evts)
+    hout += "</div>"
     out = """&nbsp;<em>lumis/events pairs</em>\
     <a href="javascript:ToggleTag('%s', '%s')" id="%s">show</a>""" \
             % (tag, link, link)
-    out += '<div class="hide" id="%s" name="%s">' % (tag, tag)
-    for idx, lumi in enumerate(sorted(pdict.keys())):
-        out += 'Lumi: %s, Events %s<br/>' % (lumi, pdict[lumi])
-    out += "</div>"
+    if  tot_evts:
+        out += '&nbsp; Total events=%s' % tot_evts
+    out += hout
     return out
 
 class CMSRepresentation(DASRepresentation):
