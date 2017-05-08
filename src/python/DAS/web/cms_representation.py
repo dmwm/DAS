@@ -304,7 +304,7 @@ def lumi_evts(rdict):
     tot_evts = 0
     for idx, lumi in enumerate(sorted(pdict.keys())):
         evts = pdict[lumi]
-        if  evts != 'NA' and evts and int_number_pattern.match(evts):
+        if  evts != 'NA' and evts and int_number_pattern.match(str(evts)):
             tot_evts += int(evts)
         hout += 'Lumi: %s, Events %s<br/>' % (lumi, evts)
     hout += "</div>"
