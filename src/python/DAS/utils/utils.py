@@ -177,7 +177,7 @@ def convert2ranges(ilist):
     http://stackoverflow.com/questions/4628333/converting-a-list-of-integers-into-range-in-python
     """
     # right now just sort input list and return it
-    ilist = list(set(ilist))
+    ilist = list(set(sorted([int(i) for i in ilist])))
     ilist.sort()
     res = [[t[0][1], t[-1][1]] for t in \
             (tuple(g[1]) for g in \

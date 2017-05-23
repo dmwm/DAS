@@ -281,6 +281,13 @@ def adjust_values(func, gen, links, pkey):
             page += 'Run number: %s, Luminosity ranges: %s' \
                     % (tdict['Run number'], convert2ranges(rdict['Luminosity number']))
             page += lumi_evts(rdict)
+        elif sorted(tdict.keys()) == sorted(['Luminosity number']):
+            page += 'Luminosity ranges: %s' \
+                    % (convert2ranges(rdict['Luminosity number']))
+        elif sorted(tdict.keys()) == sorted(['Events', 'Luminosity number']):
+            page += 'Luminosity ranges: %s' \
+                    % (convert2ranges(rdict['Luminosity number']))
+            page += lumi_evts(rdict)
         else:
             rlist = ["%s: %s" \
                 % (k[0].capitalize()+k[1:], v) for k, v in to_show]

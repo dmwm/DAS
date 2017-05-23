@@ -168,7 +168,7 @@ def block_run_lumis(url, blocks, runs=None, verbose=0):
                     if  len(eventlist) > 0:
                         evts = eventlist[idx]
                     else:
-                        evts = 'NA'
+                        evts = None
                     odict.setdefault(key, []).append((lumi, evts))
     for key, values in odict.items():
         blk, run = key
@@ -217,7 +217,7 @@ def file_run_lumis(url, blocks, runs=None, valid=None, verbose=0):
                     if  len(eventlist) > 0:
                         evts = eventlist[idx]
                     else:
-                        evts = 'NA'
+                        evts = None
                     odict.setdefault(key, []).append((lumi, evts))
     for key, values in odict.items():
         lfn, run = key
