@@ -153,8 +153,7 @@ class testCMSFakeDataServices(unittest.TestCase):
         result = [r for r in result]
         expect = 'T3_US_Cornell'
         self.assertEqual(expect, DotDict(result[0]).get('site.name'))
-#         expect = ['_id', 'das_id', 'site', 'cache_id', 'das', 'qhash']
-        expect = ['_id', 'das_id', 'site', 'das', 'qhash']
+        expect = ['_id', 'das_id', 'site', 'cache_id', 'das', 'qhash']
         expect.sort()
         rkeys = result[0].keys()
         rkeys.sort()
