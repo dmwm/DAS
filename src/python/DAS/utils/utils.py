@@ -1479,7 +1479,8 @@ def aggregator(dasquery, results, expire):
     """
     # do not aggregate records when dasquery contains multiple select keys, e.g.
     # file,run,lumi
-    if  len(dasquery._mongo_query.get('fields', [])) > 1:
+    fields = dasquery._mongo_query.get('fields', [])
+    if  isinstance(fields, list) and len(fields) > 1:
         for rec in results:
             yield rec
         return
