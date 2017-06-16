@@ -1482,6 +1482,10 @@ def aggregator(dasquery, results, expire):
     fields = dasquery._mongo_query.get('fields', [])
     if  isinstance(fields, list) and len(fields) > 1:
         for rec in results:
+            for key in fields:
+                val = rec[key]
+                if not isinstance(val, list):
+                    rec[key] = [val]
             yield rec
         return
 
