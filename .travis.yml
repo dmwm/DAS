@@ -33,7 +33,7 @@ install:
 # wait for mongodb connection
 before_script:
   - sleep 15
-  - mongo mydb_test --eval 'db.addUser("travis", "test");'
+#   - mongo mydb_test --eval 'db.addUser("travis", "test");'
 
 # command to run tests
 script: 
