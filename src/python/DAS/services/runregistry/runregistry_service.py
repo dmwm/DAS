@@ -11,10 +11,10 @@ __author__ = "Valentin Kuznetsov"
 
 import os
 import time
+import json
 import calendar
 import datetime
 import urllib
-import DAS.utils.jsonwrapper as json
 from   DAS.services.abstract_service import DASAbstractService
 from   DAS.utils.utils import map_validator, adjust_value, convert_datetime
 from   DAS.utils.utils import convert2date, print_exc, convert2ranges

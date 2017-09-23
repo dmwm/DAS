@@ -7,6 +7,7 @@ ReqMgr service
 __author__ = "Valentin Kuznetsov"
 
 # system modules
+import json
 import time
 
 # DAS modules
@@ -15,7 +16,6 @@ from DAS.utils.utils import map_validator, get_key_cert, json_parser
 from DAS.utils.url_utils import getdata
 from DAS.utils.urlfetch_pycurl import getdata as urlfetch_getdata
 
-import DAS.utils.jsonwrapper as json
 
 CKEY, CERT = get_key_cert()
 

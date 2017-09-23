@@ -6,6 +6,7 @@ about datasets.
 """
 
 # system modules
+import json
 import cherrypy
 
 # DAS modules
@@ -15,7 +16,6 @@ from   DAS.utils.utils import qlxml_parser, convert2ranges
 from   DAS.utils.utils import get_key_cert
 from   DAS.core.das_mapping_db import DASMapping
 from   DAS.utils.das_config import das_readconfig
-import DAS.utils.jsonwrapper as json
 
 def parse_run_dict(rdict):
     "Parser input run dict and normalize lumi lists"

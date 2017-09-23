@@ -9,11 +9,11 @@ Description: Main class to hold DAS query object
 # system modules
 import re
 import sys
+import json
 import copy
 from   bson.objectid import ObjectId
 
 # DAS modules
-import DAS.utils.jsonwrapper as json
 from   DAS.core.das_ql import DAS_RECORD_KEYS
 from   DAS.utils.regex import RE_3SLASHES
 from   DAS.utils.utils import genkey, deepcopy, print_exc, dastimestamp

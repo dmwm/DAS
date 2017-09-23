@@ -13,6 +13,7 @@ __author__ = "Valentin Kuznetsov"
 import os
 import re
 import cgi
+import json
 import time
 import cherrypy
 import threading
@@ -71,7 +72,6 @@ from DAS.web.cms_adjust_input import identify_apparent_query_patterns
 from DAS.web.cms_query_hints import hint_dataset_in_other_insts, \
     hint_dataset_case_insensitive
 from DAS.core.das_exceptions import WildcardMultipleMatchesException
-import DAS.utils.jsonwrapper as json
 
 from DAS.core.das_query import WildcardMatchingException
 

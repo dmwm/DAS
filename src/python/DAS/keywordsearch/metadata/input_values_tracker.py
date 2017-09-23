@@ -9,6 +9,7 @@ from __future__ import print_function
 # system modules
 import re
 import time
+import json
 import urllib
 import urllib2
 import itertools
@@ -21,7 +22,6 @@ from pymongo.errors import InvalidOperation
 from pymongo import ASCENDING
 
 # DAS modules
-from DAS.utils import jsonwrapper as json
 from DAS.utils.utils import dastimestamp
 from DAS.utils.das_db import get_db_uri, db_connection, create_indexes
 from DAS.utils.utils import get_key_cert

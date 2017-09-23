@@ -14,6 +14,7 @@ __email__ = "vkuznet@gmail.com"
 # system modules
 import os
 import sys
+import json
 import types
 import logging
 
@@ -35,7 +36,6 @@ try:
 except:
     pass
 
-import DAS.utils.jsonwrapper as json
 from DAS.web.utils import quote
 from DAS.utils.url_utils import url_extend_params, url_extend_params_as_dict
 from json import JSONEncoder

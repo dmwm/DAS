@@ -8,6 +8,7 @@ from __future__ import print_function
 # system modules
 import re
 import time
+import json
 import cherrypy
 
 # pymongo modules
@@ -26,7 +27,6 @@ from   DAS.utils.utils import get_key_cert
 from   DAS.utils.thread import start_new_thread
 from   DAS.core.das_mapping_db import DASMapping
 from   DAS.utils.das_config import das_readconfig
-import DAS.utils.jsonwrapper as json
 
 PAT = re.compile("^T[0-3]_")
 CKEY, CERT = get_key_cert()

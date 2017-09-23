@@ -20,6 +20,7 @@ from __future__ import print_function
 __author__ = "Valentin Kuznetsov"
 
 # system modules
+import json
 import sys
 import time
 try: # python3
@@ -41,7 +42,6 @@ from DAS.utils.url_utils import getdata, url_args
 from DAS.utils.urlfetch_pycurl import getdata as urlfetch_getdata
 from DAS.utils.regex import int_number_pattern
 
-import DAS.utils.jsonwrapper as json
 
 CKEY, CERT = get_key_cert()
 

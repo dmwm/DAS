@@ -26,6 +26,7 @@ from __future__ import print_function
 __author__ = "Valentin Kuznetsov"
 
 import re
+import json
 from collections import defaultdict
 import hashlib
 
@@ -43,7 +44,6 @@ from DAS.utils.logger import PrintManager
 from DAS.utils.das_pymongo import PYMONGO_OPTS
 from DAS.core.das_son_manipulator import DAS_SONManipulator
 
-import DAS.utils.jsonwrapper as json
 
 def check_map_record(record):
     "Check hash of given map record"

@@ -11,9 +11,9 @@ __version__ = "$Revision: 1.94 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
+import json
 import time
 import itertools
-import DAS.utils.jsonwrapper as json
 
 # DAS modules
 from DAS.utils.ddict import DotDict

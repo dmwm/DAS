@@ -5,6 +5,7 @@ DAS DBS/RunRegistry combined service to get luminosity information
 about datasets.
 """
 from __future__ import print_function
+import json
 
 # DAS modules
 from   DAS.utils.url_utils import getdata_urllib as getdata
@@ -12,7 +13,6 @@ from   DAS.utils.utils import qlxml_parser
 from   DAS.utils.utils import get_key_cert
 from   DAS.services.runregistry.runregistry_service \
         import collect_lumis, rr_worker
-import DAS.utils.jsonwrapper as json
 
 def rr_query(rlist):
     "Generate RunRegistry query for given runlist/generator"

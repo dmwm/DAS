@@ -19,6 +19,7 @@ followed by N requests to filesummaries API.
 from __future__ import print_function
 
 # system modules
+import json
 import sys
 import time
 import pycurl
@@ -40,7 +41,6 @@ except:
 
 # DAS modules
 from DAS import DAS_SERVER
-from DAS.utils.jsonwrapper import json
 from DAS.utils.regex import pat_http_msg, pat_expires
 from DAS.utils.utils import expire_timestamp
 

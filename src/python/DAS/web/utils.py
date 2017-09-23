@@ -20,8 +20,8 @@ else:
     from types import NoneType
     from urllib import quote_plus
     import urllib
-import sys
 import cgi
+import json
 import time
 import hashlib
 import cherrypy
@@ -30,7 +30,6 @@ from   json import JSONEncoder
 from   bson.objectid import ObjectId
 
 # DAS modules
-import DAS.utils.jsonwrapper as json
 from   DAS.utils.utils import print_exc, presentation_datetime
 from   DAS.utils.regex import number_pattern, web_arg_pattern, http_pattern
 from   DAS.utils.das_db import db_connection

@@ -7,9 +7,8 @@ DAS query utils.
 """
 
 import re
+import json
 
-# DAS modules
-import DAS.utils.jsonwrapper as json
 
 def encode_mongo_query(query):
     """

@@ -8,6 +8,7 @@ __author__ = "Valentin Kuznetsov"
 
 # system modules
 import sys
+import json
 import time
 
 # python 3
@@ -16,7 +17,6 @@ if  sys.version.startswith('3.'):
     basestring = str
 
 # DAS modules
-import DAS.utils.jsonwrapper as json
 from   DAS.services.abstract_service import DASAbstractService
 from   DAS.utils.utils import map_validator, print_exc, expire_timestamp
 from   DAS.utils.url_utils import getdata

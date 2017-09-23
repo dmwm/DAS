@@ -26,6 +26,7 @@ from __future__ import print_function
 __author__ = "Valentin Kuznetsov"
 
 # system modules
+import json
 import time
 import urllib
 try:
@@ -36,7 +37,6 @@ except:
     import StringIO
 
 # DAS modules
-import DAS.utils.jsonwrapper as json
 from DAS.services.abstract_service import DASAbstractService
 from DAS.utils.utils import map_validator, xml_parser, qlxml_parser
 from DAS.utils.utils import json_parser, dastimestamp, get_key_cert

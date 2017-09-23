@@ -7,10 +7,10 @@ Monitor service
 __author__ = "Valentin Kuznetsov"
 
 # system modules
+import json
 import time
 
 # DAS modules
-import DAS.utils.jsonwrapper as json
 from   DAS.services.abstract_service import DASAbstractService
 from   DAS.utils.utils import map_validator, convert2date, das_dateformat
 from   DAS.utils.regex import unix_time_pattern, date_yyyymmdd_pattern

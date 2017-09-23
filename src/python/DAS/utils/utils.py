@@ -14,6 +14,7 @@ import os
 import re
 import cgi
 import sys
+import json
 import time
 import copy
 from   types import GeneratorType
@@ -44,7 +45,6 @@ from   DAS.utils.regex import se_pattern, site_pattern, unix_time_pattern
 from   DAS.utils.regex import last_time_pattern, date_yyyymmdd_pattern
 from   DAS.utils.regex import rr_time_pattern, das_time_pattern
 from   DAS.utils.regex import http_ts_pattern
-import DAS.utils.jsonwrapper as json
 
 # Define transient fields in DAS records to be removed by hash function
 TRANSIENT_FIELDS = ['ts', 'expire']

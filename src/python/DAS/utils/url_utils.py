@@ -9,6 +9,7 @@ Description: Set of url utilities for DAS
 from __future__ import print_function
 
 # system modules
+import json
 import time
 try: # python3, we use urllib.urlencode which now is urllib.parse.urlencode
     import urllib.parse as urllib
@@ -33,7 +34,6 @@ from   DAS.utils.utils import http_timestamp, dastimestamp
 from   DAS.utils.pycurl_manager import RequestHandler
 from   DAS.utils.pycurl_manager import REQUEST_HANDLER
 from   DAS.utils.regex import int_number_pattern
-import DAS.utils.jsonwrapper as json
 
 
 def disable_urllib2Proxy():

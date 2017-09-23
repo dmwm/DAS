@@ -9,7 +9,6 @@ __version__ = "$Revision: 1.8 $"
 __author__ = "Valentin Kuznetsov"
 
 import re
-#import DAS.utils.jsonwrapper as json
 import json
 from DAS.services.abstract_service import DASAbstractService
 from DAS.utils.utils import map_validator
