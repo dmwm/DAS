@@ -34,7 +34,8 @@ def sitedb_parser(source):
     """SiteDB parser"""
     if  isinstance(source, str) or isinstance(source, unicode):
         data = json.loads(source)
-    elif hasattr(source, "close") or isinstance(source, file):
+#     elif hasattr(source, "close") or isinstance(source, file):
+    elif hasattr(source, "close"):
         # got data descriptor
         try:
             data = json.load(source)
