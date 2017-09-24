@@ -10,14 +10,16 @@ from __future__ import print_function
 
 # system modules
 import re
+import sys
 import json
 import time
-# import thread
-import urllib
-try:
-    import urllib2
-except ImportError:
+# python 3
+if  sys.version.startswith('3.'):
+    import urllib.parse as urllib
     import urllib.request as urllib2
+else:
+    import urllib
+    import urllib2
 import itertools
 
 # MongoDB modules

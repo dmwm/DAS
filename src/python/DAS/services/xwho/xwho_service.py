@@ -3,10 +3,17 @@ Example of CENR xwho data-service
 """
 
 import re
+import time
+# python 3
+if  sys.version.startswith('3.'):
+    import urllib.parse as urllib
+    import urllib.request as urllib2
+else:
+    import urllib
+    import urllib2
+
 from DAS.services.abstract_service import DASAbstractService
 from DAS.utils.utils import map_validator
-import urllib, urllib2
-import time
 
 class XWhoService(DASAbstractService):
     "Queries people by screen-scraping the CERN xwho enquiry"

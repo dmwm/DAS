@@ -15,10 +15,15 @@ import copy
 import math
 import string
 import random
-import urllib
-import urllib2
 import traceback
 import time
+# python 3
+if  sys.version.startswith('3.'):
+    import urllib.parse as urllib
+    import urllib.request as urllib2
+else:
+    import urllib
+    import urllib2
 
 from json import JSONDecoder
 from random import Random

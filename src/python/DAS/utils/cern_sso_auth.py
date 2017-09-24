@@ -7,10 +7,17 @@ to get data begind CERN SSO protected site.
 """
 __author__ = "Valentin Kuznetsov"
 
-import urllib2
-import urllib
-import httplib
+import sys
 import time
+# python 3
+if  sys.version.startswith('3.'):
+    import urllib.parse as urllib
+    import urllib.request as urllib2
+    import http.client as httplib
+else:
+    import urllib
+    import urllib2
+    import httplib
 
 def timestamp():
     """Construct timestamp used by Shibboleth"""

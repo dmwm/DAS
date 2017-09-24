@@ -9,20 +9,18 @@ Description: Set of url utilities for DAS
 from __future__ import print_function
 
 # system modules
+import sys
 import json
 import time
-try: # python3, we use urllib.urlencode which now is urllib.parse.urlencode
+# python 3
+if  sys.version.startswith('3.'):
     import urllib.parse as urllib
-except: # fallback to python2, we use urllib.urlencode
-    import urllib
-try:
-    import urllib2
-except ImportError: # python3
     import urllib.request as urllib2
-try:
-    import httplib
-except ImportError: # python3
     import http.client as httplib
+else:
+    import urllib
+    import urllib2
+    import httplib
 
 import cherrypy
 

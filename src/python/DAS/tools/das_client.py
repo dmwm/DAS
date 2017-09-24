@@ -31,7 +31,6 @@ import re
 import ssl
 import time
 import json
-import urllib
 from   optparse import OptionParser
 from   math import log
 from   types import GeneratorType

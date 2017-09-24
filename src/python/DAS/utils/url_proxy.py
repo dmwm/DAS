@@ -11,8 +11,14 @@ Description: Set of utilities to fetch given URLs via proxy servers
 from __future__ import print_function
 
 # system modules
-import urllib
-import urllib2
+import sys
+# python 3
+if  sys.version.startswith('3.'):
+    import urllib.parse as urllib
+    import urllib.request as urllib2
+else:
+    import urllib
+    import urllib2
 
 # DAS modules
 from DAS.utils.url_utils import getdata

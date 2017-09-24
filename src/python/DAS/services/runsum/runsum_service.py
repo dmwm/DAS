@@ -9,7 +9,10 @@ __version__ = "$Revision: 1.21 $"
 __author__ = "Valentin Kuznetsov"
 
 import time
-import urllib
+try: # python3, we use urllib.urlencode which now is urllib.parse.urlencode
+    import urllib.parse as urllib
+except: # fallback to python2, we use urllib.urlencode
+    import urllib
 import traceback
 import xml.etree.cElementTree as ET
 

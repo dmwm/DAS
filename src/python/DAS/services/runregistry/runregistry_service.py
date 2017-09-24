@@ -15,7 +15,10 @@ import time
 import json
 import calendar
 import datetime
-import urllib
+try: # python3, we use urllib.urlencode which now is urllib.parse.urlencode
+    import urllib.parse as urllib
+except: # fallback to python2, we use urllib.urlencode
+    import urllib
 
 # python3
 if  sys.version.startswith('3.'):
