@@ -7,8 +7,13 @@ Monitor service
 __author__ = "Valentin Kuznetsov"
 
 # system modules
+import sys
 import json
 import time
+
+# python3
+if  sys.version.startswith('3.'):
+    unicode = str
 
 # DAS modules
 from   DAS.services.abstract_service import DASAbstractService
