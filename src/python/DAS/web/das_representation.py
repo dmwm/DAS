@@ -187,7 +187,7 @@ class DASRepresentation(DASWebManager):
             msg += '<span class="example">dataset %s status=*</span> query' % uinput
             msg += ' or use proper status value, e.g. PRODUCTION'
             page += '<div>%s</div><br/>' % msg
-        if  total > 0:
+        if  total and total > 0:
             params = {} # will keep everything except idx/limit
             for key, val in kwargs.items():
                 if  key in skip_args:
