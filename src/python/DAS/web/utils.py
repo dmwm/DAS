@@ -8,11 +8,18 @@ from __future__ import print_function
 
 __author__ = "Valentin Kuznetsov"
 
+# system modules
 import sys
+import cgi
+import json
+import time
+import hashlib
+
 # python 3
 if  sys.version.startswith('3.'):
     long = int
     basestring = str
+    unicode = str
     NoneType = type(None)
     from urllib.parse import quote_plus
     import urllib.parse as urllib
@@ -20,10 +27,6 @@ else:
     from types import NoneType
     from urllib import quote_plus
     import urllib
-import cgi
-import json
-import time
-import hashlib
 import cherrypy
 from   cherrypy import HTTPError
 from   json import JSONEncoder
@@ -255,14 +258,7 @@ def quote(data):
     """
     Sanitize the data using cgi.escape.
     """
-    if  isinstance(data, int) or isinstance(data, float):
-        res = data
-    elif  isinstance(data, dict):
-        res = data
-    elif  isinstance(data, list):
-        res = data
-    elif  isinstance(data, long) or isinstance(data, int) or\
-          isinstance(data, float):
+    if isinstance(data, (int, long, float, dict, list)):
         res = data
     elif  isinstance(data, ObjectId):
         res = str(data)
@@ -433,11 +429,11 @@ def json2html(idict, pad="", ref=None):
                         _width = len("'', ")
                     value += \
                         "<a href=\"/das/records/%s?collection=cache\">%s</a>, "\
-                        % (quote_plus(item), quote(item))
+                        % (quote_plus(str(item)), quote(item))
                 value = value[:-2] + ']'
             else:
                 value = "<a href=\"/das/records/%s?collection=cache\">%s</a>"\
-                        % (quote_plus(val), quote(val))
+                        % (quote_plus(str(val)), quote(val))
                 if  len(str(val)) < 3: # aggregator's ids
                     value = val
             # we don't need to quote value here since
@@ -452,7 +448,7 @@ def json2html(idict, pad="", ref=None):
             sss += ' "<b>das</b>": ' + json2html(val, pad=" "*3, ref=key)
         elif key == 'gridfs_id':
             value = "<a href=\"/das/gridfs?fid=%s\">%s</a>" \
-                % (quote_plus(val), quote(val))
+                % (quote_plus(str(val)), quote(val))
             sss += pad + value
         elif isinstance(val, list):
             if  len(val) == 1:
