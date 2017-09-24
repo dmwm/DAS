@@ -4,8 +4,15 @@
 main module for Keyword Search
 """
 from __future__ import print_function
+
+# system modules
+import sys
 from math import exp
 import pprint
+
+# python3
+if  sys.version.startswith('3.'):
+    unicode = str
 
 from cherrypy import thread_data, request
 

@@ -9,6 +9,13 @@ Also some CMS specific functions are used:
 """
 from __future__ import print_function
 
+# system modules
+import sys
+
+# python3
+if  sys.version.startswith('3.'):
+    unicode = str
+
 from cherrypy import request
 from DAS.utils.regex import RE_3SLASHES
 from DAS.keywordsearch.config import DEBUG
