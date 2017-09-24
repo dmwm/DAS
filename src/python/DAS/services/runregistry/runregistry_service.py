@@ -10,11 +10,17 @@ __version__ = "$Revision"
 __author__ = "Valentin Kuznetsov"
 
 import os
+import sys
 import time
 import json
 import calendar
 import datetime
 import urllib
+
+# python3
+if  sys.version.startswith('3.'):
+    unicode = str
+
 from   DAS.services.abstract_service import DASAbstractService
 from   DAS.utils.utils import map_validator, adjust_value, convert_datetime
 from   DAS.utils.utils import convert2date, print_exc, convert2ranges
