@@ -7,7 +7,13 @@ DAS query utils.
 """
 
 import re
+import sys
 import json
+
+# python 3
+if  sys.version.startswith('3.'):
+    unicode = str
+    basestring = str
 
 
 def encode_mongo_query(query):
