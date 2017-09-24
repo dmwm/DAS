@@ -903,7 +903,7 @@ class DASMongocache(object):
             self.col.update(spec, nval, multi=True)
         return status
 
-    def update_cache(self, dasquery, results, header, system):
+    def update_cache(self, dasquery, results, header, system, api):
         """
         Insert results into cache. Use bulk insert controller by
         self.cache_size. Upon completion ensure indexies.
@@ -919,14 +919,14 @@ class DASMongocache(object):
             pass
 
         # update query record for this sub-system
-        self.update_query_record_system(dasquery, system, 'ok')
+        self.update_query_record_system(dasquery, system, api, 'ok')
 
         if  dasquery.qcache: # custom DASQuery cache
             self.update_das_expire(dasquery, expire_timestamp(dasquery.qcache))
 
-    def update_query_record_system(self, dasquery, system, status):
+    def update_query_record_system(self, dasquery, system, api, status):
         "Update system status of dasquery in das.cache collection"
-        spec = {'qhash': dasquery.qhash, 'das.system': system}
+        spec = {'qhash': dasquery.qhash, 'das.system': system, 'das.api': api}
         udict = {'$set': {'das.status':status}}
         self.col.update(spec, udict, fsync=True)
 

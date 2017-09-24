@@ -204,7 +204,7 @@ class DASAbstractService(object):
         header['prim_key'] = self.dasmapping.primary_mapkey(self.name, api)
         header['ctime'] = ctime
         system = self.name
-        self.localcache.update_cache(dasquery, result, header, system)
+        self.localcache.update_cache(dasquery, result, header, system, api)
 
         msg  = 'cache has been updated,\n'
         self.logger.debug(msg)
