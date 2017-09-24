@@ -27,9 +27,14 @@ OTHER DEALINGS IN THE SOFTWARE.
 #pylint: disable=C0301,C0103,E1101,C0111,R0201
 
 import re
+import sys
 from itertools import groupby
 from operator import itemgetter
 from math import log
+
+# python3
+if  sys.version.startswith('3.'):
+    unicode = str
 
 #import lxml.html
 from Stemmer import Stemmer
