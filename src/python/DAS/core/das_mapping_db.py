@@ -403,7 +403,7 @@ class DASMapping(object):
             spec = { 'type': 'service', 'system' : { '$ne' : None } }
             gen  = (row['system'] \
                     for row in self.col.find(spec, ['system'], **PYMONGO_OPTS))
-            self.systems = list( set(gen2list(gen)) & set(self.services) )
+            self.systems = sorted(list( set(gen2list(gen)) & set(self.services) ))
         return self.systems
 
     def list_apis(self, system=None):
@@ -548,6 +548,9 @@ class DASMapping(object):
                 if  row['das_key'] != das_key:
                     continue
                 rec_key = row['rec_key']
+                api_arg = row.get('api_arg', None)
+                if not api_arg:
+                    continue
                 pat = row.get('pattern', None)
                 if  value:
                     if  pat:
