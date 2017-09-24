@@ -19,10 +19,16 @@ followed by N requests to filesummaries API.
 from __future__ import print_function
 
 # system modules
-import json
 import sys
+import json
 import time
 import pycurl
+
+# python 3
+if  sys.version.startswith('3.'):
+    unicode = str
+    basestring = str
+
 try: # python3
     import urllib.parse as urllib
 except ImportError: # python2 fallback
