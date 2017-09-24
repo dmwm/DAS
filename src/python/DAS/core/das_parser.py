@@ -157,7 +157,7 @@ class QLManager(object):
         if  isinstance(skeys, str):
             skeys = [skeys]
         adict = {}
-        mapkeys = [key for key in cond.keys() if key not in das_special_keys()]
+        mapkeys = [key for key in list(cond.keys()) if key not in das_special_keys()]
         services = self.services(query)
         for srv in services:
             alist = self.dasmapping.list_apis(srv)
