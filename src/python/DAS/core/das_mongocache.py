@@ -27,6 +27,7 @@ import fnmatch
 # python3
 if  sys.version.startswith('3.'):
     long = int
+    unicode = str
 
 # DAS modules
 from DAS.core.das_ql import das_record_keys
@@ -43,7 +44,6 @@ from DAS.utils.logger import PrintManager
 from DAS.utils.das_pymongo import PYMONGO_OPTS, PYMONGO_NOEXHAUST
 
 # monogo db modules
-import pymongo
 from bson.objectid import ObjectId
 from bson.code import Code
 from pymongo import DESCENDING, ASCENDING
@@ -439,6 +439,12 @@ class DASMongocache(object):
                     min_expire = estamp
         return long(min_expire)
 
+    def find_query_record(self, dasquery):
+        "Find DAS query records and return them to the caller"
+        spec = {'qhash':dasquery.qhash,
+                'das.record':record_codes('query_record')}
+        return self.col.find(spec, **PYMONGO_OPTS)
+
     def update_query_record(self, dasquery, status, header=None, reason=None):
         "Update DAS record for provided query"
         ctime = time.time()
@@ -462,14 +468,14 @@ class DASMongocache(object):
             if  new_expire:
                 udict = {'$set': {'das.expire': new_expire},
                          '$push': {'das.ctime':ctime}}
-                self.col.update(das_spec, udict)
+                self.col.update(das_spec, udict, fsync=True)
         else:
             udict = {'$set': {'das.status':status, 'das.expire': min_expire},
                      '$push': {'das.ctime':ctime}}
-            self.col.update(das_spec, udict)
+            self.col.update(das_spec, udict, fsync=True)
         if  reason:
             udict = {'$set': {'das.reason':reason}}
-            self.col.update(das_spec, udict)
+            self.col.update(das_spec, udict, fsync=True)
         # align all expire timestamps when we recieve ok status
         if  status == 'ok':
             udict = {'$set': {'das.expire': min_expire}}
@@ -838,16 +844,8 @@ class DASMongocache(object):
             # insert all records into das.merge using bulk insert
             size = self.cache_size
             try:
-                if  pymongo.version.startswith('3.'): # pymongo 3.X
-                    res = self.merge.insert_many(gen)
-                    inserted += len(res.inserted_ids)
-                else:
-                    while True:
-                        nres = self.merge.insert(itertools.islice(gen, size))
-                        if  nres and isinstance(nres, list):
-                            inserted += len(nres)
-                        else:
-                            break
+                res = self.merge.insert_many(gen)
+                inserted += len(res.inserted_ids)
             except InvalidDocument as exp:
                 print(dastimestamp('DAS WARNING'), 'InvalidDocument during merge', str(exp))
                 msg = "Caught bson error: " + str(exp)
@@ -864,7 +862,6 @@ class DASMongocache(object):
                     row.update(das_dict)
                     self.merge.insert(row)
             except InvalidOperation as exp:
-                print(dastimestamp('DAS WARNING'), 'InvalidOperation during merge', str(exp))
                 pass
             except DuplicateKeyError as err:
                 print(dastimestamp('DAS WARNING'), 'DuplicateKeyError during merge')
@@ -906,34 +903,32 @@ class DASMongocache(object):
             self.col.update(spec, nval, multi=True)
         return status
 
-    def update_cache(self, dasquery, results, header):
+    def update_cache(self, dasquery, results, header, system):
         """
         Insert results into cache. Use bulk insert controller by
         self.cache_size. Upon completion ensure indexies.
         """
-        # insert/check query record in DAS cache
-        self.insert_query_record(dasquery, header)
-
         # update results records in DAS cache
         gen  = self.generate_records(dasquery, results, header)
         inserted = 0
         # bulk insert
         try:
-            if  pymongo.version.startswith('3.'): # pymongo 3.X
-                res = self.col.insert_many(gen, ordered=False, bypass_document_validation=True)
-                inserted += len(res.inserted_ids)
-            else:
-                while True:
-                    nres = self.col.insert(itertools.islice(gen, self.cache_size))
-                    if  nres and isinstance(nres, list):
-                        inserted += len(nres)
-                    else:
-                        break
+            res = self.col.insert_many(gen, ordered=False, bypass_document_validation=True)
+            inserted += len(res.inserted_ids)
         except InvalidOperation:
             pass
 
+        # update query record for this sub-system
+        self.update_query_record_system(dasquery, system, 'ok')
+
         if  dasquery.qcache: # custom DASQuery cache
             self.update_das_expire(dasquery, expire_timestamp(dasquery.qcache))
+
+    def update_query_record_system(self, dasquery, system, status):
+        "Update system status of dasquery in das.cache collection"
+        spec = {'qhash': dasquery.qhash, 'das.system': system}
+        udict = {'$set': {'das.status':status}}
+        self.col.update(spec, udict, fsync=True)
 
     def insert_query_record(self, dasquery, header):
         """

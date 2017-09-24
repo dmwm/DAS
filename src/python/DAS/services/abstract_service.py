@@ -11,9 +11,14 @@ __version__ = "$Revision: 1.94 $"
 __author__ = "Valentin Kuznetsov"
 
 # system modules
+import sys
 import json
 import time
 import itertools
+
+# python 3
+if  sys.version.startswith('3.'):
+    unicode = str
 
 # DAS modules
 from DAS.utils.ddict import DotDict
@@ -198,7 +203,8 @@ class DASAbstractService(object):
         header['lookup_keys'] = self.lookup_keys(api)
         header['prim_key'] = self.dasmapping.primary_mapkey(self.name, api)
         header['ctime'] = ctime
-        self.localcache.update_cache(dasquery, result, header)
+        system = self.name
+        self.localcache.update_cache(dasquery, result, header, system)
 
         msg  = 'cache has been updated,\n'
         self.logger.debug(msg)

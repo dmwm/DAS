@@ -343,18 +343,18 @@ class DASCore(object):
             # server (in a future it would be better to find programatically
             # this syncdelay value, but it seems pymongo driver does not
             # provide any API for it.
-            for idx in range(0, 7):
-                spec = {'qhash':dasquery.qhash, 'das.system':['das']}
-                res = self.rawcache.col.find_one(spec)
-                if  res:
-                    dbstatus = res.get('das', {}).get('status', None)
-                    if  dbstatus == status:
-                        break
-                    msg = 'qhash %s, das.status=%s, status=%s, wait for update' \
-                            % (dasquery.qhash, dbstatus, status)
-                    print(dastimestamp('DAS WARNING'), msg)
-                self.rawcache.update_query_record(dasquery, status, reason=reason)
-                time.sleep(idx*idx)
+#             for idx in range(0, 7):
+#                 spec = {'qhash':dasquery.qhash, 'das.system':['das']}
+#                 res = self.rawcache.col.find_one(spec)
+#                 if  res:
+#                     dbstatus = res.get('das', {}).get('status', None)
+#                     if  dbstatus == status:
+#                         break
+#                     msg = 'qhash %s, das.status=%s, status=%s, wait for update' \
+#                             % (dasquery.qhash, dbstatus, status)
+#                     print(dastimestamp('DAS WARNING'), msg)
+#                 self.rawcache.update_query_record(dasquery, status, reason=reason)
+#                 time.sleep(idx*idx)
 
         self.logger.info('input query=%s' % query)
         das_timer('DASCore::call', self.verbose)
@@ -406,11 +406,30 @@ class DASCore(object):
         self.logger.info('\n##### merging ######\n')
         update_das_query(dasquery, 'merging')
         das_timer('merge', self.verbose)
-        for attempt in range(0,4): # try couple of times to avoid DB problems
-            time.sleep(attempt)
-            status = self.rawcache.merge_records(dasquery, attempt)
-            if  status == 'ok':
+
+        # check that all query record statuses are ok, i.e. we did insert records
+        # this status is set by self.rawcache.update_cache
+        for idx in range(120): # 2min is large enough to get all service's records
+            records = self.rawcache.find_query_record(dasquery)
+            statuses = []
+            for row in records:
+                system = row['das']['system']
+                status = row['das']['status']
+                self.logger.info("### query record status %s %s %s" % (dasquery.qhash, system, status))
+                statuses.append(status)
+            all_statuses = sorted(list(set(statuses)))
+            # at this point we're looking that all services will have 'ok' and das status will be 'merging'
+            if len(all_statuses) == 2 and all_statuses == ['merging', 'ok']:
                 break
+            time.sleep(1)
+
+        # now we can merge records
+        status = self.rawcache.merge_records(dasquery)
+#         for attempt in range(0,4): # try couple of times to avoid DB problems
+#             time.sleep(attempt)
+#             status = self.rawcache.merge_records(dasquery, attempt)
+#             if  status == 'ok':
+#                 break
         das_timer('merge', self.verbose)
         # check if we have service records and properly setup status
         self.logger.info('\n##### check services ######\n')

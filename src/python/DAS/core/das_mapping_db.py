@@ -685,7 +685,7 @@ class DASMapping(object):
                     continue
                 if  value and pat:
                     if  isinstance(value, dict):
-                        if pat.match(json.dumps(value.values()[0])):
+                        if pat.match(json.dumps(list(value.values())[0])):
                             if  api_param not in names:
                                 names.append(api_param)
                     if  pat.match(str(value)):
