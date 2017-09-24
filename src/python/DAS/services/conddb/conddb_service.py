@@ -6,7 +6,14 @@ CondDB service
 """
 __author__ = "Valentin Kuznetsov"
 
+# system modules
+import sys
 import time
+
+# python3
+if  sys.version.startswith('3.'):
+    unicode = str
+
 from DAS.services.abstract_service import DASAbstractService
 from DAS.utils.utils import map_validator, convert2date
 
