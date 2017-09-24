@@ -204,10 +204,11 @@ def das_median(key, rows):
     if  len(robj.result) == 1:
         data = {'value': robj.result[0]}
     if  len(robj.result) % 2:
-        data = {'value': robj.result[len(robj.result)/2]}
+        data = {'value': robj.result[len(robj.result)//2]} # int division
     else:
-        val  = (robj.result[len(robj.result)/2-1] + \
-                robj.result[len(robj.result)/2])/2
+        # int division for indexes
+        val  = (robj.result[len(robj.result)//2-1] + \
+                robj.result[len(robj.result)//2])/2
         data = {'value': val}
     return data
 
