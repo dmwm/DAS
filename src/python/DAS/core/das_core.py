@@ -88,7 +88,7 @@ class DASCore(object):
             dasconfig = das_readconfig()
         verbose       = dasconfig['verbose']
         self.stdout   = debug
-        if  isinstance(debug, int):
+        if  isinstance(debug, int) and debug:
             self.verbose = debug
             dasconfig['verbose'] = debug
         else:
