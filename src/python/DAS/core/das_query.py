@@ -27,8 +27,10 @@ except ImportError: # python3
 from   DAS.core.das_exceptions import WildcardMultipleMatchesException
 from   DAS.core.das_exceptions import WildcardMatchingException
 
+# python3
 if  sys.version.startswith('3.'):
     basestring = str
+    unicode = str
 
 def check_query(query):
     "Check query"
