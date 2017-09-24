@@ -10,9 +10,14 @@ from __future__ import print_function
 import re
 import time
 import json
-import urllib
-import urllib2
 import itertools
+# python 3
+if  sys.version.startswith('3.'):
+    import urllib.parse as urllib
+    import urllib.request as urllib2
+else:
+    import urllib
+    import urllib2
 
 # jsonpath
 from jsonpath_rw import parse
