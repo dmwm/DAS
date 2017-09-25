@@ -607,15 +607,14 @@ class testUtils(unittest.TestCase):
                  {'ds':None, 'site':1,'admin':'pet', 'block':''}]
         res = cartesian_product(list1, list2)
         result = [i for i in res]
-        result = sorted(result)
         expect = [{'ds':1, 'site':2, 'admin':'vk', 'block':1},
                   {'ds':1, 'site':2, 'admin':'simon', 'block':1},
                   {'ds':1, 'site':1, 'admin':'pet', 'block':1},
                   {'ds':2, 'site':1, 'admin':'pet', 'block':1},
                   {'ds':2, 'site':1, 'admin':'pet', 'block':1},
                  ]
-        expect = sorted(expect)
-        self.assertEqual(expect, result)
+        for x in result:
+            self.assertEqual(x in expect, True)
         
     def testCartesianProduct(self):
         """
@@ -683,11 +682,9 @@ class testUtils(unittest.TestCase):
                 'site' : 'T2',
         }
         ]
-#        result = cartesian_product(dbs_set, sitedb_set, ['site'])
-#        result = cartesian_product(result, phedex_set, ['block','site'])
         result = cartesian_product(dbs_set, sitedb_set)
         result = cartesian_product(result, phedex_set)
-        resultlist = sorted([res for res in result])
+        resultlist = [res for res in result]
         expectlist = [
         {
                 'system': 'dbs+sitedb+phedex', 
@@ -718,8 +715,8 @@ class testUtils(unittest.TestCase):
                 'site': 'T2', 
         }
         ]
-        expectlist = sorted(expectlist)
-        self.assertEqual(expectlist, resultlist)
+        for x in resultlist:
+            self.assertEqual(x in expectlist, True)
 
     def test_genresults(self):
         """
@@ -754,22 +751,21 @@ class testUtils(unittest.TestCase):
 
         indict = {'a':1, 'b':[1,2]}
         result = transform_dict2list(indict)
-        result = sorted(result)
         expect = [{'a':1, 'b':1}, {'a':1, 'b':2}]
-        self.assertEqual(expect, result)
+        for x in result:
+            self.assertEqual(x in expect, True)
 
         indict = {'a':[1,2], 'b':1}
         result = transform_dict2list(indict)
-        result = sorted(result)
         expect = [{'a':1, 'b':1}, {'a':2, 'b':1}]
-        self.assertEqual(expect, result)
+        for x in result:
+            self.assertEqual(x in expect, True)
 
         indict = {'a':[1,2], 'b':[1,2]}
         result = transform_dict2list(indict)
-        result = sorted(result)
         expect = [{'a':1, 'b':1}, {'a':2, 'b':2}] 
-        expect = sorted(expect)
-        self.assertEqual(expect, result)
+        for x in result:
+            self.assertEqual(x in expect, True)
 
         indict = {'a':1, 'b':1, 'c':[1]}
         result = transform_dict2list(indict)
@@ -778,11 +774,10 @@ class testUtils(unittest.TestCase):
 
         indict = {'c':1, 'a':[1,2,3], 'b':[1,2,3]}
         result = transform_dict2list(indict)
-        result = sorted(result)
         expect = [{'a':1, 'b':1, 'c':1}, {'a':2, 'b':2, 'c':1}, 
                   {'a':3, 'b':3, 'c':1}]
-        expect = sorted(expect)
-        self.assertEqual(expect, result)
+        for x in result:
+            self.assertEqual(x in expect, True)
 
     def test_add2dict(self):
         """
