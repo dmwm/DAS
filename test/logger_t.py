@@ -33,7 +33,7 @@ class testDASLogger(unittest.TestCase):
         "Test logger error method"
         old_stdout = sys.stdout
         logger = PrintManager(self.name) # verbose is irrelevant
-        sys.stdout = StringIO()
+        sys.stdout = StringIO.StringIO()
         logger.error('test')
         result = sys.stdout.getvalue()
         expect = 'ERROR %s:%s test\n' % (self.name, funcname())
@@ -44,7 +44,7 @@ class testDASLogger(unittest.TestCase):
         "Test logger warning method"
         old_stdout = sys.stdout
         logger = PrintManager(self.name) # verbose is irrelevant
-        sys.stdout = StringIO()
+        sys.stdout = StringIO.StringIO()
         logger.warning('test')
         result = sys.stdout.getvalue()
         expect = 'WARNING %s:%s test\n' % (self.name, funcname())
@@ -55,7 +55,7 @@ class testDASLogger(unittest.TestCase):
         "Test logger info method"
         old_stdout = sys.stdout
         logger = PrintManager(self.name, verbose=1)
-        sys.stdout = StringIO()
+        sys.stdout = StringIO.StringIO()
         logger.info('test')
         result = sys.stdout.getvalue()
         expect = 'INFO %s:%s test\n' % (self.name, funcname())
@@ -66,7 +66,7 @@ class testDASLogger(unittest.TestCase):
         "Test logger debug method"
         old_stdout = sys.stdout
         logger = PrintManager(self.name, verbose=2)
-        sys.stdout = StringIO()
+        sys.stdout = StringIO.StringIO()
         logger.debug('test')
         result = sys.stdout.getvalue()
         expect = 'DEBUG %s:%s test\n' % (self.name, funcname())

@@ -2,22 +2,16 @@
 # system modules
 import re
 import sys
+import json
 import unittest
-try:
-    import cStringIO as StringIO
-except ImportError: # python3
-    import io as StringIO
-except:
-    import StringIO
 
 # DAS modules
-import DAS.utils.jsonwrapper as json
-from   DAS.core.das_query import DASQuery
-from   DAS.utils.query_utils import encode_mongo_query, decode_mongo_query
-from   DAS.utils.utils import genkey
-from   DAS.utils.das_config import das_readconfig
-from   DAS.core.das_mapping_db import DASMapping
-from   DAS.core.das_parser import QLManager
+from DAS.core.das_query import DASQuery
+from DAS.utils.query_utils import encode_mongo_query, decode_mongo_query
+from DAS.utils.utils import genkey
+from DAS.utils.das_config import das_readconfig
+from DAS.core.das_mapping_db import DASMapping
+from DAS.core.das_parser import QLManager
 
 class testDASQuery(unittest.TestCase):
 
@@ -104,16 +98,8 @@ class testDASQuery(unittest.TestCase):
        mquery = {'fields':['file'], 'spec':{u'dataset.name':'/a/b/c'}}
        iquery = 'file dataset=/a/b/c'
        dasquery   = DASQuery(iquery)
-       stdout = sys.stdout
-       sys.stdout = StringIO()
-       print(dasquery,) # do not append new line
-       result = sys.stdout.getvalue()
        msg = "<query='''%s''' instance=%s qhash=%s services=%s>" \
                % (iquery, dasquery.instance, dasquery.qhash, dasquery.services)
-       self.assertEqual(msg, result)
-       self.assertEqual(msg, str(dasquery))
-       sys.stdout = stdout
-
        dasstr = '%s' % dasquery
        self.assertEqual(msg, dasstr)
 
