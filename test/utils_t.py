@@ -15,6 +15,7 @@ import unittest
 if  sys.version.startswith('3.'):
     import urllib.parse as urllib
     import urllib.request as urllib2
+    long = int
 else:
     import urllib
     import urllib2

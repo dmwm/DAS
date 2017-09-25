@@ -7,7 +7,6 @@ Unit test for DAS PLY parser/lexer
 from __future__ import print_function
 
 import time
-import ply.yacc
 import unittest
 import traceback
 from DAS.core.das_ql_parser import DASQueryParser, relax, parse_array

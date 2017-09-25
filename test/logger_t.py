@@ -7,7 +7,12 @@ unit test for logger module
 
 import sys
 import unittest
-from cStringIO import StringIO
+try:
+    import cStringIO as StringIO
+except ImportError: # python3
+    import io as StringIO
+except:
+    import StringIO
 from DAS.utils.logger import PrintManager, funcname
 
 class testDASLogger(unittest.TestCase):

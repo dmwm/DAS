@@ -3,7 +3,12 @@
 import re
 import sys
 import unittest
-from   cStringIO import StringIO
+try:
+    import cStringIO as StringIO
+except ImportError: # python3
+    import io as StringIO
+except:
+    import StringIO
 
 # DAS modules
 import DAS.utils.jsonwrapper as json

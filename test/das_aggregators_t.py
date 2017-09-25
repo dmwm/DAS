@@ -73,10 +73,10 @@ class testDASAggregators(unittest.TestCase):
         robj = das_func('avg', 'block.replica.size', rows)
         self.assertEqual(expect, float(robj.result)/robj.rec_count)
 
-        expect = (10+2)/2
+        expect = (10+2)//2
         robj = das_func('median', 'block.replica.size', rows)
-        val = (robj.result[len(robj.result)/2-1] + \
-                                robj.result[len(robj.result)/2] )/2
+        val = (robj.result[len(robj.result)//2-1] + \
+                                robj.result[len(robj.result)//2] )//2
         self.assertEqual(expect, val)
 
         expect = 20

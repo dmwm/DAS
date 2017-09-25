@@ -9,7 +9,10 @@ http://code.activestate.com/recipes/577187-python-thread-pool/
 __author__ = 'Valentin Kuznetsov'
 
 # system modules
-from Queue import Queue
+try:
+    from Queue import Queue
+except ImportError: # python3
+    from queue import Queue
 from threading import Thread
 
 # DAS modules

@@ -96,14 +96,14 @@ class testUtils(unittest.TestCase):
         result = tasks.assign_priority(uid1) # no tasks in a queue
         self.assertEqual(result, 0)
         tasks._tasks = TestQueue(empty=False)
-        res1   = [tasks._uids.add(uid1) for r in xrange(20)]
+        res1   = [tasks._uids.add(uid1) for r in range(20)]
         self.assertEqual(tasks.assign_priority(uid1), 2)
-        res2   = [tasks._uids.add(uid2) for r in xrange(50)]
+        res2   = [tasks._uids.add(uid2) for r in range(50)]
         self.assertEqual(tasks.assign_priority(uid2), 5)
 
     def test_priority_task_manager(self):
         """Test priority task manager"""
-        data   = [idx for idx in xrange(0, 30)]
+        data   = [idx for idx in range(0, 30)]
         shared_data = Array('i', len(data))
         mypool = TaskManager(qtype='PriorityQueue', qfreq=10)
         tasks  = []

@@ -6,7 +6,6 @@ Unit test for DAS db methods
 """
 
 import time
-import ply.yacc
 import unittest
 import traceback
 from   DAS.utils.das_db import db_connection, make_uri, db_gridfs

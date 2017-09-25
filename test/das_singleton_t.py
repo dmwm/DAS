@@ -6,7 +6,6 @@ Unit test for DAS singleton
 """
 
 import time
-import ply.yacc
 import unittest
 import traceback
 from   DAS.utils.das_singleton import das_singleton

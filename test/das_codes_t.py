@@ -6,7 +6,6 @@ Unit test for DAS web codes
 """
 
 import time
-import ply.yacc
 import unittest
 import traceback
 from   DAS.web.das_codes import web_code, decode_code, DAS_WEB_CODES

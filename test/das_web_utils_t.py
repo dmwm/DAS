@@ -6,7 +6,6 @@ Unit test for DAS wew utils module
 """
 
 import json
-import plistlib
 import unittest
 
 from DAS.web.utils import wrap2dasjson, json2html, quote
