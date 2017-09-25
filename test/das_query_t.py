@@ -101,7 +101,7 @@ class testDASQuery(unittest.TestCase):
        dasquery   = DASQuery(iquery)
        stdout = sys.stdout
        sys.stdout = StringIO()
-       print dasquery, # do not append new line
+       print(dasquery,) # do not append new line
        result = sys.stdout.getvalue()
        msg = "<query='''%s''' instance=%s qhash=%s services=%s>" \
                % (iquery, dasquery.instance, dasquery.qhash, dasquery.services)

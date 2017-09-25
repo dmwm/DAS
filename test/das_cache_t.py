@@ -5,10 +5,17 @@
 Unit test for DAS cache module
 """
 
+import sys
 import json
 import time
 import unittest
-from urllib2 import URLError
+# python 3
+if  sys.version.startswith('3.'):
+    import urllib.parse as urllib
+    import urllib.request as urllib2
+else:
+    import urllib
+    import urllib2
 from DAS.utils.das_config import das_readconfig
 from DAS.utils.logger import PrintManager
 from DAS.utils.utils import deepcopy
@@ -46,7 +53,7 @@ class testDASCache(unittest.TestCase):
             expect  = {"status":"success"}
             result  = json.loads(data)
             self.assertEqual(expect["status"], result["status"])
-        except URLError as exp:
+        except urllib2.URLError as exp:
             pass
         
         # post request
@@ -58,7 +65,7 @@ class testDASCache(unittest.TestCase):
             expect  = {"status": "requested", "query": query, "expire":expire}
             result  = json.loads(data)
             self.assertEqual(expect["status"], result["status"])
-        except URLError as exp:
+        except urllib2.URLError as exp:
             pass
 
         # get data
@@ -69,7 +76,7 @@ class testDASCache(unittest.TestCase):
             expect  = {"status": "success"}
             result  = json.loads(data)
             self.assertEqual(expect["status"], result["status"])
-        except URLError as exp:
+        except urllib2.URLError as exp:
             pass
 
 #

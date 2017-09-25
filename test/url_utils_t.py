@@ -7,11 +7,18 @@ Unit test for DAS QL parser
 
 # system modules
 import re
+import sys
 import json
 import time
 import unittest
-import urllib2, urllib
 import tempfile
+# python 3
+if  sys.version.startswith('3.'):
+    import urllib.parse as urllib
+    import urllib.request as urllib2
+else:
+    import urllib
+    import urllib2
 
 # das modules
 from DAS.utils.url_utils import url_args
