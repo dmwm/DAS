@@ -5,6 +5,16 @@ Release notes
 
 This release series is targeted to DAS production stability and quality.
 
+- v04.XX.YY
+
+  - DAS is compatible with python3
+  - added new model to wait for results
+    - each sub-service register its DAS query in das.cache collection
+    - once it received and injected all data records it updates DAS query
+      record with status ok
+    - DAS core check for status sub-system queries to be ok and then call
+      merge step
+
 - v03.01.XX
 
   - DAS works with new MongoDB

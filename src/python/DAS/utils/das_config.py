@@ -199,6 +199,8 @@ DASOption('das', 'multitask', 'bool', True),
 DASOption('das', 'error_expire', 'int', 300),
 # emptyset_expire controls how long to keep DAS record for empty result set
 DASOption('das', 'emptyset_expire', 'int', 5),
+# collect_wait_time is used by DAS core to wait for data-services before merging step
+DASOption('das', 'collect_wait_time', 'int', 120),
 # list of data services participated in DAS
 DASOption('das', 'services', 'list',
                 ['dbs3', 'phedex'], destination='services'),
