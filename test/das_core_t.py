@@ -35,34 +35,15 @@ class testDASCore(unittest.TestCase):
     def testAggregators(self):
         """test DASCore aggregators via zip service"""
         # test DAS workflow
-        query  = "zip=14850 | grep zip.code | count(zip.code)"
+        query = "file dataset=/ZMM/Summer11-DESIGN42_V11_428_SLHC1-v1/GEN-SIM | grep file.size | sum(file.size)"
         dquery = DASQuery(query)
         result = self.das.call(dquery)
         result = self.das.get_from_cache(dquery)
         result = [r for r in result][0]
         if  'das' in result:
             del result['das'] # strip off DAS info
-        expect = {"function": "count", "result": {"value": 1}, 
-                  "key": "zip.code", "_id":0}
-#         self.assertEqual(expect, result)
-
-    def testIPService(self):
-        """test DASCore with IP service"""
-        ipaddr = socket.gethostbyname('cmsweb.cern.ch')
-        # test DAS workflow
-        query  = "ip=%s" % ipaddr
-        dquery = DASQuery(query)
-        result = self.das.call(dquery)
-        expect = "ok"
-        self.assertEqual(expect, result)
-
-        # test results
-        query  = "ip=%s | grep ip.address" % ipaddr
-        dquery = DASQuery(query)
-        result = self.das.get_from_cache(dquery)
-        result = [r for r in result][0]
-        result = DotDict(result).get('ip.address')
-        expect = ipaddr
+        expect = {"function": "sum", "result": {"value": 5658838455}, 
+                  "key": "file.size", "_id":0}
         self.assertEqual(expect, result)
 
 #

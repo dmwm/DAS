@@ -36,6 +36,7 @@ except ImportError: # python3
 if  sys.version.startswith('3.'):
     basestring = str
     unicode = str
+    long = int
 
 # DAS modules
 from   DAS.utils.ddict import DotDict, convert_dot_notation
@@ -566,7 +567,7 @@ def expire_timestamp(expire):
     # use Jan 1st, 2010 as a seed to check expire date
     # prior 2010 DAS was not released in production
     tup = (2010, 1, 1, 0, 0, 0, 0, 1, -1)
-    if  isinstance(expire, int) and expire < calendar.timegm(tup):
+    if  isinstance(expire, (int, long)) and expire < calendar.timegm(tup):
         expire = tstamp + expire
     return expire
 

@@ -13,7 +13,7 @@ import multiprocessing
 
 from DAS.utils.spawn_manager import Process, spawn, spawn_queue, SpawnManager
 from DAS.utils.spawn_manager import spawn
-from DAS.core.das_ply import DASPLY
+from DAS.core.das_ql_parser import DASQueryParser
 
 @Process
 def test_int(val):
@@ -47,7 +47,12 @@ class testUtils(unittest.TestCase):
         """
         set up shared array of type int with given size
         """
-        pass
+        dassystems = ['dbs', 'sitedb', 'phedex']
+        daskeys = ['dataset', 'file', 'block', 'run', 'site', 
+                   'date', 'system']
+        parserdir = '/tmp'
+
+        self.dasqlparser = DASQueryParser(daskeys, dassystems)
 
     def test_spawn_functions(self):
         """Test spawn functions"""
@@ -133,14 +138,9 @@ class testUtils(unittest.TestCase):
         daskeys = ['dataset']
         parserdir = os.getcwd()
         query="dataset=/ZMM*/*/*"
-        try:
-            dasply = DASPLY(parserdir, daskeys, dasservices, verbose=0)
-            dasply.build()
-            ply_q1 = dasply.parser.parse(query)
-            ply_q2 = spawn(dasply.parser.parse, query)
-            self.assertEqual(ply_q1, ply_q2)
-        except:
-            pass # if we don't have ply module
+        q1 = self.dasqlparser.parse(query)
+        q2 = spawn(self.dasqlparser.parse, query)
+        self.assertEqual(q1, q2)
 #
 # main
 #

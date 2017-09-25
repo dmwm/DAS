@@ -6,10 +6,16 @@ Unit test for DAS PLY parser/lexer
 """
 from __future__ import print_function
 
+import sys
 import time
 import unittest
 import traceback
+
+# python3
+if  sys.version.startswith('3.'):
+    long = int
 from DAS.core.das_ql_parser import DASQueryParser, relax, parse_array
+
 from DAS.core.das_ql_parser import parse_curle_brackets
 
 class testDASQueryParser(unittest.TestCase):

@@ -50,16 +50,16 @@ class testUtils(unittest.TestCase):
         ilist  = ['in', 'last', '=']
         expect = ['in', 'last', '=', 'IN', 'LAST']
         result = upper_lower(ilist)
-        expect.sort()
-        result.sort()
+        expect = sorted(expect)
+        result = sorted(result)
         self.assertEqual(result, expect)
 
     def test_add_hash(self):
         "Test add_hash function"
         rec    = {'foo':1}
         add_hash(rec)
-        expect = ['foo', 'hash']
-        result = rec.keys()
+        expect = sorted(['foo', 'hash'])
+        result = sorted(list(rec.keys()))
         self.assertEqual(result, expect)
 
     def test_convert2ranges(self):
@@ -158,11 +158,11 @@ class testUtils(unittest.TestCase):
         """Tests gen_counter function"""
         rec = {'a':1, 'b':1, 'c':2}
         delete_keys(rec, 1)
-        self.assertEqual(rec.keys(), ['c'])
+        self.assertEqual(list(rec.keys()), ['c'])
 
     def test_gen_counter(self):
         """Tests gen_counter function"""
-        gen  = (i for i in xrange(0, 10))
+        gen  = (i for i in range(0, 10))
         cdict = {'counter':0}
         gen = gen_counter(gen, cdict)
         self.assertEqual(len([i for i in gen]), cdict['counter'])
@@ -365,9 +365,9 @@ class testUtils(unittest.TestCase):
         self.assertEqual(result, expect)
 
         expire = '900'
+        tstamp = long(time.time()+900)
         result = long(expire_timestamp(expire))
-#        expect = long(time.time()) + 900
-        expect = 900
+        expect = tstamp
         self.assertEqual(result, expect)
 
     def test_yield_rows(self):
@@ -607,14 +607,14 @@ class testUtils(unittest.TestCase):
                  {'ds':None, 'site':1,'admin':'pet', 'block':''}]
         res = cartesian_product(list1, list2)
         result = [i for i in res]
-        result.sort()
+        result = sorted(result)
         expect = [{'ds':1, 'site':2, 'admin':'vk', 'block':1},
                   {'ds':1, 'site':2, 'admin':'simon', 'block':1},
                   {'ds':1, 'site':1, 'admin':'pet', 'block':1},
                   {'ds':2, 'site':1, 'admin':'pet', 'block':1},
                   {'ds':2, 'site':1, 'admin':'pet', 'block':1},
                  ]
-        expect.sort()
+        expect = sorted(expect)
         self.assertEqual(expect, result)
         
     def testCartesianProduct(self):
@@ -687,8 +687,7 @@ class testUtils(unittest.TestCase):
 #        result = cartesian_product(result, phedex_set, ['block','site'])
         result = cartesian_product(dbs_set, sitedb_set)
         result = cartesian_product(result, phedex_set)
-        resultlist = [res for res in result]
-        resultlist.sort()
+        resultlist = sorted([res for res in result])
         expectlist = [
         {
                 'system': 'dbs+sitedb+phedex', 
@@ -719,7 +718,7 @@ class testUtils(unittest.TestCase):
                 'site': 'T2', 
         }
         ]
-        expectlist.sort()
+        expectlist = sorted(expectlist)
         self.assertEqual(expectlist, resultlist)
 
     def test_genresults(self):
@@ -730,7 +729,7 @@ class testUtils(unittest.TestCase):
         res = [{'a':1, 'b':2, 'x':100}]
         collect_list = ['a', 'b', 'c']
         result = genresults(system, res, collect_list)
-        result.sort()
+        result = sorted(result)
         expect = [{'a':1, 'b':2, 'c':'', 'system':'das'}]
         self.assertEqual(expect, result)
 
@@ -755,21 +754,21 @@ class testUtils(unittest.TestCase):
 
         indict = {'a':1, 'b':[1,2]}
         result = transform_dict2list(indict)
-        result.sort()
+        result = sorted(result)
         expect = [{'a':1, 'b':1}, {'a':1, 'b':2}]
         self.assertEqual(expect, result)
 
         indict = {'a':[1,2], 'b':1}
         result = transform_dict2list(indict)
-        result.sort()
+        result = sorted(result)
         expect = [{'a':1, 'b':1}, {'a':2, 'b':1}]
         self.assertEqual(expect, result)
 
         indict = {'a':[1,2], 'b':[1,2]}
         result = transform_dict2list(indict)
-        result.sort()
+        result = sorted(result)
         expect = [{'a':1, 'b':1}, {'a':2, 'b':2}] 
-        expect.sort()
+        expect = sorted(expect)
         self.assertEqual(expect, result)
 
         indict = {'a':1, 'b':1, 'c':[1]}
@@ -779,10 +778,10 @@ class testUtils(unittest.TestCase):
 
         indict = {'c':1, 'a':[1,2,3], 'b':[1,2,3]}
         result = transform_dict2list(indict)
-        result.sort()
+        result = sorted(result)
         expect = [{'a':1, 'b':1, 'c':1}, {'a':2, 'b':2, 'c':1}, 
                   {'a':3, 'b':3, 'c':1}]
-        expect.sort()
+        expect = sorted(expect)
         self.assertEqual(expect, result)
 
     def test_add2dict(self):
@@ -936,16 +935,16 @@ class testUtils(unittest.TestCase):
 """
         fdesc  = tempfile.NamedTemporaryFile()
         fname  = fdesc.name
-        stream = file(fname, 'w')
+        stream = open(fname, 'w')
         stream.write(xmldata)
         stream.close()
-        stream = file(fname, 'r')
+        stream = open(fname, 'r')
         gen    = xml_parser(stream, "block", [])
         result = next(gen)
         expect = {'block': {'bytes': 1, 'file': {'size': 10}}}
         self.assertEqual(expect, result)
 
-        stream = file(fname, 'r')
+        stream = open(fname, 'r')
         gen    = xml_parser(stream, "file", ["block.bytes"])
         result = next(gen)
         expect = {'file': {'block': {'bytes': 1}, 'size': 10}}
@@ -971,10 +970,10 @@ class testUtils(unittest.TestCase):
 """
         fdesc  = tempfile.NamedTemporaryFile()
         fname  = fdesc.name
-        stream = file(fname, 'w')
+        stream = open(fname, 'w')
         stream.write(xmldata)
         stream.close()
-        stream = file(fname, 'r')
+        stream = open(fname, 'r')
         gen    = xml_parser(stream, "RUNS", [])
         result = next(gen)
         expect = {'RUNS': {'RUN': {'id': 751084.0, 
@@ -1000,10 +999,10 @@ class testUtils(unittest.TestCase):
 """
         fdesc  = tempfile.NamedTemporaryFile()
         fname  = fdesc.name
-        stream = file(fname, 'w')
+        stream = open(fname, 'w')
         stream.write(xmldata)
         stream.close()
-        stream = file(fname, 'r')
+        stream = open(fname, 'r')
         gen    = qlxml_parser(stream, "dataset")
         result = next(gen)
         expect = {'dataset': {'dataset':'/a/b/c', 'nblocks': 25}}
@@ -1027,10 +1026,10 @@ class testUtils(unittest.TestCase):
 """
         fdesc  = tempfile.NamedTemporaryFile()
         fname  = fdesc.name
-        stream = file(fname, 'w')
+        stream = open(fname, 'w')
         stream.write(xmldata)
         stream.close()
-        stream = file(fname, 'r')
+        stream = open(fname, 'r')
         gen    = qlxml_parser(stream, "file")
         result = [r for r in gen]
         expect = [{'file': {'name': '/c1.root', 'size': 1}}, 
@@ -1084,10 +1083,10 @@ class testUtils(unittest.TestCase):
         xmldata = xmldata + suffix  
         fdesc  = tempfile.NamedTemporaryFile()
         fname  = fdesc.name
-        stream = file(fname, 'w')
+        stream = open(fname, 'w')
         stream.write(xmldata)
         stream.close()
-        stream = file(fname, 'r')
+        stream = open(fname, 'r')
         gen    = qlxml_parser(stream, "dataset")
         expect = {'dataset': {'sum_block.numfiles': 12, 
                               'count_block': 1, 
@@ -1108,10 +1107,10 @@ class testUtils(unittest.TestCase):
         jsondata = {'beer': {'amstel':'good', 'guiness':'better'}}
         fdesc  = tempfile.NamedTemporaryFile()
         fname  = fdesc.name
-        stream = file(fname, 'w')
+        stream = open(fname, 'w')
         stream.write(json.dumps(jsondata))
         stream.close()
-        stream = file(fname, 'r')
+        stream = open(fname, 'r')
         gen    = json_parser(stream)
         result = next(gen)
         expect = {'beer': {'amstel': 'good', 'guiness': 'better'}}

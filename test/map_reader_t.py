@@ -45,12 +45,13 @@ class testDBS(unittest.TestCase):
         del apimap['ts']
         fdescr  = tempfile.NamedTemporaryFile()
         mapfile = fdescr.name
-        stream  = file(mapfile, 'w')
+        stream  = open(mapfile, 'w')
         yaml.dump(apimap, stream)
         result  = [r for r in read_service_map(mapfile)][0]
         result.pop('ts')
         result.pop('hash')
         self.assertEqual(apimap, result)
+        stream.close()
 
     def testValidator(self):
         """test validator function"""

@@ -332,7 +332,7 @@ class DASMongocache(object):
         # current timestamp which may expire during request processing
         spec = {'qhash':dasquery.qhash,
                 'das.expire':{'$lt':time.time()+self.del_ttl}}
-        col.remove(spec)
+        col.delete_many(spec)
 
     def check_services(self, dasquery):
         """
@@ -391,8 +391,8 @@ class DASMongocache(object):
         "Update timestamp of all DAS data records for given query"
         nval = {'$set': {'das.expire':timestamp}}
         spec = {'qhash' : dasquery.qhash}
-        self.col.update(spec, nval, multi=True)
-        self.merge.update(spec, nval, multi=True)
+        self.col.update_one(spec, nval, multi=True)
+        self.merge.update_one(spec, nval, multi=True)
 
     def das_record(self, dasquery):
         "Retrieve DAS record for given query"
@@ -421,11 +421,11 @@ class DASMongocache(object):
     def add_to_record(self, dasquery, info, system=None):
         "Add to existing DAS record provided info"
         if  system:
-            self.col.update({'query': dasquery.storage_query,
+            self.col.update_one({'query': dasquery.storage_query,
                              'das.system':system},
                             {'$set': info}, upsert=True)
         else:
-            self.col.update({'query': dasquery.storage_query},
+            self.col.update_one({'query': dasquery.storage_query},
                             {'$set': info}, upsert=True)
 
     def find_min_expire(self, dasquery):
@@ -464,22 +464,22 @@ class DASMongocache(object):
                         cdict = {'das.ctime':ctime}
                         udict = {'$set':ndict, '$push':cdict}
                         oid   = ObjectId(rec['_id'])
-                        self.col.update({'_id':oid}, udict)
+                        self.col.update_one({'_id':oid}, udict)
             if  new_expire:
                 udict = {'$set': {'das.expire': new_expire},
                          '$push': {'das.ctime':ctime}}
-                self.col.update(das_spec, udict, fsync=True)
+                self.col.update_one(das_spec, udict)
         else:
             udict = {'$set': {'das.status':status, 'das.expire': min_expire},
                      '$push': {'das.ctime':ctime}}
-            self.col.update(das_spec, udict, fsync=True)
+            self.col.update_one(das_spec, udict)
         if  reason:
             udict = {'$set': {'das.reason':reason}}
-            self.col.update(das_spec, udict, fsync=True)
+            self.col.update_one(das_spec, udict)
         # align all expire timestamps when we recieve ok status
         if  status == 'ok':
             udict = {'$set': {'das.expire': min_expire}}
-            self.col.update(das_spec, udict, fsync=True)
+            self.col.update_one(das_spec, udict)
 
     def apilist(self, dasquery):
         "Return list of apis for given dasquery"
@@ -799,7 +799,7 @@ class DASMongocache(object):
 #         time.sleep(attempt+3) # pymongo 3.2 don't yet flush in time
 
         # remove any entries in merge collection for this query
-        self.merge.remove({'qhash':dasquery.qhash})
+        self.merge.delete_many({'qhash':dasquery.qhash})
         # proceed
         self.logger.debug(dasquery)
         id_list = []
@@ -928,7 +928,7 @@ class DASMongocache(object):
         "Update system status of dasquery in das.cache collection"
         spec = {'qhash': dasquery.qhash, 'das.system': system, 'das.api': api}
         udict = {'$set': {'das.status':status}}
-        self.col.update(spec, udict, fsync=True)
+        self.col.update_one(spec, udict)
 
     def insert_query_record(self, dasquery, header):
         """
@@ -951,7 +951,7 @@ class DASMongocache(object):
             q_record['das']['status'] = "requested"
             q_record['qhash'] = dasquery.qhash
             q_record['das']['ctime'] = [time.time()]
-            res = self.col.insert(q_record)
+            res = self.col.insert_one(q_record)
             if  not res:
                 msg = 'unable to insert query record'
                 print(dastimestamp('DAS ERROR '), dasquery, msg, ', will retry')

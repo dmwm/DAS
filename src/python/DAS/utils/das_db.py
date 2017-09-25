@@ -219,10 +219,7 @@ def create_indexes(coll, index_list):
             spec = pair
             if  not isinstance(pair, list):
                 spec = [pair]
-            if  pymongo.version.startswith('3.'): # pymongo 3.X
-                coll.ensure_index(spec)
-            else:
-                coll.create_index(spec)
+            coll.create_index(spec)
         except Exception as exp:
             print_exc(exp)
 

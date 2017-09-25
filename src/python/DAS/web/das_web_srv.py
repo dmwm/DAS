@@ -43,7 +43,6 @@ import DAS
 from DAS.core.das_core import DASCore
 from DAS.core.das_ql import das_aggregators, das_operators, das_filters
 from DAS.core.das_ql import DAS_DB_KEYWORDS
-from DAS.core.das_ply import das_parser_error
 from DAS.core.das_query import DASQuery, check_query
 from DAS.utils.utils import getarg
 from DAS.utils.url_utils import disable_urllib2Proxy
@@ -515,14 +514,12 @@ class DASWebService(DASWebManager):
         try:
             dasquery = DASQuery(uinput, instance=inst, qcache=qcache)
         except WildcardMultipleMatchesException as err:
-            das_parser_error(uinput, str(err).replace('\n', ''))
             # TODO: hints could be shown here also, but it makes no sense, as
             # they are shown only when no matches are found
             return 1, error_msg(str(err), tmpl='das_wildcard_err',
                                 suggest=err.options.values,
                                 url_extend_params=url_extend_params)
         except WildcardMatchingException as err:
-            das_parser_error(uinput, str(type(err)) + ' ' + str(err))
             kwds = {'input':uinput, 'instance':inst}
             hints = self.hint_datasets(kwds)
             page = error_msg(str(err))
@@ -532,8 +529,6 @@ class DASWebService(DASWebManager):
                         hint=hint, base=self.base, dbs=self.dbs_global)
             return 1, page
         except Exception as err:
-            das_parser_error(uinput, str(type(err)) + ' ' + str(err))
-
             # show multiple dataset matches for 1 keyword queries
             if hasattr(response, 'dataset_matches_msg'):
                 return 1, error_msg(response.dataset_matches_msg,

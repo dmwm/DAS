@@ -4,9 +4,7 @@
 """
 File       : das_ql_parser.py
 Author     : Valentin Kuznetsov <vkuznet AT gmail dot com>
-Description: DAS Query Parser module. It tasks to parse input DAS queryes
-             and yield tokens in a form of DASPLY module.
-             This module meant to replace DASPLY and be thread-safe.
+Description: DAS Query Parser module.
 """
 
 # system modules
