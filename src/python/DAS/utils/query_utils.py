@@ -39,7 +39,7 @@ def encode_mongo_query(query):
     return_query = dict(query)
     speclist = []
     for key, val in return_query.pop('spec').items():
-        if  str(type(val)) == "<type '_sre.SRE_Pattern'>":
+        if hasattr(val, 'pattern'): # it is sre pattern
             val = json.dumps(val.pattern)
             speclist.append({"key":key, "value":val, "pattern":1})
         else:
