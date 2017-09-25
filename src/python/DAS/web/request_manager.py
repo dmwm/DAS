@@ -31,7 +31,8 @@ class RequestManager(object):
 
     def clean(self):
         """Clean on hold collection"""
-        for key, req in self.store.items():
+        cdict = dict(self.store)
+        for key, req in cdict.items():
             if  req.tstamp < (time.time()-self.lifetime):
                 del self.store[key]
 
