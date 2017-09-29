@@ -3,10 +3,11 @@ function ajaxCheckPid(base, method, pid, interval) {
     // method is request method, e.g. /request
     // pid is DASQuery qhash
     // status request interval in seconds
-    var limit = 30000; // in miliseconds
+    var limit = 15000; // in miliseconds
+    var increment = 5000 // in milliseconds
     var wait  = parseInt(interval);
-    if (wait*2 < limit) {
-        wait  = wait*2;
+    if (wait+increment < limit) {
+        wait  = wait+increment;
     } else if (wait==limit) {
         wait  = 5000; // initial time in msec (5 sec)
     } else { wait = limit; }
