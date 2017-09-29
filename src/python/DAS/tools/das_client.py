@@ -17,9 +17,11 @@ if  sys.version_info < (2, 6):
 # python 3
 if  sys.version.startswith('3.'):
     import urllib.request as urllib2
+    import urllib.parse as urllib
     import http.client as httplib
     import http.cookiejar as cookielib
 else:
+    import urllib
     import urllib2
     import httplib
     import cookielib
