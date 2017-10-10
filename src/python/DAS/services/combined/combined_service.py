@@ -125,7 +125,7 @@ def dataset_summary(dbs_url, dataset):
     expire = 600 # set some expire since we're not going to use it
     # we call filesummaries?dataset=dataset to get number of files/blks
     dbs_url += '/filesummaries'
-    dbs_args = {'dataset': dataset}
+    dbs_args = {'dataset': dataset, 'validFileOnly': 1}
     headers = {'Accept': 'application/json;text/json'}
     source, expire = \
         getdata(dbs_url, dbs_args, headers, expire, ckey=CKEY, cert=CERT,
