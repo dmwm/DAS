@@ -119,7 +119,7 @@ def configs(url, args, verbose=False):
     udict = {}
     for rid, rtype in ids_types.items():
         for url in set(urls):
-            if  rid in url:
+            if  str(rid) in str(url):
                 udict.setdefault(rtype, []).append(url)
     config = {'dataset':dataset, 'name': source, 'urls': udict, 'ids': ids, 'idict': idict}
     yield {'config': config}

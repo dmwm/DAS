@@ -714,7 +714,7 @@ class DBS3Service(DASAbstractService):
                     yield dict(name=val)
         elif api == 'runs_via_dataset' or api == 'runs':
             for row in gen:
-                values = row['run']['run_num']
+                values = row.get('run', {}).get('run_num', 'N/A')
                 if  isinstance(values, list):
                     for val in values:
                         yield dict(run_number=val)

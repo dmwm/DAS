@@ -391,8 +391,8 @@ class DASMongocache(object):
         "Update timestamp of all DAS data records for given query"
         nval = {'$set': {'das.expire':timestamp}}
         spec = {'qhash' : dasquery.qhash}
-        self.col.update_one(spec, nval, multi=True)
-        self.merge.update_one(spec, nval, multi=True)
+        self.col.update_many(spec, nval)
+        self.merge.update_many(spec, nval)
 
     def das_record(self, dasquery):
         "Retrieve DAS record for given query"
@@ -900,7 +900,7 @@ class DASMongocache(object):
             # update DAS records (both meta and data ones, by using qhash)
             nval = {'$set': {'das.expire':empty_expire}}
             spec = {'qhash':dasquery.qhash}
-            self.col.update(spec, nval, multi=True)
+            self.col.update_many(spec, nval)
         return status
 
     def update_cache(self, dasquery, results, header, system, api):

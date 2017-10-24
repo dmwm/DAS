@@ -516,9 +516,13 @@ class DASWebService(DASWebManager):
         except WildcardMultipleMatchesException as err:
             # TODO: hints could be shown here also, but it makes no sense, as
             # they are shown only when no matches are found
+            if isinstance(err.options.values, list) and err.options.values:
+                return 1, error_msg(str(err), tmpl='das_wildcard_err',
+                                    suggest=err.options.values,
+                                    url_extend_params=url_extend_params)
             return 1, error_msg(str(err), tmpl='das_wildcard_err',
-                                suggest=err.options.values,
                                 url_extend_params=url_extend_params)
+
         except WildcardMatchingException as err:
             kwds = {'input':uinput, 'instance':inst}
             hints = self.hint_datasets(kwds)
