@@ -273,6 +273,13 @@ class DASCore(object):
             self.rawcache.remove_from_cache(dasquery)
         return status, error, reason
 
+    def status(self):
+        "Return status of given service"
+        sdict = {'das':self.taskmgr.status()}
+        for srv in sorted(self.systems):
+            sdict[srv] = getattr(getattr(self, srv), 'status')()
+        return sdict
+
     def worker(self, srv, dasquery):
         """Main worker function which calls data-srv call function"""
         self.logger.info('##### %s ######\n' % srv)

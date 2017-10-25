@@ -1137,6 +1137,10 @@ class DASWebService(DASWebManager):
     def status(self):
         """Return list of all current requests in DAS queue"""
         requests = [r for r in self.reqmgr.items()]
+        dasprint(dastimestamp('DAS INFO '), "web TaskManager", self.taskmgr.status())
+        sdict = self.dasmgr.status()
+        for key, val in sdict.items():
+            dasprint(dastimestamp('DAS INFO '), "%s TaskManager %s" % (key, val))
         page = self.templatepage('das_status', requests=requests, time=time)
         return self.page(page)
 

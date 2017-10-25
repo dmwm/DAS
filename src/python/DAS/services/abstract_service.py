@@ -98,6 +98,10 @@ class DASAbstractService(object):
             msg = 'Undefined rawcache, please check your configuration'
             raise Exception(msg)
 
+    def status(self):
+        "Return status of the service"
+        return self.taskmgr.status()
+
     def services(self):
         """
         Return sub-subsystems used to retrieve data records. It is used
