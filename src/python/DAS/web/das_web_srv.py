@@ -541,6 +541,9 @@ class DASWebService(DASWebManager):
             # for non Wildcard parsing errors, show the Keyword Search
             return 1, error_msg(str(err), show_kws=self.is_kws_enabled())
 
+        if dasquery.error:
+            return 1, error_msg(dasquery.error)
+
         # DAS query validation
         if isinstance(uinput, dict):  # DASQuery w/ {'spec':{'_id:id}}
             pass
@@ -752,6 +755,8 @@ class DASWebService(DASWebManager):
         time0  = time.time()
         if  dasquery:
             dasquery = DASQuery(dasquery, instance=inst)
+            if  dasquery.error:
+                return self.page(form + dasquery.error, ctime=time.time()-time0)
         else:
             check, content = \
                     self.generate_dasquery(uinput, inst, html_mode=False)

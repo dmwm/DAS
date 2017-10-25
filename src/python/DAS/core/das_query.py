@@ -121,6 +121,7 @@ class DASQuery(object):
         self._aggregators   = []
         self._qcache        = 0
         self._flags         = flags
+        self._error         = ''
 
         # loop over flags and set available attributes
         for key, val in flags.items():
@@ -139,7 +140,10 @@ class DASQuery(object):
             except Exception as exp:
                 msg = "Fail to parse DAS query='%s', %s" % (query, str(exp))
                 print_exc(msg, print_traceback=True)
-                raise exp
+                self._mongo_query = {'error': msg, 'spec': {}, 'fields': []}
+                self._storage_query = {'error': msg}
+                self._error = msg
+#                 raise exp
         elif isinstance(query, dict):
             newquery = {}
             for key, val in query.items():
@@ -156,7 +160,10 @@ class DASQuery(object):
             self._mongo_query = query.mongo_query
             self._storage_query = query.storage_query
         else:
-            raise Exception('Unsupported data type of DAS query')
+#             raise Exception('Unsupported data type of DAS query')
+            self._error = 'Unsupported data type of DAS query'
+        if self._error:
+            return
         self.update_attr()
 
         # check dataset wild-cards
@@ -208,6 +215,11 @@ class DASQuery(object):
     def hashes(self):
         "hashes property of the DAS query"
         return self._hashes
+
+    @property
+    def error(self):
+        "error property of the DAS query"
+        return self._error
 
     @property
     def mongoparser(self):
