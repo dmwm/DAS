@@ -280,9 +280,11 @@ class DASWebService(DASWebManager):
         """
         Serve DAS CLI file download.
         """
-        dasroot = '/'.join(__file__.split('/')[:-3])
-        clifile = os.path.join(dasroot, 'DAS/tools/das_client.py')
-        return serve_file(clifile, content_type='text/plain')
+        msg = 'Please use dasgoclient which is available in any CMSSW releases'
+        return msg
+#         dasroot = '/'.join(__file__.split('/')[:-3])
+#         clifile = os.path.join(dasroot, 'DAS/tools/das_client.py')
+#         return serve_file(clifile, content_type='text/plain')
 
     @expose
     @tools.secmodv2()

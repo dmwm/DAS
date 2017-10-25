@@ -95,12 +95,7 @@ How I can get DAS command line tool?
 </li>
 </ul>
 <p>
-The DAS command line tool can be downloaded directly from DAS web page.
-Click on <a href="/das/cli">CLI</a> link and save page using your
-browser capabilities. You can also save it as simple as
-<pre class="example">
-curl https://cmsweb.cern.ch/das/cli > das_client.py
-</pre>
+The DAS command line tool (dasgoclient or das_client) is available in any CMSSW releases.
 </p>
 
 <ul>
@@ -108,70 +103,19 @@ curl https://cmsweb.cern.ch/das/cli > das_client.py
 How can I use DAS CLI?
 </li>
 </ul>
-The DAS CLI only requires python (version 2.6 and above). No other dependencies,
-not even CMSSW. Just download and save it in your prefered location
-(I will assume you save it under name das_client.py). Change its
-permission
+See help section of the DAS CLI tool (dasgoclient or das_client):
 <pre class="example">
-chmod a+x das_client.py
-</pre>
-and then invoke its help as
-<pre class="example">
-./das_client.py --help
+dasgoclient --help # Go-based DAS CLI tool (recommended)
+das_client --help # Python-based DAS CLI tool (obsolete, soon will be linked to dasgoclient)
 </pre>
 
-<b>DAS CLI from DAS 0.9.X release will behave in the following way:</b>
-<pre class="example">
-Usage: das_client.py [options]
-
-Options:
-  -h, --help        show this help message and exit
-  --verbose=VERBOSE verbose output
-  --query=QUERY     specify query for your request
-  --host=HOST       specify host name of DAS cache server, default https://cmsweb.cern.ch
-  --idx=IDX         start index for returned result set, aka pagination, use w/ limit
-  --limit=LIMIT     number of returned results (results per page)
-  --format=FORMAT   specify return data format (json or plain), default json
-</pre>
 Here are few examples of DAS cli usage:
 <pre class="example">
-./das_client.py --query="dataset=/EG/Run2010A*/AOD"
-./das_client.py --query="dataset=/EG/Run2010A*/AOD" --verbose=1
-./das_client.py --query="dataset=/EG/Run2010A*/AOD | grep dataset.name"
-./das_client.py --query="dataset=/EG/Run2010A*/AOD | grep dataset.name" --format=plain
+das_client --query="dataset=/EG/Run2010A*/AOD"
+das_client --query="dataset=/EG/Run2010A*/AOD" --verbose=1
+das_client --query="dataset=/EG/Run2010A*/AOD | grep dataset.name"
+das_client --query="dataset=/EG/Run2010A*/AOD | grep dataset.name" --format=json
 </pre>
-Please note, the --format option can only be used together with DAS filters, since
-tabulated format requires knowledge of columns (which are fields you specify in a filter).
-<br/>
-<br/>
-
-<b>DAS CLI from DAS 1.0.X release and above has the following syntax:</b>
-<pre class="example">
-Usage: das_client.py [options]
-For more help please visit https://cmsweb.cern.ch/das/faq
-
-Options:
-  -h, --help            show this help message and exit
-  -v VERBOSE, --verbose=VERBOSE
-                        verbose output
-  --query=QUERY         specify query for your request
-  --host=HOST           host name of DAS cache server, default is
-                        https://cmsweb.cern.ch
-  --idx=IDX             start index for returned result set, aka pagination,
-                        use w/ limit (default is 0)
-  --limit=LIMIT         number of returned results (default is 10), use
-                        --limit=0 to show all results
-  --format=FORMAT       specify return data format (json or plain), default
-                        plain.
-  --threshold=THRESHOLD
-                        query waiting threshold in sec, default is 5 minutes
-  --key=CKEY            specify private key file name
-  --cert=CERT           specify private certificate file name
-</pre>
-Its usage is slightly different! By default, it uses <em>plain</em>
-format instead of <em>JSON</em>, and prints out the default record key value, e.g.
-for dataset query it will print dataset.name, therefore usage of DAS filters
-to get list of datasets is not required.
 
 </div>
 </div>
