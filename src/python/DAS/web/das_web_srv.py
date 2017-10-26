@@ -1152,7 +1152,7 @@ class DASWebService(DASWebManager):
             return ', '.join(['<em>%s:</em> %s' % (k, idict[k]) for k in sorted(idict)])
         for key, val in sdict.items():
             page += '<div>'
-            stats = ', '.join(['%s: %s' % (k, dump(v)) for k, v in val.items()])
+            stats = ', '.join([dump(v) for v in val.values()])
             page += '<b>%s</b>: %s' % (key, stats)
             page += '</div>'
         return self.page(page)
