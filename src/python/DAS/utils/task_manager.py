@@ -89,6 +89,7 @@ class Worker(Thread):
                 self._pids.discard(pid)
                 print_exc(err)
                 print("\n### args", func, args, kwargs)
+            self._tasks.task_done()
             evt.set()
 
 class TaskManager(object):
@@ -122,7 +123,9 @@ class TaskManager(object):
 
     def status(self):
         "Return status of task manager queue"
-        info = {'qsize':self._tasks.qsize(), 'full':self._tasks.full(),
+        info = {'qsize':self._tasks.qsize(),
+                'full':self._tasks.full(),
+                'empty':self._tasks.empty(),
                 'unfinished':self._tasks.unfinished_tasks,
                 'nworkers':len(self._workers)}
         return {self.name:info}
