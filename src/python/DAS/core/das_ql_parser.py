@@ -16,7 +16,7 @@ import json
 from DAS.core.das_ql import das_filters, das_operators, das_mapreduces
 from DAS.core.das_ql import das_aggregators, das_special_keys
 from DAS.utils.regex import date_yyyymmdd_pattern, int_number_pattern, float_number_pattern
-from DAS.utils.utils import das_dateformat
+from DAS.utils.utils import das_dateformat, dastimestamp
 
 class DASOptionParser(object):
     "Option parser class"
@@ -125,14 +125,14 @@ def parse_array(query, oper, daskey):
                 error(query, idx, 'Wrong date value, use YYYYMMDD format')
     return out, jdx+1
 
-def error(query, idx, msg='Parsing failure'):
+def error(query, idx, msg='DAS ERROR: parsing failure'):
     "Form error message and raise appropriate exception message"
     out = ' '.join(query)
     where = ''
     for jdx in range(0, idx):
         where += '-'*(len(query[jdx])+1)
     where += '^'
-    msg += '\n' + out + '\n' + where
+    msg = dastimestamp(msg) + '\n' + out + '\n' + where
     raise Exception(msg)
 
 def spec_entry(key, oper, val):
