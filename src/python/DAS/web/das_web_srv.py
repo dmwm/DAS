@@ -1139,11 +1139,22 @@ class DASWebService(DASWebManager):
     def status(self):
         """Return list of all current requests in DAS queue"""
         requests = [r for r in self.reqmgr.items()]
-        dasprint(dastimestamp('DAS INFO '), "web TaskManager", self.taskmgr.status())
+        page = self.templatepage('das_status', requests=requests, time=time)
+
         sdict = self.dasmgr.status()
+        sdict['web'] = self.taskmgr.status()
+        dasprint(dastimestamp('DAS INFO '), "web TaskManager", sdict['web'])
         for key, val in sdict.items():
             dasprint(dastimestamp('DAS INFO '), "%s TaskManager %s" % (key, val))
-        page = self.templatepage('das_status', requests=requests, time=time)
+        page += '<h3>Services</h3>'
+        def dump(idict):
+            "Dump input dict"
+            return ', '.join(['<em>%s:</em> %s' % (k, idict[k]) for k in sorted(idict)])
+        for key, val in sdict.items():
+            page += '<div>'
+            stats = ', '.join(['%s: %s' % (k, dump(v)) for k, v in val.items()])
+            page += '<b>%s</b>: %s' % (key, stats)
+            page += '</div>'
         return self.page(page)
 
     @expose
