@@ -219,6 +219,8 @@ class DASQuery(object):
     @property
     def error(self):
         "error property of the DAS query"
+        if 'error' in self._mongo_query:
+            return self._mongo_query['error']
         return self._error
 
     @property

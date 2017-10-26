@@ -191,6 +191,14 @@ class DASQueryParser(object):
 
     def parse(self, query):
         "Parse input query"
+        try:
+            return self.parse_helper(query)
+        except Exception as exp:
+            print(str(exp))
+            return {'spec':{}, 'fields':{}, 'error':str(exp)}
+
+    def parse_helper(self, query):
+        "Parse input query"
         spec = {}
         filters = {}
         aggregators = []
