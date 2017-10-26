@@ -41,13 +41,18 @@ def dumpstacks(isignal, iframe):
     """
     print("DAS stack, signal=%s, frame=%s" % (isignal, iframe))
     id2name = dict([(th.ident, th.name) for th in threading.enumerate()])
+    adict = dict([(th.ident, th.isAlive()) for th in threading.enumerate()])
+    ddict = dict([(th.ident, th.isDaemon()) for th in threading.enumerate()])
     code = []
+    alive = 0
     for tid, stack in sys._current_frames().items():
-        code.append("\n# Thread: %s(%d)" % (id2name.get(tid,""), tid))
-        for filename, lineno, name, line in traceback.extract_stack(stack):
-            code.append('File: "%s", line %d, in %s' % (filename, lineno, name))
-            if  line:
-                code.append("  %s" % (line.strip()))
-    print("\n".join(code))
+        thname = id2name.get(tid,"")
+        if 'das' in thname.lower():
+            code.append("# Thread: %s(%d) alive=%s daemon=%s" \
+                    % (thname, tid, adict[tid], ddict[tid]))
+            if adict[tid]:
+                alive += 1
+    print("\n".join(sorted(code)))
+    print("Total number of alive threads: %s" % alive)
 
 signal.signal(signal.SIGUSR1, dumpstacks)
