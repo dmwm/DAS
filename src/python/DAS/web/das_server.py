@@ -25,7 +25,10 @@ from optparse import OptionParser
 # CherryPy modules
 from cherrypy import log, tree, engine
 from cherrypy import config as cpconfig
-from cherrypy.wsgiserver import CherryPyWSGIServer
+try:
+    from cherrypy.wsgiserver import CherryPyWSGIServer
+except:
+    CherryPyWSGIServer = None
 from cherrypy.process.servers import ServerAdapter
 from cherrypy.process.plugins import PIDFile
 from cherrypy import _cptree
@@ -159,18 +162,19 @@ class Root(object):
         port = int(config.get("kws_port", 8214))
         host = config.get("kws_host", '0.0.0.0')
 
-        kws_server = CherryPyWSGIServer(
-            bind_addr=(host, port),
-            wsgi_app=kws_wsgi_app,
-            numthreads=int(config.get("thread_pool_kws", 10)),
-            request_queue_size=cpconfig["server.socket_queue_size"],
-            # below are cherrypy default settings...
-            # max=-1,
-            # timeout=10,
-            # shutdown_timeout=5
-        )
-        srv_adapter = ServerAdapter(engine, kws_server)
-        srv_adapter.subscribe()
+        if CherryPyWSGIServer:
+            kws_server = CherryPyWSGIServer(
+                bind_addr=(host, port),
+                wsgi_app=kws_wsgi_app,
+                numthreads=int(config.get("thread_pool_kws", 10)),
+                request_queue_size=cpconfig["server.socket_queue_size"],
+                # below are cherrypy default settings...
+                # max=-1,
+                # timeout=10,
+                # shutdown_timeout=5
+            )
+            srv_adapter = ServerAdapter(engine, kws_server)
+            srv_adapter.subscribe()
 
     def start(self, blocking=True):
         """Configure and start the server."""
