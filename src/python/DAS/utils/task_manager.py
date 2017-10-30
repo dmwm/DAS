@@ -114,6 +114,7 @@ class TaskManager(object):
         self.qfreq = qfreq
         self._pids  = set()
         self._uids  = UidSet()
+        self.qtype = qtype
         if  qtype == 'PriorityQueue':
             self._tasks = PriorityQueue()
         else:
@@ -124,6 +125,7 @@ class TaskManager(object):
     def status(self):
         "Return status of task manager queue"
         info = {'qsize':self._tasks.qsize(),
+                'queue': self.qtype,
                 'full':self._tasks.full(),
                 'empty':self._tasks.empty(),
                 'unfinished':self._tasks.unfinished_tasks,
