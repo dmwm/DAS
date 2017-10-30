@@ -103,6 +103,7 @@ class DASCore(object):
             dasconfig['write_cache'] = True
             self.noresults = nores
 
+        self.init_expire = dasconfig['das'].get('init_expire', 5*60)
         self.multitask = dasconfig['das'].get('multitask', True)
         if  debug or self.verbose:
             self.multitask = False # in verbose mode do not use multitask
@@ -113,14 +114,16 @@ class DASCore(object):
         dasconfig['engine'] = engine
         if  self.multitask:
             nworkers = dasconfig['das'].get('core_workers', 5)
-            if  engine:
-                thr_name = 'DASCore:PluginTaskManager'
-                self.taskmgr = PluginTaskManager(\
-                        engine, nworkers=nworkers, name=thr_name)
-                self.taskmgr.subscribe()
-            else:
-                thr_name = 'DASCore:TaskManager'
-                self.taskmgr = TaskManager(nworkers=nworkers, name=thr_name)
+#             if  engine:
+#                 thr_name = 'DASCore:PluginTaskManager'
+#                 self.taskmgr = PluginTaskManager(\
+#                         engine, nworkers=nworkers, name=thr_name)
+#                 self.taskmgr.subscribe()
+#             else:
+#                 thr_name = 'DASCore:TaskManager'
+#                 self.taskmgr = TaskManager(nworkers=nworkers, name=thr_name)
+            thr_name = 'DASCore:TaskManager'
+            self.taskmgr = TaskManager(nworkers=nworkers, name=thr_name)
         else:
             self.taskmgr = None
 
@@ -313,9 +316,8 @@ class DASCore(object):
             ack_services = services
         if  dasquery.query.find('records ') != -1:
             srv_status = True # skip DAS queries w/ records request
-        # create das record with initial expire tstamp 2 min in a future
-        # it should be sufficient for processing data-srv records
-        expire = time.time()+2*60
+        # create das record with initial expire tstamp
+        expire = time.time()+self.init_expire
         header = dasheader("das", dasquery, expire, api='das_core',
                 services=dict(das=ack_services))
         header['lookup_keys'] = []
