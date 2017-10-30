@@ -50,6 +50,7 @@ from pymongo import DESCENDING, ASCENDING
 from bson.errors import InvalidDocument
 from pymongo.errors import ConnectionFailure, InvalidOperation, DuplicateKeyError
 from pymongo.errors import OperationFailure
+from pymongo.collection import ReturnDocument
 
 def adjust_expire(expire):
     "Adjust expire timestamp"
@@ -926,9 +927,12 @@ class DASMongocache(object):
 
     def update_query_record_system(self, dasquery, system, api, status):
         "Update system status of dasquery in das.cache collection"
-        spec = {'qhash': dasquery.qhash, 'das.system': system, 'das.api': api}
+        spec = {'qhash': dasquery.qhash, 'das.system': system, 'das.api': api,
+                'das.record':record_codes('query_record')}
         udict = {'$set': {'das.status':status}}
-        self.col.update_one(spec, udict)
+#         print("### update_query_record", spec)
+        doc=self.col.find_one_and_update(spec, udict, return_document=ReturnDocument.AFTER)
+#         print(doc)
 
     def insert_query_record(self, dasquery, header):
         """
