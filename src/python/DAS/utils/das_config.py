@@ -195,6 +195,8 @@ DASOption('test_server', 'socket_queue_size', 'int', 100),
 DASOption('das', 'verbose', 'int', 0, destination='verbose'),
 # flag to turn on/off the multitasking (thread based) support in DAS
 DASOption('das', 'multitask', 'bool', True),
+# init_expire controls initial expiration time for DAS records
+DASOption('das', 'init_expire', 'int', 300),
 # error_expire controls how long to keep DAS record for misbehaving data-srv
 DASOption('das', 'error_expire', 'int', 300),
 # emptyset_expire controls how long to keep DAS record for empty result set
