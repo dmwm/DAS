@@ -74,14 +74,16 @@ class DASAbstractService(object):
                 system, weight = system_weight.split(':')
                 if  system == self.name:
                     nworkers *= int(weight)
-            if  engine:
-                thr_name = 'DASAbstractService:%s:PluginTaskManager' % self.name
-                self.taskmgr = PluginTaskManager(\
-                        engine, nworkers=nworkers, name=thr_name)
-                self.taskmgr.subscribe()
-            else:
-                thr_name = 'DASAbstractService:%s:TaskManager' % self.name
-                self.taskmgr = TaskManager(nworkers=nworkers, name=thr_name)
+#             if  engine:
+#                 thr_name = 'DASAbstractService:%s:PluginTaskManager' % self.name
+#                 self.taskmgr = PluginTaskManager(\
+#                         engine, nworkers=nworkers, name=thr_name)
+#                 self.taskmgr.subscribe()
+#             else:
+#                 thr_name = 'DASAbstractService:%s:TaskManager' % self.name
+#                 self.taskmgr = TaskManager(nworkers=nworkers, name=thr_name)
+            thr_name = 'DASAbstractService:%s:TaskManager' % self.name
+            self.taskmgr = TaskManager(nworkers=nworkers, name=thr_name)
         else:
             self.taskmgr = None
 
