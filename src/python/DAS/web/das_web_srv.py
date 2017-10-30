@@ -114,16 +114,19 @@ class DASWebService(DASWebManager):
         if  qtype not in ['Queue', 'PriorityQueue']:
             msg = 'Wrong queue type, qtype=%s' % qtype
             raise Exception(msg)
-        if  self.engine:
-            thr_name = 'DASWebService:PluginTaskManager'
-            self.taskmgr = PluginTaskManager(bus=self.engine, \
-                    nworkers=nworkers, name=thr_name, qtype=qtype, \
-                    qfreq=qfreq)
-            self.taskmgr.subscribe()
-        else:
-            thr_name = 'DASWebService:TaskManager'
-            self.taskmgr = TaskManager(nworkers=nworkers, name=thr_name, \
-                    qtype=qtype, qfreq=qfreq)
+#         if  self.engine:
+#             thr_name = 'DASWebService:PluginTaskManager'
+#             self.taskmgr = PluginTaskManager(bus=self.engine, \
+#                     nworkers=nworkers, name=thr_name, qtype=qtype, \
+#                     qfreq=qfreq)
+#             self.taskmgr.subscribe()
+#         else:
+#             thr_name = 'DASWebService:TaskManager'
+#             self.taskmgr = TaskManager(nworkers=nworkers, name=thr_name, \
+#                     qtype=qtype, qfreq=qfreq)
+        thr_name = 'DASWebService:TaskManager'
+        self.taskmgr = TaskManager(nworkers=nworkers, name=thr_name, \
+                qtype=qtype, qfreq=qfreq)
         self.adjust      = config.get('adjust_input', False)
         self.dasmgr      = None # defined at run-time via self.init()
         self.reqmgr      = None # defined at run-time via self.init()
