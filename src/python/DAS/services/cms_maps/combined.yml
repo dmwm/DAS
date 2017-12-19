@@ -74,6 +74,17 @@ das_map : [
      "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+"},
 ]
 ---
+urn : site4block
+url : "combined plugin"
+expire : 10800
+params : {"block":"required"}
+lookup : site
+das_map : [
+    {"das_key":"site", "rec_key":"site.name", "pattern":"^T[0-3]_"},
+    {"das_key":"block", "rec_key":"block.name", "api_arg":"block",
+     "pattern": "/[\\w-]+/[\\w-]+/[A-Z-]+#[0-9a-zA-Z-]"},
+]
+---
 urn : lumi4dataset
 url : "combined plugin"
 format : JSON

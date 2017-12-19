@@ -279,6 +279,8 @@ class CombinedService(DASAbstractService):
                     yield {'dataset':record}
             del datasets
             del found
+        if  api == 'site4block':
+            pass
         if  api == 'site4dataset':
             try:
                 gen = site4dataset(dbs_url, phedex_api, args, expire)
@@ -325,7 +327,7 @@ class CombinedService(DASAbstractService):
         # therefore the expire time stamp will not be changed, since
         # helper function will yield results
         time0 = time.time()
-        if  api == 'dataset4site_release' or \
+        if  api == 'dataset4site_release' or api == 'site4block' \
             api == 'site4dataset' or 'files4dataset_runs_site':
             genrows = self.helper(api, args, expire)
         # here I use directly the call to the service which returns
