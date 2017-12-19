@@ -327,7 +327,7 @@ class CombinedService(DASAbstractService):
         # therefore the expire time stamp will not be changed, since
         # helper function will yield results
         time0 = time.time()
-        if  api == 'dataset4site_release' or api == 'site4block' \
+        if  api == 'dataset4site_release' or api == 'site4block' or \
             api == 'site4dataset' or 'files4dataset_runs_site':
             genrows = self.helper(api, args, expire)
         # here I use directly the call to the service which returns
