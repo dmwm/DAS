@@ -114,7 +114,7 @@ def tooltip_helper(title):
     page  = ''
     if  title == 'Dataset presence':
         tooltip = title + ' is a total number of files\
- at the site divided by total number of files in a dataset'
+ at the site divided by total number of valid files in a dataset'
     elif title == 'Block presence':
         tooltip = title + ' is a total number of blocks at the site\
  divided by total number of blocks in a dataset'
