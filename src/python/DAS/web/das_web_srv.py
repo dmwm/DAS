@@ -727,9 +727,6 @@ class DASWebService(DASWebManager):
             # update client version
             cli, cli_msg = check_client_version()
             head.update({'client': cli, 'client_message': cli_msg})
-            # for old clients setup appropriate status/reason
-            if  cli_msg:
-                head.update({'status': 'warning', 'reason': cli_msg})
         return head, data
 
     def hint_datasets(self, kwargs):
