@@ -50,7 +50,7 @@ def check_client_version():
     msg = ''
     if  not ver:
         msg  = 'DAS_CLIENT version is not set.\n'
-    elif ver != DAS_CLIENT:
+    elif not ver.startswith(DAS_CLIENT):
         # decode DAS_CLIENT version, format
         # das-client/major.minor::python/major.minor
         das_str, py_str = ver.split('::')
@@ -61,6 +61,7 @@ def check_client_version():
         msg += 'Your client version  : %s\n' % ver
         msg += 'Supported DAS version: %s\n' % DAS_CLIENT
     else:
+        msg = 'das_client will be retired soon, please switch to dasgoclient'
         return ver, msg
     msg += 'Please upgrade your client to new version.\n'
     msg += 'It can be downloaded from %s\n' % url
