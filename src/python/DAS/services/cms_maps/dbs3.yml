@@ -134,19 +134,8 @@ url : "https://cmsweb.cern.ch/dbs/prod/global/DBSReader/datasetlist/"
 expire : 900
 params : {
         "dataset":"required",
-        "primary_ds_name":"optional",
-        "primary_ds_type":"optional",
         "detail":"True",
         "dataset_access_type": "VALID",
-        "data_tier_name":"optional",
-        "release_version": "optional",
-        "run_num": "optional",
-        "logical_file_name": "optional",
-        "acquisition_era_name": "optional",
-        "physics_group_name": "optional",
-        "cdate": "optional",
-        "create_by": "optional",
-        "prep_id": "optional",
 }
 lookup : dataset
 das_map : [
