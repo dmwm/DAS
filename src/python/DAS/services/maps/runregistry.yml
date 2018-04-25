@@ -6,7 +6,7 @@ urn : rr_xmlrpc
 #url : "http://localhost:8081/cms-service-runregistry-api/xmlrpc"
 url : "http://localhost:8081/runregistry"
 expire : 900
-params : {"run": ""}
+params : {"run": "optional"}
 lookup : run
 das_map : [
     {"das_key":"run","rec_key":"run.run_number","api_arg":"run"},
@@ -15,11 +15,11 @@ das_map : [
 urn : rr_xmlrpc2
 url : "http://localhost:8081/runregistry"
 expire : 900
-params : {"run": "", "date": ""}
+params : {"run": "optional", "date": "optional"}
 lookup : run
 das_map : [
     {"das_key":"run","rec_key":"run.run_number","api_arg":"run"},
-    {"das_key":"date","rec_key":"date"},
+    {"das_key":"date","rec_key":"date", "api_arg":"date"},
 ]
 ---
 urn : rr_xmlrpc_lumis
