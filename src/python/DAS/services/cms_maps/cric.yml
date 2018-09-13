@@ -1,0 +1,75 @@
+# CRIC API mapping to DAS
+system: cric
+format: JSON
+---
+# NOTE: all APIs shown below accept match parameter
+# we use it for matching api with das key and handle it as optional in
+# cric_service.py module
+urn : site_names
+url : "https://cms-cric.cern.ch/api/cms/site/query"
+expire : 3600
+params : {"preset":"site-names", "rcsite_state":"ANY", "json":1, "match":"optional"}
+lookup : site
+das_map : [
+    {"das_key":"site", "rec_key":"site.name", "api_arg":"match", "pattern":"^T[0-3]"},
+    {"das_key":"site", "rec_key":"site.se", "api_arg":"match", "pattern":"([a-zA-Z0-9-_]+\\.){2}"}
+]
+---
+urn : groups
+url : "https://cms-cric.cern.ch/api/accounts/user/query"
+expire : 3600
+params : {"preset":"group-responsibilities", "json":1, "match":"optional"}
+lookup : group
+das_map : [
+    {"das_key":"group", "rec_key":"group.name", "api_arg":"match"},
+]
+---
+urn : group_responsibilities
+url : "https://cms-cric.cern.ch/api/accounts/user/query"
+expire : 3600
+params : {"preset":"group-responsibilities", "json":1, "match":"optional"}
+lookup : group
+das_map : [
+    {"das_key":"group", "rec_key":"group.name", "api_arg":"match"},
+]
+---
+urn : people_via_email
+url : "https://cms-cric.cern.ch/api/accounts/user/query"
+expire : 3600
+params : {"preset":"people", "json":1, "match":"optional"}
+lookup : user
+das_map : [
+    {"das_key":"user", "rec_key":"user.email", "api_arg":"match",
+     "pattern":"[a-zA-Z0-9]+@[a-zA-Z0-9]+\\.[a-zA-Z]{2,4}"},
+]
+---
+urn : people_via_name
+url : "https://cms-cric.cern.ch/api/accounts/user/query"
+expire : 3600
+params : {"preset":"people", "json":1, "match":"optional"}
+lookup : user
+das_map : [
+    {"das_key":"user", "rec_key":"user.name", "api_arg":"match"},
+]
+---
+urn : roles
+url : "https://cms-cric.cern.ch/api/accounts/user/query"
+expire : 3600
+params : {"preset":"roles", "json":1, "match":"optional"}
+lookup : role
+das_map : [
+    {"das_key":"role", "rec_key":"user.role", "api_arg":"match"},
+]
+---
+notations : [
+        {"api_output": "site.cms_name", "rec_key":"site.name", "api":""},
+        {"api_output": "user_group", "rec_key":"name", "api":"group_responsibilities"},
+        {"api_output": "alias", "rec_key":"name", "api":""},
+]
+---
+input_values: [
+  {"input": "site.name",
+   "url": "https://cms-cric.cern.ch/api/cms/site/query",
+   "jsonpath_selector": "$.result[*][2]",
+   "test": "T1*"},
+]
