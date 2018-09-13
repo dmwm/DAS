@@ -150,7 +150,7 @@ expire : 3600
 params : {"se": "*", "group":"*"}
 lookup : site
 das_map : [
-    {"das_key":"site", "rec_key":"node.name", "api_arg":"node", "pattern":"^T[0-3]_"},
+    {"das_key":"site", "rec_key":"site.name", "api_arg":"node", "pattern":"^T[0-3]_"},
     {"das_key":"site", "rec_key":"site.se", "api_arg":"se", "pattern":"([a-zA-Z0-9-_]+\\.){2}"},
     {"das_key":"group", "rec_key":"group.name", "api_arg":"group"},
 ]
