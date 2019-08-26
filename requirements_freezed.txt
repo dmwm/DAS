@@ -4,7 +4,7 @@ PyYAML==3.10
 czjson==1.0.8
 decorator==3.4.0
 jsonpath-rw==1.2.3
-nltk==3.0.2
+nltk==3.4.5
 pycurl==7.43.0
 pymongo==3.5.1
 python-cjson==1.0.5
