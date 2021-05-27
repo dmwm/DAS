@@ -1,6 +1,6 @@
 CherryPy==3.2.4
 Markdown==2.3.1
-PyYAML==3.10
+PyYAML==5.4
 czjson==1.0.8
 decorator==3.4.0
 jsonpath-rw==1.2.3
